@@ -1,3 +1,4 @@
+Backend:
 npm i -g @nestjs/cli
 nest new project-name
 npm  run start:dev
@@ -12,5 +13,4 @@ https://docs.nestjs.com/techniques/validation
 npm install @nestjs/mapped-types
 
 Frontend:
-
 npx create-next-app@latest
