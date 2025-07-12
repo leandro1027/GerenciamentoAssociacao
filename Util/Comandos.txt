@@ -5,8 +5,7 @@ npm  run start:dev
 nest --help
 
 //validator:
-npm install class-validator
-npm install class-transformer
+npm install class-validator && class-transformer
 https://docs.nestjs.com/techniques/validation
 
 //Partial-types
