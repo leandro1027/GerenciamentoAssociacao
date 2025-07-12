@@ -10,3 +10,7 @@ https://docs.nestjs.com/techniques/validation
 
 //Partial-types
 npm install @nestjs/mapped-types
+
+Frontend:
+
+npx create-next-app@latest
