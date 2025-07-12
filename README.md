@@ -82,15 +82,17 @@ Este é um projeto full stack desenvolvido com **React + Next.js** no front-end 
 
 ## 🚀 Como Executar o Projeto
 
-### 📦 Backend
+### 📦 Backend e Frontend 💻
+
 ```bash
+📦
 cd backend
 npm install
 npx prisma generate
 npx prisma migrate dev --name init
-npm run start:dev
+npm run start:dev 
 
-### 💻 Frontend
+💻 
 cd frontend
 npm install
 npm run dev
