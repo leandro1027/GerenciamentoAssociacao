@@ -1,0 +1,12 @@
+npm i -g @nestjs/cli
+nest new project-name
+npm  run start:dev
+nest --help
+
+//validator:
+npm install class-validator
+npm install class-transformer
+https://docs.nestjs.com/techniques/validation
+
+//Partial-types
+npm install @nestjs/mapped-types
