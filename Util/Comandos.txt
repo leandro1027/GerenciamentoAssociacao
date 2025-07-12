@@ -14,3 +14,6 @@ npm install @nestjs/mapped-types
 
 Frontend:
 npx create-next-app@latest
+
+Prisma:
+npm install prisma --save-dev
