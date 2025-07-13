@@ -1,26 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class VoluntarioService {
+  constructor(private readonly prisma:PrismaService
+  ) {}
+
   create(createVoluntarioDto: CreateVoluntarioDto) {
-    return 'This action adds a new voluntario';
+    return this.prisma.voluntario.create({
+      data: createVoluntarioDto,
+    });
   }
 
   findAll() {
-    return `This action returns all voluntario`;
+    return this.prisma.voluntario.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} voluntario`;
+  async findOne(id: number) {
+    const voluntario = await this.prisma.voluntario.findUnique({
+      where: {id},
+    });
+
+    if(!voluntario){
+      throw new NotFoundException(`Voluntário com id ${id} não encontrado.`);
+    }
+
+    return voluntario;
   }
 
-  update(id: number, updateVoluntarioDto: UpdateVoluntarioDto) {
-    return `This action updates a #${id} voluntario`;
+  async update(id: number, updateVoluntarioDto: UpdateVoluntarioDto) {
+    await this.findOne(id);
+
+    return this.prisma.usuario.update({
+      where: {id},
+      data: updateVoluntarioDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} voluntario`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.prisma.voluntario.delete({
+      where: {id},
+    });
   }
 }
