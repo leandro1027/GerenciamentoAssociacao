@@ -1,14 +1,14 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
 
 export class CreateUsuarioDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({message: "O nome não pode ser vazio."})
   nome: string;
 
   @IsEmail()
   email: string;
 
-  @IsString()
+  @IsPhoneNumber()
   @IsOptional()
   telefone?: string;
 }
