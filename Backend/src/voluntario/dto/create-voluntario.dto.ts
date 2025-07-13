@@ -8,9 +8,7 @@ export class CreateVoluntarioDto {
 
   @IsString({ message: 'O motivo deve ser um texto.' })
   @IsNotEmpty({ message: 'O motivo não pode estar vazio.' })
-  @MinLength(10, {
-    message: 'O motivo deve ter pelo menos 10 caracteres.',
-  })
+  @MinLength(10, { message: 'O motivo deve ter pelo menos 10 caracteres.'})
   motivo: string;
 
 }
