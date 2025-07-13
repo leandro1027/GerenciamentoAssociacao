@@ -2,7 +2,7 @@ import { IsInt, IsNotEmpty, IsString, MinLength } from "class-validator";
 
 export class CreateVoluntarioDto {
     
-    @IsInt({ message: 'O ID do usuário deve ser um número inteiro.' })
+  @IsInt({ message: 'O ID do usuário deve ser um número inteiro.' })
   @IsNotEmpty({ message: 'O ID do usuário não pode estar vazio.' })
   usuarioId: number;
 
