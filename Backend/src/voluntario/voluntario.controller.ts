@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { VoluntarioService } from './voluntario.service';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
@@ -18,17 +18,18 @@ export class VoluntarioController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.voluntarioService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.voluntarioService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateVoluntarioDto: UpdateVoluntarioDto) {
-    return this.voluntarioService.update(+id, updateVoluntarioDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateVoluntarioDto: UpdateVoluntarioDto) {
+    return this.voluntarioService.update(id, updateVoluntarioDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.voluntarioService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.voluntarioService.remove(id);
   }
 }
