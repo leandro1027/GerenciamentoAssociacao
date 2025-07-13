@@ -1,26 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDoacaoDto } from './dto/create-doacao.dto';
 import { UpdateDoacaoDto } from './dto/update-doacao.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DoacaoService {
+  constructor (private readonly prisma:PrismaService){}
+
   create(createDoacaoDto: CreateDoacaoDto) {
-    return 'This action adds a new doacao';
+    return this.prisma.doacao.create({data: createDoacaoDto,
+    });
   }
 
   findAll() {
-    return `This action returns all doacao`;
+    return this.prisma.doacao.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} doacao`;
+  async findOne(id: number) {
+    const doacao = await this.prisma.doacao.findUnique({
+      where: {id},
+    });
+
+    if(!doacao){
+      throw new NotFoundException(`Doação com id ${id} não encontrada.`)
+    }
+
+    return doacao;
   }
 
-  update(id: number, updateDoacaoDto: UpdateDoacaoDto) {
-    return `This action updates a #${id} doacao`;
+ async update(id: number, updateDoacaoDto: UpdateDoacaoDto) {
+    await this.findOne(id);
+
+    return this.prisma.doacao.update({
+      where: {id},
+      data: updateDoacaoDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} doacao`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.prisma.doacao.delete({
+      where: {id},
+    });
   }
-}
+} 

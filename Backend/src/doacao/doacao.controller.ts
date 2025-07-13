@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { DoacaoService } from './doacao.service';
 import { CreateDoacaoDto } from './dto/create-doacao.dto';
 import { UpdateDoacaoDto } from './dto/update-doacao.dto';
@@ -18,17 +18,18 @@ export class DoacaoController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.doacaoService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.doacaoService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDoacaoDto: UpdateDoacaoDto) {
-    return this.doacaoService.update(+id, updateDoacaoDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateDoacaoDto: UpdateDoacaoDto) {
+    return this.doacaoService.update(id, updateDoacaoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.doacaoService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.doacaoService.remove(id);
   }
 }
