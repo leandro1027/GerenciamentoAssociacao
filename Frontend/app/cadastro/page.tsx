@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import api from '../../services/api';
+import api from '../services/api';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
-import { Usuario } from '../../types'; // Importando a interface de Usuário
+import { Usuario } from '@/types'; 
 
 export default function CadastroPage() {
   // Estados para controlar os campos do formulário
