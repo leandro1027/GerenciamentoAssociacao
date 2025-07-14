@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from './components/layout/navbar'; // Caminho corrigido
 import { Providers } from '@/context/providers'; // Caminho corrigido
+import Footer from './components/layout/footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
         <Providers> {/* 2. Use o Providers para embrulhar a aplicação */}
           <Navbar />
           <main>{children}</main>
+           <Footer /> 
         </Providers>
       </body>
     </html>
