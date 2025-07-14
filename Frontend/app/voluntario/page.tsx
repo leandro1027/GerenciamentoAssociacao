@@ -4,38 +4,49 @@ import { useState, useEffect, FormEvent } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
 import Textarea from '../components/common/textarea';
-import { Usuario } from '../../types';
+import { useAuth } from '../../context/AuthContext'; // Importa o hook de autenticação
 import Link from 'next/link';
+import { Voluntario, StatusVoluntario } from '../../types';
 
 export default function VoluntarioPage() {
-  // Estados para o formulário
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const { user, isAuthenticated } = useAuth(); // Pega o utilizador logado
+  
   const [motivo, setMotivo] = useState('');
+  const [voluntarioStatus, setVoluntarioStatus] = useState<StatusVoluntario | null>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   // Estados para feedback
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Efeito para buscar os utilizadores quando a página carrega
+  // Verifica se o utilizador já é um voluntário
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await api.get<Usuario[]>('/usuario');
-        setUsuarios(response.data);
-      } catch (err) {
-        setFetchError('Não foi possível carregar os utilizadores. Tente novamente mais tarde.');
-      }
-    };
-    fetchUsuarios();
-  }, []);
+    if (isAuthenticated && user) {
+      setIsCheckingStatus(true);
+      const checkStatus = async () => {
+        try {
+          const response = await api.get<Voluntario[]>('/voluntario');
+          const minhaCandidatura = response.data.find(v => v.usuarioId === user.id);
+          if (minhaCandidatura) {
+            setVoluntarioStatus(minhaCandidatura.status);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status de voluntário", error);
+        } finally {
+          setIsCheckingStatus(false);
+        }
+      };
+      checkStatus();
+    } else {
+      setIsCheckingStatus(false);
+    }
+  }, [isAuthenticated, user]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedUserId) {
-      setSubmitError('Por favor, selecione um utilizador.');
+    if (!user) {
+      setSubmitError('Utilizador não autenticado.');
       return;
     }
 
@@ -44,14 +55,14 @@ export default function VoluntarioPage() {
     setSuccess(null);
 
     try {
-      await api.post('/voluntario', {
-        usuarioId: parseInt(selectedUserId, 10), // Converte a string para número
+      const response = await api.post('/voluntario', {
+        usuarioId: user.id,
         motivo,
       });
 
       setSuccess('Candidatura enviada com sucesso! Entraremos em contacto em breve.');
-      setSelectedUserId('');
       setMotivo('');
+      setVoluntarioStatus('pendente'); // Atualiza o status localmente
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao enviar a candidatura.';
       setSubmitError(errorMessage);
@@ -59,7 +70,58 @@ export default function VoluntarioPage() {
       setIsLoading(false);
     }
   };
+  
+  // Ecrã de carregamento enquanto verifica o status
+  if (isCheckingStatus) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-gray-50">
+        <p>A verificar o seu estado...</p>
+      </main>
+    );
+  }
 
+  // Se o utilizador não estiver logado
+  if (!isAuthenticated) {
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="w-full max-w-lg p-8 text-center bg-white rounded-xl shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Necessário</h2>
+                <p className="text-gray-600 mb-6">Você precisa de estar logado para se candidatar como voluntário.</p>
+                <Link href="/login" className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                    Ir para a página de Login
+                </Link>
+            </div>
+        </main>
+    );
+  }
+
+  // Se o utilizador já tem uma candidatura
+  if (voluntarioStatus) {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-full max-w-lg p-8 text-center bg-white rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Estado da sua Candidatura</h2>
+          <p className="text-gray-600 mb-6">
+            A sua candidatura já foi recebida e o seu estado atual é:
+          </p>
+          <span className={`px-4 py-2 text-lg font-semibold rounded-full ${
+            voluntarioStatus === 'aprovado' ? 'bg-green-100 text-green-800' :
+            voluntarioStatus === 'recusado' ? 'bg-red-100 text-red-800' :
+            'bg-yellow-100 text-yellow-800'
+          }`}>
+            {voluntarioStatus.charAt(0).toUpperCase() + voluntarioStatus.slice(1)}
+          </span>
+          <div className="mt-8">
+            <Link href="/" className="text-sm text-blue-600 hover:underline">
+                Voltar à Página Inicial
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Se o utilizador estiver logado e não tiver candidatura, mostra o formulário
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-xl shadow-lg">
@@ -68,34 +130,19 @@ export default function VoluntarioPage() {
             Seja um Voluntário
             </h1>
             <p className="mt-2 text-gray-600">
-            Preencha o formulário abaixo para se candidatar.
+            Complete a sua candidatura abaixo.
             </p>
         </div>
         
-        {fetchError ? (
-          <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">
-            {fetchError}
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="usuario" className="block mb-2 text-sm font-medium text-gray-600">
-                Selecione o seu nome
+              <label className="block mb-2 text-sm font-medium text-gray-600">
+                Candidatando-se como:
               </label>
-              <select
-                id="usuario"
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-colors duration-200"
-                required
-              >
-                <option value="" disabled>-- Escolha um utilizador --</option>
-                {usuarios.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.nome} ({user.email})
-                  </option>
-                ))}
-              </select>
+              <div className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg">
+                <p className="font-semibold text-gray-800">{user?.nome}</p>
+                <p className="text-sm text-gray-500">{user?.email}</p>
+              </div>
             </div>
 
             <div>
@@ -115,7 +162,6 @@ export default function VoluntarioPage() {
               Enviar Candidatura
             </Button>
           </form>
-        )}
 
         {success && (
           <div className="p-4 mt-4 text-center text-green-800 bg-green-100 rounded-lg">

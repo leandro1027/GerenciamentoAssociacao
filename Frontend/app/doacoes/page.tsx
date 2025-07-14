@@ -1,48 +1,34 @@
+// app/doacoes/page.tsx
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
 import Input from '../components/common/input';
-import { Usuario } from '../../types';
+import { useAuth } from '../../context/AuthContext'; // Importa o hook de autenticação
 import Link from 'next/link';
 import QRCode from 'qrcode';
 
 export default function DoacoesPage() {
+  const { user, isAuthenticated } = useAuth(); // Pega o utilizador logado
+
   // Estados do formulário
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [valor, setValor] = useState<string>('');
 
   // Estados de controlo do fluxo
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Busca os utilizadores ao carregar a página
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const response = await api.get<Usuario[]>('/usuario');
-        setUsuarios(response.data);
-      } catch (err) {
-        setFetchError('Não foi possível carregar os utilizadores. Tente novamente mais tarde.');
-      }
-    };
-    fetchUsuarios();
-  }, []);
 
   // Gera o QR Code
   const handleGenerateQRCode = (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedUserId || !valor) {
-      setSubmitError('Por favor, selecione um utilizador e insira um valor.');
+    if (!valor) {
+      setSubmitError('Por favor, insira um valor.');
       return;
     }
     
-    // Simula uma chave PIX "copia e cola"
     const pixKey = `00020126360014BR.GOV.BCB.PIX0114+5542999999999520400005303986540${parseFloat(valor).toFixed(2).replace('.', '')}5802BR5913NOME_DA_ASSOC6009SAO_PAULO62070503***6304ABCD`;
 
     QRCode.toDataURL(pixKey)
@@ -58,29 +44,47 @@ export default function DoacoesPage() {
 
   // Confirma a doação e envia para o back-end
   const handleConfirmDonation = async () => {
+    if (!user) {
+        setSubmitError('Utilizador não autenticado.');
+        return;
+    }
+
     setIsLoading(true);
     setSubmitError(null);
     setSuccess(null);
 
     try {
       await api.post('/doacao', {
-        usuarioId: parseInt(selectedUserId, 10),
+        usuarioId: user.id, // Usa o ID do utilizador logado
         valor: parseFloat(valor),
         tipo: 'pix',
       });
 
       setSuccess('Doação confirmada com sucesso! Muito obrigado pelo seu apoio.');
-      // Limpa o estado
-      setSelectedUserId('');
       setValor('');
       setQrCodeDataURL(null);
-    } catch (err: any) {
+    } catch (err: any) { // <-- O ERRO ESTAVA AQUI
       const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao confirmar a doação.';
       setSubmitError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // Se o utilizador não estiver logado, mostra uma mensagem
+  if (!isAuthenticated) {
+    return (
+        <main className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="w-full max-w-lg p-8 text-center bg-white rounded-xl shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Necessário</h2>
+                <p className="text-gray-600 mb-6">Você precisa de estar logado para fazer uma doação.</p>
+                <Link href="/login" className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                    Ir para a página de Login
+                </Link>
+            </div>
+        </main>
+    );
+  }
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -98,21 +102,12 @@ export default function DoacoesPage() {
           // Formulário para gerar o QR Code
           <form onSubmit={handleGenerateQRCode} className="space-y-5">
             <div>
-              <label htmlFor="usuario" className="block mb-2 text-sm font-medium text-gray-600">
-                Selecione o seu nome
+              <label className="block mb-2 text-sm font-medium text-gray-600">
+                Doando como:
               </label>
-              <select
-                id="usuario"
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white"
-                required
-              >
-                <option value="" disabled>-- Escolha um utilizador --</option>
-                {usuarios.map((user) => (
-                  <option key={user.id} value={user.id}>{user.nome}</option>
-                ))}
-              </select>
+              <div className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg">
+                <p className="font-semibold text-gray-800">{user?.nome}</p>
+              </div>
             </div>
             <div>
               <label htmlFor="valor" className="block mb-2 text-sm font-medium text-gray-600">
