@@ -5,9 +5,6 @@ export interface Usuario {
   telefone?: string; 
 }
 
-/**
- * Define os possíveis status de uma candidatura de voluntário.
- */
 export type StatusVoluntario = 'pendente' | 'aprovado' | 'recusado';
 
 export interface Voluntario {

@@ -2,12 +2,15 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
 import api from '../services/api';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
-import { Usuario } from '@/types'; 
+import { Usuario } from '../../types';
 
 export default function CadastroPage() {
+  const router = useRouter(); // 2. Inicialize o router
+
   // Estados para controlar os campos do formulário
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -19,7 +22,7 @@ export default function CadastroPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault(); // Impede o recarregamento da página
+    event.preventDefault();
     setIsLoading(true);
     setError(null);
     setSuccess(null);
@@ -31,19 +34,23 @@ export default function CadastroPage() {
         telefone,
       });
 
-      setSuccess(`Usuário "${response.data.nome}" cadastrado com sucesso!`);
-      // Limpa o formulário após o sucesso
-      setNome('');
-      setEmail('');
-      setTelefone('');
+      setSuccess(`Usuário "${response.data.nome}" cadastrado com sucesso! Redirecionando...`);
+      
+      // 3. Redireciona o usuário após 2 segundos
+      setTimeout(() => {
+        // Supondo que você crie uma página de boas-vindas ou painel
+        // Se não, pode ser router.push('/voluntario'); ou router.push('/');
+        router.push('/'); 
+      }, 2000);
+
     } catch (err: any) {
-      // Pega a mensagem de erro da API, se houver
       const errorMessage =
         err.response?.data?.message || 'Ocorreu um erro ao cadastrar.';
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Garante que o botão seja reativado em caso de erro
     }
+    // Não defina setIsLoading(false) aqui no 'finally' para o sucesso,
+    // pois queremos que o botão permaneça desativado até o redirecionamento.
   };
 
   return (
@@ -98,7 +105,6 @@ export default function CadastroPage() {
           </Button>
         </form>
 
-        {/* Mensagens de Feedback */}
         {success && (
           <div className="p-4 text-center text-green-800 bg-green-100 rounded-lg">
             {success}
