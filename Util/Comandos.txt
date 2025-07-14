@@ -13,6 +13,8 @@ npm install @nestjs/mapped-types
 
 Frontend:
 npx create-next-app@latest
+npm install qrcode
+npm install @types/qrcode --save-dev
 
 Prisma:
 npm install prisma --save-dev
