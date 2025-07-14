@@ -33,7 +33,7 @@ Este é um projeto full stack desenvolvido com **React + Next.js** no front-end 
 | Front-end    | React, Next.js, Axios              |
 | Back-end     | Nest.js, TypeScript, Prisma ORM    |
 | Banco de Dados | SQLite (modo local)               |
-| Estilização  | CSS simples                        |
+| Estilização  | tailwind css                        |
 | Outros       | QRCode Generator                   |
 
 ---
