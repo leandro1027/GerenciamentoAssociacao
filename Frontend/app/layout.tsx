@@ -2,7 +2,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Navbar from './components/layout/navbar';
+import Navbar from './components/layout/navbar'; // Caminho corrigido
+import { Providers } from '@/context/providers'; // Caminho corrigido
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <Navbar /> {/* 2. Adicione a Navbar aqui */}
-        <main>{children}</main> {/* 3. O conteúdo da página será renderizado aqui */}
+        <Providers> {/* 2. Use o Providers para embrulhar a aplicação */}
+          <Navbar />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   );
