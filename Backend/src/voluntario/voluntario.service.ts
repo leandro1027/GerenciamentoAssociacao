@@ -34,7 +34,7 @@ export class VoluntarioService {
   async update(id: number, updateVoluntarioDto: UpdateVoluntarioDto) {
     await this.findOne(id);
 
-    return this.prisma.usuario.update({
+    return this.prisma.voluntario.update({
       where: {id},
       data: updateVoluntarioDto,
     });
