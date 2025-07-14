@@ -1,19 +1,19 @@
-// app/cadastro/page.tsx
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
+import { useRouter } from 'next/navigation';
 import api from '../services/api';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 import { Usuario } from '../../types';
 
 export default function CadastroPage() {
-  const router = useRouter(); // 2. Inicialize o router
+  const router = useRouter();
 
   // Estados para controlar os campos do formulário
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState(''); // Estado para a senha
   const [telefone, setTelefone] = useState('');
 
   // Estados para feedback ao usuário
@@ -31,26 +31,22 @@ export default function CadastroPage() {
       const response = await api.post<Usuario>('/usuario', {
         nome,
         email,
+        senha, // Envia a senha para a API
         telefone,
       });
 
       setSuccess(`Usuário "${response.data.nome}" cadastrado com sucesso! Redirecionando...`);
       
-      // 3. Redireciona o usuário após 2 segundos
       setTimeout(() => {
-        // Supondo que você crie uma página de boas-vindas ou painel
-        // Se não, pode ser router.push('/voluntario'); ou router.push('/');
-        router.push('/'); 
+        router.push('/login'); // Redireciona para a página de login
       }, 2000);
 
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message || 'Ocorreu um erro ao cadastrar.';
       setError(errorMessage);
-      setIsLoading(false); // Garante que o botão seja reativado em caso de erro
+      setIsLoading(false);
     }
-    // Não defina setIsLoading(false) aqui no 'finally' para o sucesso,
-    // pois queremos que o botão permaneça desativado até o redirecionamento.
   };
 
   return (
@@ -85,6 +81,21 @@ export default function CadastroPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+            />
+          </div>
+          {/* Campo de Senha Adicionado */}
+          <div>
+            <label htmlFor="senha" className="block mb-2 text-sm font-medium text-gray-600">
+              Senha
+            </label>
+            <Input
+              id="senha"
+              type="password"
+              placeholder="********"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+              minLength={6}
             />
           </div>
           <div>

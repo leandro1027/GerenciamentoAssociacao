@@ -1,8 +1,10 @@
+
 export interface Usuario {
   id: number;
   nome: string;
   email: string;
-  telefone?: string; 
+  senha?: string; 
+  telefone?: string;
 }
 
 export type StatusVoluntario = 'pendente' | 'aprovado' | 'recusado';
@@ -12,7 +14,6 @@ export interface Voluntario {
   usuarioId: number;
   motivo: string;
   status: StatusVoluntario;
-  
   usuario?: Usuario; 
 }
 
@@ -21,5 +22,5 @@ export interface Doacao {
   usuarioId: number;
   valor: number;
   tipo: string;
-  data: string; // A data virá como string no formato  JSON da API
+  data: string;
 }

@@ -32,7 +32,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">
-            Aceder à sua Conta
+            Acessar sua Conta
           </h1>
           <p className="mt-2 text-gray-600">
             Bem-vindo de volta!

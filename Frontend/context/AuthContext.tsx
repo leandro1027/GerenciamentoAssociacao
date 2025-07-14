@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Usuario } from '../types';
 import api from '@/app/services/api';
 
-// Define a forma dos dados do contexto
 interface AuthContextType {
   user: Usuario | null;
   isAuthenticated: boolean;
@@ -13,41 +12,36 @@ interface AuthContextType {
   logout: () => void;
 }
 
-// Cria o contexto
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Cria o componente Provedor
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
   const router = useRouter();
 
-  // Simula o login. Num projeto real, isto seria uma chamada POST para /auth/login
   const login = async (email: string, pass: string) => {
-    // Para esta simulação, qualquer senha serve, mas o email tem de existir.
-    // Isto é inseguro e apenas para fins de demonstração.
-    if (!email) throw new Error("O email é obrigatório.");
+    if (!email || !pass) throw new Error("Email e senha são obrigatórios.");
 
     try {
-      // Como não temos um endpoint para buscar por email, buscamos todos e filtramos.
-      // Isto é ineficiente e apenas para a simulação.
+      // Num projeto real, seria um POST para /auth/login
       const { data: users } = await api.get<Usuario[]>('/usuario');
       const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-      if (foundUser) {
+      // Lógica de login atualizada para verificar a senha
+      if (foundUser && foundUser.senha === pass) {
         setUser(foundUser);
-        router.push('/'); // Redireciona para a página inicial após o login
+        router.push('/');
       } else {
-        throw new Error('Utilizador não encontrado.');
+        throw new Error('Email ou senha inválidos.');
       }
     } catch (error) {
       console.error(error);
-      throw error; // Propaga o erro para ser tratado na página de login
+      throw error;
     }
   };
 
   const logout = () => {
     setUser(null);
-    router.push('/login'); // Redireciona para a página de login após o logout
+    router.push('/login');
   };
 
   const value = {
@@ -60,7 +54,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Cria um hook customizado para facilitar o uso do contexto
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

@@ -12,6 +12,7 @@ model Usuario {
   id       Int        @id @default(autoincrement())
   nome     String
   email    String
+  senha    String
   telefone String?
   voluntario Voluntario?
   doacoes   Doacao[]
