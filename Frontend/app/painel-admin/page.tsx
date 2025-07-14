@@ -73,12 +73,12 @@ export default function AdminPanelPage() {
   // Ecrã de Login Simulado
   if (!isAuthenticated) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gray-100">
+      <main className="flex items-center justify-center min-h-screen bg-gray-200">
         <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center">Acesso Restrito</h1>
+          <h1 className="text-2xl font-bold text-center text-gray-800">Acesso Restrito</h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium">Senha de Administrador</label>
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">Senha de Administrador</label>
               <Input 
                 id="password"
                 type="password"
