@@ -20,7 +20,6 @@ export default function AdminPanelPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Senha de admin
     if (password === 'admin123') {
       setIsAuthenticated(true);
       setLoginError('');
@@ -58,6 +57,25 @@ export default function AdminPanelPage() {
       setVoluntarios(prev => prev.map(v => v.id === voluntarioId ? { ...v, status } : v));
     } catch (err) {
       alert('Erro ao atualizar o status.');
+    }
+  };
+
+  // NOVA FUNÇÃO PARA APAGAR UTILIZADOR
+  const handleDeleteUser = async (userId: number) => {
+    const userToDelete = usuarios.find(u => u.id === userId);
+    if (!userToDelete) return;
+
+    const confirmationMessage = `Tem a certeza de que deseja apagar o utilizador "${userToDelete.nome}"? Esta ação não pode ser desfeita.`;
+
+    if (window.confirm(confirmationMessage)) {
+      try {
+        await api.delete(`/usuario/${userId}`);
+        // Remove o utilizador da lista localmente para feedback imediato
+        setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== userId));
+      } catch (err) {
+        alert('Não foi possível apagar o utilizador. Verifique se ele não tem candidaturas de voluntário ou doações associadas.');
+        console.error(err);
+      }
     }
   };
 
@@ -159,6 +177,7 @@ export default function AdminPanelPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ação</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -167,6 +186,14 @@ export default function AdminPanelPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button //Obs: só sera possivel excluir um usuário se o mesmo não tiver outros registros, como cadastro de voluntário
+                            onClick={() => handleDeleteUser(user.id)} 
+                            className="text-red-600 hover:text-red-900 font-medium text-sm transition-colors"
+                          >
+                            Excluir
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
