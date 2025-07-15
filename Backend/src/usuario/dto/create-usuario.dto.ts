@@ -9,7 +9,7 @@ export class CreateUsuarioDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({message: 'O nome não pode estar vazio.'})
   @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres.' })
   senha: string; 
 

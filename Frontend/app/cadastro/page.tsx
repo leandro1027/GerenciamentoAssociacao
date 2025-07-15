@@ -10,10 +10,9 @@ import { Usuario } from '../../types';
 export default function CadastroPage() {
   const router = useRouter();
 
-  // Estados para controlar os campos do formulário
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState(''); // Estado para a senha
+  const [senha, setSenha] = useState(''); 
   const [telefone, setTelefone] = useState('');
 
   // Estados para feedback ao usuário
@@ -31,14 +30,14 @@ export default function CadastroPage() {
       const response = await api.post<Usuario>('/usuario', {
         nome,
         email,
-        senha, // Envia a senha para a API
+        senha,
         telefone,
       });
 
       setSuccess(`Usuário "${response.data.nome}" cadastrado com sucesso! Redirecionando...`);
       
       setTimeout(() => {
-        router.push('/login'); // Redireciona para a página de login
+        router.push('/login'); // Redireciona para login
       }, 2000);
 
     } catch (err: any) {
@@ -83,7 +82,7 @@ export default function CadastroPage() {
               required
             />
           </div>
-          {/* Campo de Senha Adicionado */}
+          {/*senha*/}
           <div>
             <label htmlFor="senha" className="block mb-2 text-sm font-medium text-gray-600">
               Senha

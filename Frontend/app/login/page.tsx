@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // A senha não é usada na lógica, mas é bom tê-la no formulário
+  const [password, setPassword] = useState(''); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,7 +1,5 @@
-// components/common/Button.tsx
 import React from 'react';
 
-// Aceita todas as propriedades de um botão HTML padrão
 type ButtonProps = React.ComponentProps<'button'> & {
   isLoading?: boolean;
 };
