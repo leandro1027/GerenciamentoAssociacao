@@ -16,7 +16,6 @@ export default function HomePage() {
           </p>
         </header>
 
-        {/* Secção de Ações Principais */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             href="/cadastro"

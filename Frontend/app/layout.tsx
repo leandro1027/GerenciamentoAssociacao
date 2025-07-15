@@ -1,9 +1,8 @@
-// app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Navbar from './components/layout/navbar'; // Caminho corrigido
-import { Providers } from '@/context/providers'; // Caminho corrigido
+import Navbar from './components/layout/navbar';
+import { Providers } from '@/context/providers';
 import Footer from './components/layout/footer';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <Providers> {/* 2. Use o Providers para embrulhar a aplicação */}
+        <Providers>
           <Navbar />
           <main>{children}</main>
            <Footer /> 

@@ -4,23 +4,21 @@ import { useState, useEffect, FormEvent } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
 import Textarea from '../components/common/textarea';
-import { useAuth } from '../../context/AuthContext'; // Importa o hook de autenticação
+import { useAuth } from '../../context/AuthContext'; 
 import Link from 'next/link';
 import { Voluntario, StatusVoluntario } from '../../types';
 
 export default function VoluntarioPage() {
-  const { user, isAuthenticated } = useAuth(); // Pega o utilizador logado
-  
+  const { user, isAuthenticated } = useAuth();
   const [motivo, setMotivo] = useState('');
   const [voluntarioStatus, setVoluntarioStatus] = useState<StatusVoluntario | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
-  // Estados para feedback
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Verifica se o utilizador já é um voluntário
+  // Verifica se o usuario já é um voluntário
   useEffect(() => {
     if (isAuthenticated && user) {
       setIsCheckingStatus(true);
@@ -62,7 +60,7 @@ export default function VoluntarioPage() {
 
       setSuccess('Candidatura enviada com sucesso! Entraremos em contacto em breve.');
       setMotivo('');
-      setVoluntarioStatus('pendente'); // Atualiza o status localmente
+      setVoluntarioStatus('pendente');
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao enviar a candidatura.';
       setSubmitError(errorMessage);
@@ -71,16 +69,15 @@ export default function VoluntarioPage() {
     }
   };
   
-  // Ecrã de carregamento enquanto verifica o status
   if (isCheckingStatus) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p>A verificar o seu estado...</p>
+        <p>Verificando seu estado...</p>
       </main>
     );
   }
 
-  // Se o utilizador não estiver logado
+  // Se não ta logado
   if (!isAuthenticated) {
     return (
         <main className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -95,7 +92,7 @@ export default function VoluntarioPage() {
     );
   }
 
-  // Se o utilizador já tem uma candidatura
+  // Se já tem uma candidatura
   if (voluntarioStatus) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -121,7 +118,6 @@ export default function VoluntarioPage() {
     );
   }
 
-  // Se o utilizador estiver logado e não tiver candidatura, mostra o formulário
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-xl shadow-lg">

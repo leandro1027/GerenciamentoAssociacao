@@ -1,7 +1,5 @@
-// components/common/Input.tsx
 import React from 'react';
 
-// Aceita todas as propriedades de um input HTML padrão
 type InputProps = React.ComponentProps<'input'>;
 
 const Input = (props: InputProps) => {

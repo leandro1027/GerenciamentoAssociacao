@@ -1,21 +1,18 @@
-// app/doacoes/page.tsx
 'use client';
 
 import { useState, FormEvent } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
 import Input from '../components/common/input';
-import { useAuth } from '../../context/AuthContext'; // Importa o hook de autenticação
+import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 import QRCode from 'qrcode';
 
 export default function DoacoesPage() {
-  const { user, isAuthenticated } = useAuth(); // Pega o utilizador logado
+  const { user, isAuthenticated } = useAuth();
 
-  // Estados do formulário
   const [valor, setValor] = useState<string>('');
 
-  // Estados de controlo do fluxo
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -55,7 +52,7 @@ export default function DoacoesPage() {
 
     try {
       await api.post('/doacao', {
-        usuarioId: user.id, // Usa o ID do utilizador logado
+        usuarioId: user.id,
         valor: parseFloat(valor),
         tipo: 'pix',
       });
@@ -63,7 +60,7 @@ export default function DoacoesPage() {
       setSuccess('Doação confirmada com sucesso! Muito obrigado pelo seu apoio.');
       setValor('');
       setQrCodeDataURL(null);
-    } catch (err: any) { // <-- O ERRO ESTAVA AQUI
+    } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao confirmar a doação.';
       setSubmitError(errorMessage);
     } finally {
@@ -71,7 +68,6 @@ export default function DoacoesPage() {
     }
   };
   
-  // Se o utilizador não estiver logado, mostra uma mensagem
   if (!isAuthenticated) {
     return (
         <main className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -127,7 +123,7 @@ export default function DoacoesPage() {
             <Button type="submit">Gerar QR Code PIX</Button>
           </form>
         ) : (
-          // Ecrã de confirmação com QR Code
+          //Confirmação QR Code
           <div className="flex flex-col items-center space-y-4">
             <h2 className="text-xl font-semibold text-gray-700">Escaneie para pagar</h2>
             <img src={qrCodeDataURL} alt="QR Code PIX" className="w-64 h-64 border-4 border-gray-300 rounded-lg" />

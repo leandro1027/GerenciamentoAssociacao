@@ -20,7 +20,7 @@ export default function AdminPanelPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Esta é a sua senha secreta. Num projeto real, isto seria inseguro.
+    // Senha de admin
     if (password === 'admin123') {
       setIsAuthenticated(true);
       setLoginError('');
@@ -30,7 +30,6 @@ export default function AdminPanelPage() {
   };
 
   useEffect(() => {
-    // Só busca os dados se o utilizador estiver autenticado
     if (!isAuthenticated) return;
 
     const fetchData = async () => {
@@ -51,7 +50,7 @@ export default function AdminPanelPage() {
     };
 
     fetchData();
-  }, [isAuthenticated]); // O efeito depende da autenticação
+  }, [isAuthenticated]);
 
   const handleUpdateStatus = async (voluntarioId: number, status: StatusVoluntario) => {
     try {
@@ -70,7 +69,6 @@ export default function AdminPanelPage() {
     }
   };
 
-  // Ecrã de Login Simulado
   if (!isAuthenticated) {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gray-200">
@@ -95,7 +93,7 @@ export default function AdminPanelPage() {
     );
   }
 
-  // Painel Administrativo (visível apenas após o login)
+  // Painel Administrativo
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
@@ -108,9 +106,9 @@ export default function AdminPanelPage() {
 
         {error && <div className="p-4 mb-6 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
         
-        {loading ? <p className="text-center">A carregar dados...</p> : (
+        {loading ? <p className="text-center">Carregando os dados...</p> : (
           <>
-            {/* Secção de Gestão de Voluntários */}
+            {/* Seção de Gestão de Voluntários */}
             <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gestão de Voluntários</h2>
               <div className="overflow-x-auto">
@@ -151,7 +149,7 @@ export default function AdminPanelPage() {
               </div>
             </section>
 
-            {/* Secção de Lista de Membros */}
+            {/* Seção de Lista de Membros */}
             <section className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Membros Registados</h2>
               <div className="overflow-x-auto">

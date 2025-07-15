@@ -82,7 +82,6 @@ export default function CadastroPage() {
               required
             />
           </div>
-          {/*senha*/}
           <div>
             <label htmlFor="senha" className="block mb-2 text-sm font-medium text-gray-600">
               Senha

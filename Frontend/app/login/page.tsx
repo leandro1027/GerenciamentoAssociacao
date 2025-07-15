@@ -20,7 +20,6 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      // O redirecionamento é tratado dentro da função de login no AuthContext
     } catch (err: any) {
       setError(err.message || 'Falha no login. Verifique as suas credenciais.');
       setIsLoading(false);
