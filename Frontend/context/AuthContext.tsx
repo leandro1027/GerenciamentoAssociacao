@@ -22,11 +22,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!email || !pass) throw new Error("Email e senha são obrigatórios.");
 
     try {
-      // Num projeto real, seria um POST para /auth/login
+      //Futuramente um POST para /auth/login
       const { data: users } = await api.get<Usuario[]>('/usuario');
       const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-      // Lógica de login atualizada para verificar a senha
       if (foundUser && foundUser.senha === pass) {
         setUser(foundUser);
         router.push('/');
