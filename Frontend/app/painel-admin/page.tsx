@@ -60,7 +60,6 @@ export default function AdminPanelPage() {
     }
   };
 
-  // NOVA FUNÇÃO PARA APAGAR UTILIZADOR
   const handleDeleteUser = async (userId: number) => {
     const userToDelete = usuarios.find(u => u.id === userId);
     if (!userToDelete) return;
