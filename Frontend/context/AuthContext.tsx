@@ -22,19 +22,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!email || !pass) throw new Error("Email e senha são obrigatórios.");
 
     try {
-      //Futuramente um POST para /auth/login
-      const { data: users } = await api.get<Usuario[]>('/usuario');
-      const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-      if (foundUser && foundUser.senha === pass) {
-        setUser(foundUser);
+      const response = await api.post<Usuario>('/auth/login', { email, senha: pass });
+      if (response.data) {
+        setUser(response.data);
         router.push('/');
       } else {
-        throw new Error('Email ou senha inválidos.');
+        throw new Error('Resposta inesperada da API.');
       }
-    } catch (error) {
-      console.error(error);
-      throw error;
+    } catch (error: any) {
+      console.error("Falha no login:", error);
+      throw new Error(error.response?.data?.message || 'Falha no login.');
     }
   };
 
@@ -43,12 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    login,
-    logout,
-  };
+  const value = { user, isAuthenticated: !!user, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

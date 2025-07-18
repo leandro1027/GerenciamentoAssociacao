@@ -1,3 +1,4 @@
+// app/login/page.tsx
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); 
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,6 +21,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      // O redirecionamento é tratado dentro do AuthContext
     } catch (err: any) {
       setError(err.message || 'Falha no login. Verifique as suas credenciais.');
       setIsLoading(false);
@@ -31,7 +33,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">
-            Acesse sua Conta
+            Aceder à sua Conta
           </h1>
           <p className="mt-2 text-gray-600">
             Bem-vindo de volta!
@@ -40,20 +42,20 @@ export default function LoginPage() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">
               E-mail
             </label>
             <Input
               id="email"
               type="email"
-              placeholder="seuemail@exemplo.com"
+              placeholder="o.seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">
               Senha
             </label>
             <Input

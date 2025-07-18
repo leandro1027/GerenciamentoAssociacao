@@ -1,3 +1,4 @@
+// app/cadastro/page.tsx
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -12,10 +13,9 @@ export default function CadastroPage() {
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState(''); 
+  const [senha, setSenha] = useState('');
   const [telefone, setTelefone] = useState('');
 
-  // Estados para feedback ao usuário
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -34,62 +34,62 @@ export default function CadastroPage() {
         telefone,
       });
 
-      setSuccess(`Usuário "${response.data.nome}" cadastrado com sucesso! Redirecionando...`);
+      setSuccess(`Utilizador "${response.data.nome}" registado com sucesso! A redirecionar...`);
       
       setTimeout(() => {
-        router.push('/login'); // Redireciona para login
+        router.push('/login');
       }, 2000);
 
     } catch (err: any) {
       const errorMessage =
-        err.response?.data?.message || 'Ocorreu um erro ao cadastrar.';
+        err.response?.data?.message || 'Ocorreu um erro ao registar.';
       setError(errorMessage);
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-50">
+    <main className="flex items-center justify-center min-h-screen bg-gray-50 py-12">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold text-center text-gray-800">
-          Crie sua Conta
+          Crie a sua Conta
         </h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="nome" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="nome" className="block mb-2 text-sm font-medium text-gray-700">
               Nome Completo
             </label>
             <Input
               id="nome"
               type="text"
-              placeholder="Seu nome completo"
+              placeholder="O seu nome completo"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required
             />
           </div>
           <div>
-            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">
               E-mail
             </label>
             <Input
               id="email"
               type="email"
-              placeholder="seuemail@exemplo.com"
+              placeholder="o.seu.email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div>
-            <label htmlFor="senha" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="senha" className="block mb-2 text-sm font-medium text-gray-700">
               Senha
             </label>
             <Input
               id="senha"
               type="password"
-              placeholder="********"
+              placeholder="Mínimo de 6 caracteres"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
@@ -97,7 +97,7 @@ export default function CadastroPage() {
             />
           </div>
           <div>
-            <label htmlFor="telefone" className="block mb-2 text-sm font-medium text-gray-600">
+            <label htmlFor="telefone" className="block mb-2 text-sm font-medium text-gray-700">
               Telefone (Opcional)
             </label>
             <Input
@@ -110,7 +110,7 @@ export default function CadastroPage() {
           </div>
           
           <Button type="submit" isLoading={isLoading}>
-            Cadastrar
+            Registar
           </Button>
         </form>
 
