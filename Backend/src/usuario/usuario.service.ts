@@ -3,31 +3,53 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsuarioService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createUsuarioDto: CreateUsuarioDto) {
-    return this.prisma.usuario.create({
-      data: createUsuarioDto,
+  async create(createUsuarioDto: CreateUsuarioDto) {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(createUsuarioDto.senha, salt);
+
+    const user = await this.prisma.usuario.create({
+      data: {
+        ...createUsuarioDto,
+        senha: hashedPassword,
+      },
+    });
+
+    const { senha, ...result } = user;
+    return result;
+  }
+
+  async findByEmail(email: string) {
+
+    return this.prisma.usuario.findFirst({
+      where: { email },
     });
   }
 
-  findAll() {
-    return this.prisma.usuario.findMany();
+  async findAll() {
+    const users = await this.prisma.usuario.findMany();
+    return users.map(user => {
+      const { senha, ...result } = user;
+      return result;
+    });
   }
 
   async findOne(id: number) {
-    const usuario = await this.prisma.usuario.findUnique({
+    const user = await this.prisma.usuario.findUnique({
       where: { id },
     });
 
-    if (!usuario) {
-      throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
+    if (!user) {
+      throw new NotFoundException(`Utilizador com ID ${id} não encontrado.`);
     }
 
-    return usuario;
+    const { senha, ...result } = user;
+    return result;
   }
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
