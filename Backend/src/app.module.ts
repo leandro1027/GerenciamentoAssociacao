@@ -6,6 +6,7 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { VoluntarioModule } from './voluntario/voluntario.module';
 import { DoacaoModule } from './doacao/doacao.module';
 import { AuthModule } from './auth/auth.module';
+import { SlideModule } from './slide/slide.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
     VoluntarioModule,
     DoacaoModule,
     AuthModule,
+    SlideModule,
   ],
   controllers: [AppController],
   providers: [AppService],

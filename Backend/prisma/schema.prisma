@@ -36,3 +36,12 @@ model Doacao {
   usuario    Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
+model Slide {
+  id        Int      @id @default(autoincrement())
+  imageUrl  String
+  title     String
+  subtitle  String?
+  createdAt DateTime @default(now())
+}
+
+

@@ -24,3 +24,11 @@ export interface Doacao {
   tipo: string;
   data: string;
 }
+
+export interface Slide {
+  id: number;
+  imageUrl: string;
+  title: string;
+  subtitle?: string;
+}
+
