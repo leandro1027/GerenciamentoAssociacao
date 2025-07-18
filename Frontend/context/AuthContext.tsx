@@ -1,4 +1,3 @@
-// frontend/context/AuthContext.tsx
 'use client';
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
@@ -10,7 +9,7 @@ import Cookies from 'js-cookie';
 interface AuthContextType {
   user: Usuario | null;
   isAuthenticated: boolean;
-  isLoading: boolean; // Adicionado para gerir o estado de carregamento inicial
+  isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
 }
