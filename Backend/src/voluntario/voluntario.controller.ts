@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus, UseGuards} from '@nestjs/common';
 import { VoluntarioService } from './voluntario.service';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('voluntario')
+@UseGuards(JwtAuthGuard)
 export class VoluntarioController {
   constructor(private readonly voluntarioService: VoluntarioService) {}
 

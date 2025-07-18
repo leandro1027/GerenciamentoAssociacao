@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus,UseGuards } from '@nestjs/common';
 import { DoacaoService } from './doacao.service';
 import { CreateDoacaoDto } from './dto/create-doacao.dto';
 import { UpdateDoacaoDto } from './dto/update-doacao.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('doacao')
+@UseGuards(JwtAuthGuard)
 export class DoacaoController {
   constructor(private readonly doacaoService: DoacaoService) {}
 
