@@ -13,6 +13,7 @@ model Usuario {
   nome     String
   email    String
   senha    String
+  role       String   @default("USER")
   telefone String?
   voluntario Voluntario?
   doacoes   Doacao[]

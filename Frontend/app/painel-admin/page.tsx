@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { Voluntario, Usuario, StatusVoluntario } from '../../types';
 import Link from 'next/link';
-import Input from '../components/common/input';
-import Button from '../components/common/button';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminPanelPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const { user, isAuthenticated } = useAuth();
 
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -18,38 +15,31 @@ export default function AdminPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      setLoginError('');
-    } else {
-      setLoginError('Senha incorreta.');
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [voluntariosRes, usuariosRes] = await Promise.all([
+        api.get<Voluntario[]>('/voluntario'),
+        api.get<Usuario[]>('/usuario')
+      ]);
+      setVoluntarios(voluntariosRes.data);
+      setUsuarios(usuariosRes.data);
+    } catch (err) {
+      setError('Falha ao carregar os dados do painel.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [voluntariosRes, usuariosRes] = await Promise.all([
-          api.get<Voluntario[]>('/voluntario'),
-          api.get<Usuario[]>('/usuario')
-        ]);
-        setVoluntarios(voluntariosRes.data);
-        setUsuarios(usuariosRes.data);
-      } catch (err) {
-        setError('Falha ao carregar os dados do painel.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [isAuthenticated]);
+    // Apenas busca os dados se o utilizador estiver logado E for um admin
+    if (isAuthenticated && user?.role === 'ADMIN') {
+      fetchData();
+    } else {
+      setLoading(false); // Para de carregar se o utilizador não for admin
+    }
+  }, [isAuthenticated, user]);
 
   const handleUpdateStatus = async (voluntarioId: number, status: StatusVoluntario) => {
     try {
@@ -57,24 +47,6 @@ export default function AdminPanelPage() {
       setVoluntarios(prev => prev.map(v => v.id === voluntarioId ? { ...v, status } : v));
     } catch (err) {
       alert('Erro ao atualizar o status.');
-    }
-  };
-
-  const handleDeleteUser = async (userId: number) => {
-    const userToDelete = usuarios.find(u => u.id === userId);
-    if (!userToDelete) return;
-
-    const confirmationMessage = `Tem a certeza de que deseja apagar o utilizador "${userToDelete.nome}"? Esta ação não pode ser desfeita.`;
-
-    if (window.confirm(confirmationMessage)) {
-      try {
-        await api.delete(`/usuario/${userId}`);
-        // Remove o utilizador da lista localmente para feedback imediato
-        setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== userId));
-      } catch (err) {
-        alert('Não foi possível apagar o utilizador. Verifique se ele não tem candidaturas de voluntário ou doações associadas.');
-        console.error(err);
-      }
     }
   };
 
@@ -86,46 +58,37 @@ export default function AdminPanelPage() {
     }
   };
 
-  if (!isAuthenticated) {
+  // Se o utilizador não estiver logado ou não for um admin, mostra acesso negado
+  if (!isAuthenticated || user?.role !== 'ADMIN') {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gray-200">
-        <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center text-gray-800">Acesso Restrito</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700">Senha de Administrador</label>
-              <Input 
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="********"
-              />
-            </div>
-            <Button type="submit">Entrar</Button>
-            {loginError && <p className="text-sm text-center text-red-600">{loginError}</p>}
-          </form>
+      <main className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-full max-w-md p-8 text-center bg-white rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
+          <p className="mt-2 text-gray-700">Você não tem permissão para acessar o painel Administrativo.</p>
+          <Link href="/" className="mt-6 inline-block text-blue-600 hover:underline">
+            Voltar à Página Inicial
+          </Link>
         </div>
       </main>
     );
   }
 
-  // Painel Administrativo
+  // Se for um admin, mostra o painel
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8 flex justify-between items-center">
           <h1 className="text-4xl font-bold text-gray-800">Painel Administrativo</h1>
-          <button onClick={() => setIsAuthenticated(false)} className="text-sm text-blue-600 hover:underline">
-            Sair
-          </button>
+          <Link href="/" className="text-sm text-blue-600 hover:underline">
+            Voltar à Página Inicial
+          </Link>
         </header>
 
         {error && <div className="p-4 mb-6 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
         
-        {loading ? <p className="text-center">Carregando os dados...</p> : (
+        {loading ? <p className="text-center">A carregar dados...</p> : (
           <>
-            {/* Seção de Gestão de Voluntários */}
+            {/* Secção de Gestão de Voluntários */}
             <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gestão de Voluntários</h2>
               <div className="overflow-x-auto">
@@ -166,7 +129,7 @@ export default function AdminPanelPage() {
               </div>
             </section>
 
-            {/* Seção de Lista de Membros */}
+            {/* Secção de Lista de Membros */}
             <section className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Membros Registados</h2>
               <div className="overflow-x-auto">
@@ -176,7 +139,6 @@ export default function AdminPanelPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ação</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -185,14 +147,6 @@ export default function AdminPanelPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
-                        <td className="px-6 py-4 text-center">
-                          <button //Obs: só sera possivel excluir um usuário se o mesmo não tiver outros registros, como cadastro de voluntário
-                            onClick={() => handleDeleteUser(user.id)} 
-                            className="text-red-600 hover:text-red-900 font-medium text-sm transition-colors"
-                          >
-                            Excluir
-                          </button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
