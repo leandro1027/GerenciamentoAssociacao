@@ -1,33 +1,73 @@
 'use client';
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Usuario } from '../types';
 import api from '@/app/services/api';
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: Usuario | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Função auxiliar para configurar o token no Axios
+const setAuthHeader = (token: string | null) => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Começa a carregar
   const router = useRouter();
 
-  const login = async (email: string, pass: string) => {
-    if (!email || !pass) throw new Error("Email e senha são obrigatórios.");
+  // Efeito para restaurar a sessão ao carregar a aplicação
+  useEffect(() => {
+    const loadUserFromCookies = async () => {
+      const token = Cookies.get('token');
+      if (token) {
+        try {
+          setAuthHeader(token);
+          const { data: userData } = await api.get<Usuario>('/auth/profile');
+          setUser(userData);
+        } catch (error) {
+          // Se o token for inválido, limpa tudo
+          Cookies.remove('token');
+          setAuthHeader(null);
+          setUser(null);
+        }
+      }
+      setIsLoading(false);
+    };
 
+    loadUserFromCookies();
+  }, []);
+
+  const login = async (email: string, pass: string) => {
     try {
-      const response = await api.post<Usuario>('/auth/login', { email, senha: pass });
-      if (response.data) {
-        setUser(response.data);
+      const response = await api.post<{ access_token: string }>('/auth/login', { email, senha: pass });
+      const { access_token } = response.data;
+
+      if (access_token) {
+        Cookies.set('token', access_token, { expires: 1/24, secure: process.env.NODE_ENV === 'production' });
+        setAuthHeader(access_token);
+        
+        // Após o login, busca os dados do perfil para preencher o estado
+        const { data: userData } = await api.get<Usuario>('/auth/profile');
+        setUser(userData);
+
         router.push('/');
       } else {
-        throw new Error('Resposta inesperada da API.');
+        throw new Error('Token não recebido.');
       }
     } catch (error: any) {
       console.error("Falha no login:", error);
@@ -36,11 +76,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    Cookies.remove('token');
+    setAuthHeader(null);
     setUser(null);
     router.push('/login');
   };
 
-  const value = { user, isAuthenticated: !!user, login, logout };
+  const value = { user, isAuthenticated: !!user, isLoading, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
