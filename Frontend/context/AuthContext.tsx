@@ -1,3 +1,4 @@
+// frontend/context/AuthContext.tsx
 'use client';
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
@@ -9,14 +10,15 @@ import Cookies from 'js-cookie';
 interface AuthContextType {
   user: Usuario | null;
   isAuthenticated: boolean;
+  isLoading: boolean; // Adicionado para gerir o estado de carregamento inicial
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Função para configurar o token no Axios
-const setAuthToken = (token: string | null) => {
+// Função auxiliar para configurar o token no Axios
+const setAuthHeader = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
@@ -26,18 +28,29 @@ const setAuthToken = (token: string | null) => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Começa a carregar
   const router = useRouter();
 
-  // Tenta carregar o utilizador a partir do token ao iniciar
+  // Efeito para restaurar a sessão ao carregar a aplicação
   useEffect(() => {
-    const token = Cookies.get('token');
-    if (token) {
-      setAuthToken(token);
-      // Aqui, num projeto real, você faria um pedido a um endpoint /me
-      // para obter os dados do utilizador a partir do token.
-      // Para simplificar, vamos apenas assumir que o token é válido.
-      // A lógica de login irá definir o utilizador.
-    }
+    const loadUserFromCookies = async () => {
+      const token = Cookies.get('token');
+      if (token) {
+        try {
+          setAuthHeader(token);
+          const { data: userData } = await api.get<Usuario>('/auth/profile');
+          setUser(userData);
+        } catch (error) {
+          // Se o token for inválido, limpa tudo
+          Cookies.remove('token');
+          setAuthHeader(null);
+          setUser(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    loadUserFromCookies();
   }, []);
 
   const login = async (email: string, pass: string) => {
@@ -46,15 +59,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { access_token } = response.data;
 
       if (access_token) {
-        Cookies.set('token', access_token, { expires: 1/24 }); // Expira em 1 hora
-        setAuthToken(access_token);
+        Cookies.set('token', access_token, { expires: 1/24, secure: process.env.NODE_ENV === 'production' });
+        setAuthHeader(access_token);
         
-        // Vamos buscar os dados do utilizador após o login
-        // (Isto requer um novo endpoint protegido no back-end)
-        // Por agora, vamos simular:
-        const usersResponse = await api.get<Usuario[]>('/usuario');
-        const loggedUser = usersResponse.data.find(u => u.email === email);
-        if (loggedUser) setUser(loggedUser);
+        // Após o login, busca os dados do perfil para preencher o estado
+        const { data: userData } = await api.get<Usuario>('/auth/profile');
+        setUser(userData);
 
         router.push('/');
       } else {
@@ -68,12 +78,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     Cookies.remove('token');
-    setAuthToken(null);
+    setAuthHeader(null);
     setUser(null);
     router.push('/login');
   };
 
-  const value = { user, isAuthenticated: !!user, login, logout };
+  const value = { user, isAuthenticated: !!user, isLoading, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
