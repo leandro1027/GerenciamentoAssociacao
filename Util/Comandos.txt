@@ -11,10 +11,23 @@ https://docs.nestjs.com/techniques/validation
 //Partial-types
 npm install @nestjs/mapped-types
 
+//Prisma:
+npm install prisma --save-dev
+
+//Biblioteca para hashing de senhas
+npm install bcrypt
+
+//Tipos de desenvolvimento para o bcrypt
+npm install @types/bcrypt --save-dev
+
+//Pacotes padrão do NestJS para autenticação
+npm install @nestjs/passport passport passport-local @nestjs/jwt
+
+//Tipos de desenvolvimento para o passport
+npm install @types/passport-local --save-dev
+
 Frontend:
 npx create-next-app@latest
 npm install qrcode
 npm install @types/qrcode --save-dev
 
-Prisma:
-npm install prisma --save-dev
