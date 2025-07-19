@@ -1,4 +1,3 @@
-// app/cadastro/page.tsx
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -7,24 +6,21 @@ import api from '../services/api';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 import { Usuario } from '../../types';
+import toast from 'react-hot-toast'; 
 
 export default function CadastroPage() {
   const router = useRouter();
 
+  // Estados para controlar os campos do formulário
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [telefone, setTelefone] = useState('');
-
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
+  
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const response = await api.post<Usuario>('/usuario', {
@@ -34,16 +30,16 @@ export default function CadastroPage() {
         telefone,
       });
 
-      setSuccess(`Utilizador "${response.data.nome}" registado com sucesso! A redirecionar...`);
+      toast.success(`Utilizador "${response.data.nome}" registado com sucesso!`);
       
       setTimeout(() => {
         router.push('/login');
       }, 2000);
 
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || 'Ocorreu um erro ao registar.';
-      setError(errorMessage);
+      const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao registar.';
+      // Exibe uma notificação de erro
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };
@@ -113,17 +109,6 @@ export default function CadastroPage() {
             Registar
           </Button>
         </form>
-
-        {success && (
-          <div className="p-4 text-center text-green-800 bg-green-100 rounded-lg">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">
-            {error}
-          </div>
-        )}
       </div>
     </main>
   );
