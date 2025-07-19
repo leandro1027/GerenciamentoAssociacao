@@ -15,7 +15,7 @@ const Navbar = () => {
             <Link href="/" className="flex items-center">
               <Image
                 src="/logo.png" 
-                alt="Logótipo da Associação"
+                alt="Logótipo Associação"
                 width={120}
                 height={40}
                 priority
