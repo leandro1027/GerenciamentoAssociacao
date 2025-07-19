@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
+
 // Tipo para controlar a vista ativa no painel
 type AdminView = 'slides' | 'voluntarios' | 'membros';
 
@@ -117,7 +118,7 @@ export default function AdminPanelPage() {
 
   // Componente para a Sidebar
   const Sidebar = () => (
-    <aside className={`bg-stone-800 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
+    <aside className={`bg-stone-800 text-white flex flex-col flex-shrink-0 transition-all duration-500 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
         <div className="mb-8">
             <h2 className="text-2xl font-bold">Cadastro</h2>
         </div>
@@ -151,7 +152,7 @@ export default function AdminPanelPage() {
             <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
         </header>
         <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
-            {loading && <p>A carregar dados...</p>}
+            {loading && <p>Carregando dados...</p>}
             {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
             
             {!loading && !error && (
