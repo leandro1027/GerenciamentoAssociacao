@@ -75,7 +75,7 @@ export default function AdminPanelPage() {
   };
 
   const handleDeleteSlide = async (id: number) => {
-    if (window.confirm('Tem a certeza?')) {
+    if (window.confirm('Tem certeza que deseja remover o slide? Essa ação não podera ser desfeita!')) {
       try {
         await api.delete(`/slide/${id}`);
         setSlides(slides.filter(slide => slide.id !== id));
