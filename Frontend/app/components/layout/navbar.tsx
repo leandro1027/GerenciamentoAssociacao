@@ -16,14 +16,14 @@ const Navbar = () => {
               <Image
                 src="/logo.png" 
                 alt="Logótipo da Associação"
-                width={120} 
+                width={120}
                 height={40}
-                priority 
+                priority
               />
             </Link>
           </div>
 
-          {/* Links de Navegação pc */}
+          {/* Links de Navegação (Desktop) */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/voluntario" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
@@ -32,16 +32,20 @@ const Navbar = () => {
               <Link href="/doacoes" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Faça uma Doação
               </Link>
-              <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Painel Admin
-              </Link>
+              
+              {/* O link para o Painel Admin só aparece se o utilizador for um ADMIN */}
+              {isAuthenticated && user?.role === 'ADMIN' && (
+                <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Painel Admin
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* Botões de Ação Login/Logout */}
+          {/* Botões de Ação (Login/Logout) */}
           <div className="hidden md:flex items-center">
             {isAuthenticated ? (
-              // Usuario logado?
+              // Mostra se o utilizador está logado
               <>
                 <span className="text-gray-800 text-sm mr-4">
                   Olá, <span className="font-semibold">{user?.nome}</span>
@@ -54,7 +58,7 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              // Mostra se o Usuario não está logado
+              // Mostra se o utilizador não está logado
               <>
                 <Link href="/login" className="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Login
@@ -66,7 +70,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Menu Mobile*/}
+          {/* Menu Mobile (simples) */}
           <div className="md:hidden">
              <Link href="/login" className="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
               {isAuthenticated ? 'Menu' : 'Login'}
