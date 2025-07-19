@@ -17,7 +17,6 @@ export default function HomePage() {
                 Junte-se a nós e faça a diferença!
               </p>
             </header>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link
                 href="/cadastro"
