@@ -8,10 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 
-// TIPO PARA CONTROLAR A VISTA ATIVA
 type AdminView = 'slides' | 'voluntarios' | 'membros';
 
-// --- COMPONENTES FILHOS ---
 
 // 1. COMPONENTE PARA GERIR SLIDES
 const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
