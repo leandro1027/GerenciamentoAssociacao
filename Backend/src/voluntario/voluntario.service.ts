@@ -6,8 +6,7 @@ import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class VoluntarioService {
-  constructor(private readonly prisma:PrismaService
-  ) {}
+  constructor(private readonly prisma:PrismaService) {}
 
   create(createVoluntarioDto: CreateVoluntarioDto) {
     return this.prisma.voluntario.create({

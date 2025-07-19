@@ -9,13 +9,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  // A rota de registo (POST) é PÚBLICA. Não tem @UseGuards.
   @Post()
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
   }
 
-  // As rotas abaixo são PROTEGIDAS. Elas exigem um token JWT válido.
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
