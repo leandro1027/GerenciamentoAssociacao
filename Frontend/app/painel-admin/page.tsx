@@ -2,29 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
+import Input from '../components/common/input';
+import Button from '../components/common/button';
 
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
 
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [slides, setSlides] = useState<Slide[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Estados para o formulário de slides
+  const [slideTitle, setSlideTitle] = useState('');
+  const [slideSubtitle, setSlideSubtitle] = useState('');
+  const [slideFile, setSlideFile] = useState<File | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [voluntariosRes, usuariosRes] = await Promise.all([
+      const [voluntariosRes, usuariosRes, slidesRes] = await Promise.all([
         api.get<Voluntario[]>('/voluntario'),
-        api.get<Usuario[]>('/usuario')
+        api.get<Usuario[]>('/usuario'),
+        api.get<Slide[]>('/slide'),
       ]);
       setVoluntarios(voluntariosRes.data);
       setUsuarios(usuariosRes.data);
+      setSlides(slidesRes.data);
     } catch (err) {
       setError('Falha ao carregar os dados do painel.');
     } finally {
@@ -33,11 +43,10 @@ export default function AdminPanelPage() {
   };
 
   useEffect(() => {
-    // Apenas busca os dados se o utilizador estiver logado E for um admin
     if (isAuthenticated && user?.role === 'ADMIN') {
       fetchData();
     } else {
-      setLoading(false); // Para de carregar se o utilizador não for admin
+      setLoading(false);
     }
   }, [isAuthenticated, user]);
 
@@ -50,6 +59,46 @@ export default function AdminPanelPage() {
     }
   };
 
+  const handleCreateSlide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slideFile) {
+      alert('Por favor, selecione uma imagem.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', slideFile);
+    formData.append('title', slideTitle);
+    formData.append('subtitle', slideSubtitle);
+
+    try {
+      const response = await api.post<Slide>('/slide', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setSlides([response.data, ...slides]);
+      setSlideTitle('');
+      setSlideSubtitle('');
+      setSlideFile(null);
+      const fileInput = document.getElementById('slide-file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    } catch (error) {
+      alert('Erro ao criar o slide.');
+    }
+  };
+
+  const handleDeleteSlide = async (id: number) => {
+    if (window.confirm('Tem a certeza de que deseja apagar este slide?')) {
+      try {
+        await api.delete(`/slide/${id}`);
+        setSlides(slides.filter(slide => slide.id !== id));
+      } catch (error) {
+        alert('Erro ao apagar o slide.');
+      }
+    }
+  };
+
   const getStatusClass = (status: StatusVoluntario) => {
     switch (status) {
       case 'aprovado': return 'bg-green-100 text-green-800';
@@ -58,13 +107,12 @@ export default function AdminPanelPage() {
     }
   };
 
-  // Se o utilizador não estiver logado ou não for um admin, mostra acesso negado
   if (!isAuthenticated || user?.role !== 'ADMIN') {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-md p-8 text-center bg-white rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
-          <p className="mt-2 text-gray-700">Você não tem permissão para acessar o painel Administrativo.</p>
+          <p className="mt-2 text-gray-700">Você não tem permissão para aceder a esta página.</p>
           <Link href="/" className="mt-6 inline-block text-blue-600 hover:underline">
             Voltar à Página Inicial
           </Link>
@@ -73,7 +121,6 @@ export default function AdminPanelPage() {
     );
   }
 
-  // Se for um admin, mostra o painel
   return (
     <main className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
@@ -88,7 +135,48 @@ export default function AdminPanelPage() {
         
         {loading ? <p className="text-center">A carregar dados...</p> : (
           <>
-            {/* Secção de Gestão de Voluntários */}
+            <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gestão do Carrossel</h2>
+              <form onSubmit={handleCreateSlide} className="mb-6 p-4 border rounded-lg space-y-3 bg-gray-50">
+                <h3 className="font-semibold text-gray-800">Adicionar Novo Slide</h3>
+                <Input value={slideTitle} onChange={e => setSlideTitle(e.target.value)} placeholder="Título do Slide" required />
+                <Input value={slideSubtitle} onChange={e => setSlideSubtitle(e.target.value)} placeholder="Subtítulo (opcional)" />
+                <div>
+                  <label htmlFor="slide-file-input" className="block mb-2 text-sm font-medium text-gray-700">Imagem do Slide</label>
+                  <input
+                    id="slide-file-input"
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        setSlideFile(e.target.files[0]);
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    required
+                  />
+                </div>
+                <Button type="submit">Adicionar Slide</Button>
+              </form>
+              <div>
+                <h3 className="font-semibold mb-2 text-gray-800">Slides Atuais</h3>
+                <div className="space-y-2">
+                  {slides.map(slide => (
+                    <div key={slide.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
+                      <div className="flex items-center space-x-4">
+                        <img src={`http://localhost:3001${slide.imageUrl}`} alt={slide.title} className="w-20 h-12 object-cover rounded-md" />
+                        <div>
+                          <p className="font-semibold text-gray-900">{slide.title}</p>
+                          <p className="text-sm text-gray-500">{slide.subtitle}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => handleDeleteSlide(slide.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             <section className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Gestão de Voluntários</h2>
               <div className="overflow-x-auto">
@@ -129,7 +217,6 @@ export default function AdminPanelPage() {
               </div>
             </section>
 
-            {/* Secção de Lista de Membros */}
             <section className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">Membros Registados</h2>
               <div className="overflow-x-auto">

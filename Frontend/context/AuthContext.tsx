@@ -16,7 +16,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Função auxiliar para configurar o token no Axios
 const setAuthHeader = (token: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -27,10 +26,9 @@ const setAuthHeader = (token: string | null) => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Começa a carregar
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Efeito para restaurar a sessão ao carregar a aplicação
   useEffect(() => {
     const loadUserFromCookies = async () => {
       const token = Cookies.get('token');
@@ -40,7 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const { data: userData } = await api.get<Usuario>('/auth/profile');
           setUser(userData);
         } catch (error) {
-          // Se o token for inválido, limpa tudo
           Cookies.remove('token');
           setAuthHeader(null);
           setUser(null);
@@ -48,7 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsLoading(false);
     };
-
     loadUserFromCookies();
   }, []);
 
@@ -58,10 +54,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { access_token } = response.data;
 
       if (access_token) {
-        Cookies.set('token', access_token, { expires: 1/24, secure: process.env.NODE_ENV === 'production' });
+        Cookies.set('token', access_token, { expires: 1 / 24 });
         setAuthHeader(access_token);
         
-        // Após o login, busca os dados do perfil para preencher o estado
         const { data: userData } = await api.get<Usuario>('/auth/profile');
         setUser(userData);
 
