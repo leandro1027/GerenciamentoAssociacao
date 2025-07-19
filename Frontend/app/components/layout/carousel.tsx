@@ -10,7 +10,8 @@ const SlideGallery = () => {
   useEffect(() => {
     api.get<Slide[]>('/slide')
       .then(response => {
-        setSlides(response.data);
+        // Limita a quantidade de slides
+        setSlides(response.data.slice(0, 2));
       })
       .catch(error => console.error("[SlideGallery] ERRO ao buscar slides:", error));
   }, []);
@@ -22,15 +23,16 @@ const SlideGallery = () => {
   const apiBaseUrl = api.defaults.baseURL;
 
   return (
-    <div className="w-full">
-      {/* A grelha agora não tem espaçamento para criar um efeito de faixa contínua */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+
+    <div className="w-full bg-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {slides.map((slide) => (
-          <div key={slide.id} className="overflow-hidden group">
+          // Altura fixa aqui para controlar o tamanho da imagem
+          <div key={slide.id} className="overflow-hidden group h-80"> {/* Altura de 320px */}
             <img 
               src={`${apiBaseUrl}${slide.imageUrl}`} 
               alt={slide.title} 
-              className="w-full h-full object-cover aspect-video transform group-hover:scale-105 transition-transform duration-500" 
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" 
             />
           </div>
         ))}
