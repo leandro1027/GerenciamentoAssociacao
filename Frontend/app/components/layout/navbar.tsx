@@ -3,8 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image'; 
 import { useAuth } from '@/context/AuthContext';
+import { usePathname } from 'next/navigation';
+
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const pathname = usePathname(); // 2. Obtenha o URL atual
+
+  // 3. Se a página for '/painel-admin', o componente não renderiza nada
+  if (pathname === '/painel-admin') {
+    return null;
+  }
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
