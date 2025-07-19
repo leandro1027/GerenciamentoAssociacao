@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from 'next/image'; 
 import { useAuth } from '@/context/AuthContext';
-
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
 
@@ -14,10 +13,10 @@ const Navbar = () => {
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
               <Image
-                src="/logo.png" 
-                alt="Logótipo Associação"
-                width={120}
-                height={40}
+                src="/logo.png"
+                alt="Logótipo da Associação"
+                width={60}  // Largura 
+                height={60} // Altura
                 priority
               />
             </Link>
@@ -33,7 +32,6 @@ const Navbar = () => {
                 Faça uma Doação
               </Link>
               
-              {/* O link para o Painel Admin só aparece se o utilizador for um ADMIN */}
               {isAuthenticated && user?.role === 'ADMIN' && (
                 <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Painel Admin
@@ -45,7 +43,6 @@ const Navbar = () => {
           {/* Botões de Ação (Login/Logout) */}
           <div className="hidden md:flex items-center">
             {isAuthenticated ? (
-              // Mostra se o utilizador está logado
               <>
                 <span className="text-gray-800 text-sm mr-4">
                   Olá, <span className="font-semibold">{user?.nome}</span>
@@ -58,7 +55,6 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              // Mostra se o utilizador não está logado
               <>
                 <Link href="/login" className="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Login
