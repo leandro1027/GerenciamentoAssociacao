@@ -1,13 +1,27 @@
+// components/common/Input.tsx
 import React from 'react';
 
-type InputProps = React.ComponentProps<'input'>;
+type InputProps = React.ComponentProps<'input'> & {
+  icon?: React.ReactNode;
+  onIconClick?: () => void;
+};
 
-const Input = (props: InputProps) => {
+const Input = ({ icon, onIconClick, ...props }: InputProps) => {
   return (
-    <input
-      {...props}
-      className={`w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-colors duration-200 placeholder:text-gray-300 ${props.className}`}
-    />
+    <div className="relative w-full">
+      <input
+        {...props}
+        className={`w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-colors duration-200 placeholder:text-gray-350 text-gray-800 font-semibold ${icon ? 'pr-10' : ''} ${props.className}`}
+      />
+      {icon && (
+        <div 
+          className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+          onClick={onIconClick}
+        >
+          {icon}
+        </div>
+      )}
+    </div>
   );
 };
 
