@@ -23,6 +23,7 @@ export interface Doacao {
   valor: number;
   tipo: string;
   data: string;
+  usuario?: Usuario;
 }
 
 export interface Slide {

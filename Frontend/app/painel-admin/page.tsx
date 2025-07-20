@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 
-type AdminView = 'slides' | 'voluntarios' | 'membros';
+// TIPO PARA CONTROLAR A VISTA ATIVA
+type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes';
 
+// --- COMPONENTES FILHOS ---
 
 // 1. COMPONENTE PARA GERIR SLIDES
 const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
@@ -135,6 +137,12 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
                                                 <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
                                             </>
                                         )}
+                                        {voluntario.status === 'aprovado' && (
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Alterar para Recusado</button>
+                                        )}
+                                        {voluntario.status === 'recusado' && (
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Alterar para Aprovado</button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -145,6 +153,136 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
         </section>
     );
 };
+
+// 3. COMPONENTE PARA GERIR MEMBROS
+const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
+    const [usuarios, setUsuarios] = useState(initialUsers);
+    const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+
+    const handleDelete = async (userId: number) => {
+        if (window.confirm('Tem a certeza de que deseja apagar este membro?')) {
+            try {
+                await api.delete(`/usuario/${userId}`);
+                setUsuarios(usuarios.filter(u => u.id !== userId));
+            } catch (error) {
+                alert('Erro ao apagar o membro.');
+            }
+        }
+    };
+
+    const handleEdit = (user: Usuario) => {
+        setEditingUser({ ...user });
+    };
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingUser) return;
+        try {
+            const { id, nome, email, telefone } = editingUser;
+            const response = await api.patch(`/usuario/${id}`, { nome, email, telefone });
+            setUsuarios(usuarios.map(u => u.id === id ? response.data : u));
+            setEditingUser(null);
+        } catch (error) {
+            alert('Erro ao atualizar o membro.');
+        }
+    };
+
+    return (
+        <section>
+            <div className="bg-white rounded-xl shadow p-6">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {usuarios.map(user => (
+                                <tr key={user.id}>
+                                    {editingUser?.id === user.id ? (
+                                        <>
+                                            <td className="px-6 py-4"><Input value={editingUser.nome} onChange={e => setEditingUser({...editingUser, nome: e.target.value})} /></td>
+                                            <td className="px-6 py-4"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
+                                            <td className="px-6 py-4"><Input value={editingUser.telefone} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
+                                            <td className="px-6 py-4 text-center space-x-2">
+                                                <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
+                                                <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
+                                            </td>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
+                                                <button onClick={() => handleEdit(user)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
+                                                <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                                            </td>
+                                        </>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+// 4. NOVO COMPONENTE PARA LISTAR DOAÇÕES
+const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) => {
+    
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+        }).format(value);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        });
+    };
+
+    return (
+        <section>
+            <div className="bg-white rounded-xl shadow p-6">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doador</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {initialDonations.map(doacao => (
+                                <tr key={doacao.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">{doacao.usuario?.nome || 'Utilizador não encontrado'}</div>
+                                        <div className="text-sm text-gray-500">{doacao.usuario?.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{formatCurrency(doacao.valor)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(doacao.data)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 
@@ -157,6 +295,7 @@ export default function AdminPanelPage() {
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [doacoes, setDoacoes] = useState<Doacao[]>([]); // Estado para doações
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,14 +306,16 @@ export default function AdminPanelPage() {
         setLoading(true);
         setError(null);
         try {
-          const [voluntariosRes, usuariosRes, slidesRes] = await Promise.all([
+          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes] = await Promise.all([
             api.get<Voluntario[]>('/voluntario'),
             api.get<Usuario[]>('/usuario'),
             api.get<Slide[]>('/slide'),
+            api.get<Doacao[]>('/doacao'), // Busca as doações
           ]);
           setVoluntarios(voluntariosRes.data);
           setUsuarios(usuariosRes.data);
           setSlides(slidesRes.data);
+          setDoacoes(doacoesRes.data); // Guarda as doações no estado
         } catch (err) {
           setError('Falha ao carregar os dados do painel.');
         } finally {
@@ -208,6 +349,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Listar/Cadastrar Slides</button>
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Listar Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Listar Membros</button>
+            <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Listar Doações</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -218,6 +360,7 @@ export default function AdminPanelPage() {
       slides: 'Gestão do Carrossel',
       voluntarios: 'Gestão de Voluntários',
       membros: 'Membros Registados',
+      doacoes: 'Histórico de Doações',
     };
 
     return (
@@ -236,32 +379,8 @@ export default function AdminPanelPage() {
                 <>
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
-                    {activeView === 'membros' && (
-                        <section>
-                            <div className="bg-white rounded-xl shadow p-6">
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {usuarios.map(user => (
-                                                <tr key={user.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </section>
-                    )}
+                    {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
+                    {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
                 </>
             )}
         </div>
