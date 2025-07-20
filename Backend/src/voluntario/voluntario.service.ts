@@ -14,19 +14,26 @@ export class VoluntarioService {
     });
   }
 
+
   findAll() {
-    return this.prisma.voluntario.findMany();
+    return this.prisma.voluntario.findMany({
+      include: {
+        usuario: true, 
+      },
+    });
   }
 
   async findOne(id: number) {
     const voluntario = await this.prisma.voluntario.findUnique({
-      where: {id},
+      where: { id },
+      include: {
+        usuario: true, 
+      },
     });
 
-    if(!voluntario){
-      throw new NotFoundException(`Voluntário com id ${id} não encontrado.`);
+    if (!voluntario) {
+      throw new NotFoundException(`Candidatura de voluntário com ID ${id} não encontrada.`);
     }
-
     return voluntario;
   }
 
