@@ -109,7 +109,7 @@ export default function DoacoesPage() {
               <label htmlFor="valor" className="block mb-2 text-sm font-medium text-gray-600">
                 Valor da Doação (R$)
               </label>
-              <Input
+              <Input 
                 id="valor"
                 type="number"
                 step="0.01"
