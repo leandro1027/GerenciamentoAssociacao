@@ -17,6 +17,8 @@ model Usuario {
   telefone String?
   voluntario Voluntario?
   doacoes   Doacao[]
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
 }
 
 model Voluntario {

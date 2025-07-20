@@ -26,6 +26,10 @@ npm install @nestjs/passport passport passport-local @nestjs/jwt
 //Tipos de desenvolvimento para o passport
 npm install @types/passport-local --save-dev
 
+// E-mail
+npm install nodemailer
+npm install @types/nodemailer --save-dev
+
 Frontend:
 npx create-next-app@latest
 npm install qrcode
