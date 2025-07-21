@@ -6,6 +6,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private usuarioService: UsuarioService,
     private jwtService: JwtService,
     private prisma: PrismaService,
+    private configService: ConfigService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -42,15 +44,15 @@ export class AuthService {
     const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await this.prisma.usuario.update({
-      where: { id: user.id }, // CORRIGIDO: Usa o ID do utilizador em vez do e-mail
+      where: { id: user.id },
       data: { passwordResetToken, passwordResetExpires },
     });
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'leandrobalaban78@gmail.com',
-        pass: 'mkjk eeid axep yztt',
+        user: this.configService.get<string>('EMAIL_USER'),
+        pass: this.configService.get<string>('EMAIL_PASS'),
       },
     });
 

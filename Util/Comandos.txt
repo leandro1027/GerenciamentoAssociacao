@@ -30,6 +30,10 @@ npm install @types/passport-local --save-dev
 npm install nodemailer
 npm install @types/nodemailer --save-dev
 
+//segurança no back
+npm install @nestjs/config
+
+
 Frontend:
 npx create-next-app@latest
 npm install qrcode
