@@ -10,15 +10,12 @@ import QRCode from 'qrcode';
 
 export default function DoacoesPage() {
   const { user, isAuthenticated } = useAuth();
-
   const [valor, setValor] = useState<string>('');
-
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Gera o QR Code
   const handleGenerateQRCode = (event: FormEvent) => {
     event.preventDefault();
     if (!valor) {
@@ -39,7 +36,6 @@ export default function DoacoesPage() {
       });
   };
 
-  // Confirma a doação e envia para o back-end
   const handleConfirmDonation = async () => {
     if (!user) {
         setSubmitError('Utilizador não autenticado.');
@@ -68,17 +64,38 @@ export default function DoacoesPage() {
     }
   };
   
+  // Se o utilizador não estiver logado, mostra a mensagem - CÓDIGO ATUALIZADO
   if (!isAuthenticated) {
     return (
-        <main className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="w-full max-w-lg p-8 text-center bg-white rounded-xl shadow-lg">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Acesso Necessário</h2>
-                <p className="text-gray-600 mb-6">Você precisa de estar logado para fazer uma doação.</p>
-                <Link href="/login" className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                    Ir para a página de Login
-                </Link>
-            </div>
-        </main>
+      <main className="flex items-center justify-center min-h-screen bg-slate-100 p-4">
+        <div className="w-full max-w-md p-8 text-center bg-white rounded-2xl shadow-xl space-y-6">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100">
+            <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-3xl font-extrabold text-slate-900">Acesso Restrito</h2>
+            <p className="mt-2 text-slate-600">
+              Você precisa estar logado para fazer uma doação.
+            </p>
+          </div>
+          <div className="flex flex-col items-center space-y-4 pt-4">
+            <Link 
+              href="/login" 
+              className="w-full px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+            >
+              Ir para a página de Login
+            </Link>
+            <Link 
+              href="/" 
+              className="text-sm font-medium text-slate-500 hover:text-slate-700 hover:underline transition-colors"
+            >
+              Voltar à Página Inicial
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -98,7 +115,7 @@ export default function DoacoesPage() {
           // Formulário para gerar o QR Code
           <form onSubmit={handleGenerateQRCode} className="space-y-5">
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-600">
+              <label className="block mb-2 text-sm font-medium text-gray-700">
                 Doando como:
               </label>
               <div className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-lg">
@@ -106,10 +123,10 @@ export default function DoacoesPage() {
               </div>
             </div>
             <div>
-              <label htmlFor="valor" className="block mb-2 text-sm font-medium text-gray-600">
+              <label htmlFor="valor" className="block mb-2 text-sm font-medium text-gray-700">
                 Valor da Doação (R$)
               </label>
-              <Input 
+              <Input
                 id="valor"
                 type="number"
                 step="0.01"
@@ -123,7 +140,7 @@ export default function DoacoesPage() {
             <Button type="submit">Gerar QR Code PIX</Button>
           </form>
         ) : (
-          //Confirmação QR Code
+          // Ecrã de confirmação com QR Code
           <div className="flex flex-col items-center space-y-4">
             <h2 className="text-xl font-semibold text-gray-700">Escaneie para pagar</h2>
             <img src={qrCodeDataURL} alt="QR Code PIX" className="w-64 h-64 border-4 border-gray-300 rounded-lg" />

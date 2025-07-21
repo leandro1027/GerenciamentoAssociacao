@@ -59,7 +59,6 @@ export default function CadastroPage() {
             <Input
               id="nome"
               type="text"
-              placeholder="O seu nome completo"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               required
@@ -72,7 +71,6 @@ export default function CadastroPage() {
             <Input
               id="email"
               type="email"
-              placeholder="email@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -85,7 +83,7 @@ export default function CadastroPage() {
             <Input
               id="senha"
               type="password"
-              placeholder="Mínimo de 6 caracteres"
+              placeholder="******"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
@@ -99,7 +97,6 @@ export default function CadastroPage() {
             <Input
               id="telefone"
               type="tel"
-              placeholder="(99) 99999-9999"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
             />
