@@ -26,15 +26,40 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-gray-800">Redefinir Senha</h1>
-        <p className="text-center text-gray-600">Insira o seu e-mail e enviaremos um link para redefinir a sua senha.</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="O seu e-mail" required />
-          <Button type="submit" isLoading={isLoading}>Enviar Link</Button>
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-lg">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H5v-2H3v-2H1v-4a6 6 0 016-6h4a6 6 0 016 6z"></path>
+            </svg>
+          </div>
+          <h1 className="mt-4 text-3xl font-bold text-center text-gray-800">
+            Esqueceu a sua senha?
+          </h1>
+          <p className="mt-2 text-center text-gray-600">
+            Sem problemas. Insira o seu e-mail e enviaremos um link para redefinir a sua senha.
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">Endereço de e-mail</label>
+            <Input 
+              id="email"
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="email@exemplo.com" 
+              required 
+            />
+          </div>
+          <Button type="submit" isLoading={isLoading}>
+            Enviar Link de Recuperação
+          </Button>
         </form>
         <div className="text-center">
-            <Link href="/login" className="text-sm text-blue-600 hover:underline">Voltar para o Login</Link>
+            <Link href="/login" className="text-sm font-medium text-blue-600 hover:underline">
+                Voltar para o Login
+            </Link>
         </div>
       </div>
     </main>
