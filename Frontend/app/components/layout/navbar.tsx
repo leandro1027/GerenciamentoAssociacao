@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; 
 import { useAuth } from '@/context/AuthContext';
@@ -7,9 +8,21 @@ import { usePathname } from 'next/navigation';
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const pathname = usePathname(); // 2. Obtenha o URL atual
+  const pathname = usePathname();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 3. Se a página for '/painel-admin', o componente não renderiza nada
+  // Fecha o dropdown se clicar fora dele
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownRef]);
+
   if (pathname === '/painel-admin') {
     return null;
   }
@@ -20,61 +33,42 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="Logótipo da Associação"
-                width={60}  // Largura 
-                height={60} // Altura
-                priority
-              />
+              <Image src="/logo.png" alt="Logótipo da Associação" width={60} height={60} priority />
             </Link>
           </div>
 
-          {/* Links de Navegação (Desktop) */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <Link href="/voluntario" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Seja Voluntário
-              </Link>
-              <Link href="/doacoes" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Faça uma Doação
-              </Link>
-              
+              <Link href="/voluntario" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Seja Voluntário</Link>
+              <Link href="/doacoes" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Faça uma Doação</Link>
               {isAuthenticated && user?.role === 'ADMIN' && (
-                <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Painel Admin
-                </Link>
+                <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Painel Admin</Link>
               )}
             </div>
           </div>
 
-          {/* Botões de Ação (Login/Logout) */}
           <div className="hidden md:flex items-center">
             {isAuthenticated ? (
-              <>
-                <span className="text-gray-800 text-sm mr-4">
-                  Olá, <span className="font-semibold">{user?.nome}</span>
-                </span>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                >
-                  Sair
+              <div className="relative" ref={dropdownRef}>
+                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center text-gray-800 text-sm">
+                  Olá, <span className="font-semibold ml-1">{user?.nome}</span>
+                  <svg className={`w-4 h-4 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
-              </>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
+                    <Link href="/perfil" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">O Meu Perfil</Link>
+                    <button onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100">Sair</button>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
-                <Link href="/login" className="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Login
-                </Link>
-                <Link href="/cadastro" className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                  Cadastre-se
-                </Link>
+                <Link href="/login" className="text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">Login</Link>
+                <Link href="/cadastro" className="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">Cadastre-se</Link>
               </>
             )}
           </div>
 
-          {/* Menu Mobile (simples) */}
           <div className="md:hidden">
              <Link href="/login" className="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
               {isAuthenticated ? 'Menu' : 'Login'}
