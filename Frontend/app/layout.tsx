@@ -22,9 +22,13 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={inter.className}>
         <Providers>
+          <Toaster position="top-center" />
+          
           <Navbar />
-          <main>{children}</main>
-           <Footer /> 
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Footer /> 
         </Providers>
       </body>
     </html>

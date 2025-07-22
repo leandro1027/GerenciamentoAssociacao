@@ -126,7 +126,7 @@ export default function ProfilePage() {
                   <Input id="telefone" value={telefone} onChange={e => setTelefone(e.target.value)} />
                 </div>
                 <div className="pt-4 flex justify-end">
-                  <Button type="submit" isLoading={isProfileLoading}>Guardar Alterações</Button>
+                  <Button type="submit" isLoading={isProfileLoading}>Salvar Alterações</Button>
                 </div>
               </form>
             </div>
