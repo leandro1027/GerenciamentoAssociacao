@@ -15,6 +15,7 @@ model Usuario {
   senha    String
   role       String   @default("USER")
   telefone String?
+  profileImageUrl String?
   voluntario Voluntario?
   doacoes   Doacao[]
   passwordResetToken   String?

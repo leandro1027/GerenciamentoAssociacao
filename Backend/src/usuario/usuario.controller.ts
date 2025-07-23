@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -7,6 +7,9 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { editFileName, imageFileFilter } from 'src/utils/file-upload.utils';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -32,6 +35,20 @@ export class UsuarioController {
   changeMyPassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
     const userId = req.user.id;
     return this.usuarioService.changePassword(userId, changePasswordDto);
+  }
+
+   @Patch('me/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({ destination: './uploads', filename: editFileName }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    const userId = req.user.id;
+    const imageUrl = `/uploads/${file.filename}`;
+    return this.usuarioService.updateAvatar(userId, imageUrl);
   }
 
   // --- ROTAS RESTRITAS PARA ADMINISTRADORES ---
