@@ -8,6 +8,7 @@ import { VoluntarioModule } from './voluntario/voluntario.module';
 import { DoacaoModule } from './doacao/doacao.module';
 import { AuthModule } from './auth/auth.module';
 import { SlideModule } from './slide/slide.module';
+import { AnimalModule } from './animal/animal.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SlideModule } from './slide/slide.module';
     DoacaoModule,
     AuthModule,
     SlideModule,
+    AnimalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

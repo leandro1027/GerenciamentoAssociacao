@@ -9,34 +9,35 @@ datasource db {
 }
 
 model Usuario {
-  id       Int        @id @default(autoincrement())
-  nome     String
-  email    String
-  senha    String
-  role       String   @default("USER")
-  telefone String?
-  profileImageUrl String?
-  voluntario Voluntario?
-  doacoes   Doacao[]
+  id                   Int         @id @default(autoincrement())
+  nome                 String
+  email                String
+  senha                String
+  role                 String      @default("USER")
+  telefone             String?
+  profileImageUrl      String?
+  voluntario           Voluntario?
+  doacoes              Doacao[]
+  adocoes              Adocao[]
   passwordResetToken   String?
   passwordResetExpires DateTime?
 }
 
 model Voluntario {
-  id         Int      @id @default(autoincrement())
-  usuarioId  Int      @unique
-  motivo     String
-  status     String   @default("pendente") // "pendente", "aprovado", "recusado"
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @unique
+  motivo    String
+  status    String   @default("pendente")
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 model Doacao {
-  id         Int      @id @default(autoincrement())
-  usuarioId  Int
-  valor      Float
-  tipo       String   // "pix"
-  data       DateTime @default(now())
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  valor     Float
+  tipo      String
+  data      DateTime @default(now())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 model Slide {
@@ -47,4 +48,67 @@ model Slide {
   createdAt DateTime @default(now())
 }
 
+enum Especie {
+  CAO
+  GATO
+  OUTRO
+}
 
+enum Sexo {
+  MACHO
+  FEMEA
+}
+
+enum Porte {
+  PEQUENO
+  MEDIO
+  GRANDE
+}
+
+enum StatusAnimal {
+  DISPONIVEL
+  EM_PROCESSO_ADOCAO
+  ADOTADO
+}
+
+model Animal {
+  id               String       @id @default(uuid())
+  nome             String
+  animalImageUrl   String?
+  descricao        String      
+  especie          Especie
+  sexo             Sexo
+  porte            Porte
+  idade            String
+  disponivel       Boolean      @default(true)
+  status           StatusAnimal @default(DISPONIVEL)
+  pedidosAdocao    Adocao[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+enum StatusAdocao {
+  SOLICITADA
+  EM_ANALISE
+  APROVADA
+  RECUSADA
+}
+
+model Adocao {
+  id                String       @id @default(uuid())
+  dataSolicitacao   DateTime     @default(now())
+  dataFinalizacao   DateTime?
+  status            StatusAdocao @default(SOLICITADA)
+  observacoesAdmin  String?  
+
+  // Relacionamento com o usuário que quer adotar
+  // ***** CORREÇÃO APLICADA AQUI *****
+  usuario           Usuario      @relation(fields: [usuarioId], references: [id])
+  usuarioId         Int
+
+  // Relacionamento com o animal a ser adotado
+  animal            Animal       @relation(fields: [animalId], references: [id])
+  animalId          String
+
+  @@unique([usuarioId, animalId])
+}
