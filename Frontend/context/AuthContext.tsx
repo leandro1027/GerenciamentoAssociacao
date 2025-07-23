@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
+  updateUser: (newUserData: Usuario) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,24 +50,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, pass: string) => {
-    try {
-      const response = await api.post<{ access_token: string }>('/auth/login', { email, senha: pass });
-      const { access_token } = response.data;
+    const response = await api.post<{ access_token: string }>('/auth/login', { email, senha: pass });
+    const { access_token } = response.data;
 
-      if (access_token) {
-        Cookies.set('token', access_token, { expires: 1 / 24 });
-        setAuthHeader(access_token);
-        
-        const { data: userData } = await api.get<Usuario>('/auth/profile');
-        setUser(userData);
-
-        router.push('/');
-      } else {
-        throw new Error('Token não recebido.');
-      }
-    } catch (error: any) {
-      console.error("Falha no login:", error);
-      throw new Error(error.response?.data?.message || 'Falha no login.');
+    if (access_token) {
+      Cookies.set('token', access_token, { expires: 1 / 24 });
+      setAuthHeader(access_token);
+      const { data: userData } = await api.get<Usuario>('/auth/profile');
+      setUser(userData);
+      router.push('/');
     }
   };
 
@@ -77,7 +69,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const value = { user, isAuthenticated: !!user, isLoading, login, logout };
+  // NOVA FUNÇÃO PARA ATUALIZAR O UTILIZADOR EM TODA A APLICAÇÃO
+  const updateUser = (newUserData: Usuario) => {
+    setUser(newUserData);
+  };
+
+  const value = { user, isAuthenticated: !!user, isLoading, login, logout, updateUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

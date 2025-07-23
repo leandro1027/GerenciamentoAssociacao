@@ -5,6 +5,7 @@ export interface Usuario {
   senha?: string; 
   role: 'USER' | 'ADMIN'; 
   telefone?: string;
+  profileImageUrl?: string;
 }
 
 export type StatusVoluntario = 'pendente' | 'aprovado' | 'recusado';

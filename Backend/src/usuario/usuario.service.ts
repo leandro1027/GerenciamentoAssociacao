@@ -102,4 +102,13 @@ export class UsuarioService {
       data: { senha: hashedPassword },
     });
   }
+
+  async updateAvatar(id: number, imageUrl: string) {
+    const user = await this.prisma.usuario.update({
+      where: { id },
+      data: { profileImageUrl: imageUrl },
+    });
+    const { senha, ...result } = user;
+    return result;
+}
 }
