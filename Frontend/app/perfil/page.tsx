@@ -144,7 +144,7 @@ export default function ProfilePage() {
 
   const apiBaseUrl = api.defaults.baseURL;
   const avatarUrl = user.profileImageUrl
-    ? `${apiBaseUrl}${user.profileImageUrl}`
+    ? `${apiBaseUrl}${user.profileImageUrl}?t=${new Date().getTime()}`
     : `https://ui-avatars.com/api/?name=${user.nome.replace(' ', '+')}&background=0ea5e9&color=fff&size=128`;
 
   const getStatusClasses = (status: string | null) => {
