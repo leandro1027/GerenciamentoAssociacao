@@ -1,49 +1,47 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import Link from 'next/link'; // Link removido
+import Link from 'next/link'; // Link importado novamente
 import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal } from '../types';
 
-// --- COMPONENTE PARA O CARD DO ANIMAL (SEM LINK) ---
+// --- COMPONENTE PARA O CARD DO ANIMAL (COM LINK APENAS NO TEXTO) ---
 const AnimalCard = ({ animal }: { animal: Animal }) => {
+  // Se o animal ou a URL da imagem não existirem, não renderiza o card para evitar erros.
+  if (!animal || !animal.animalImageUrl) {
+    return null; 
+  }
+
   const apiBaseUrl = api.defaults.baseURL;
-  const imageUrl = animal.animalImageUrl ? `${apiBaseUrl}${animal.animalImageUrl}` : '';
+  const imageUrl = `${apiBaseUrl}${animal.animalImageUrl}`;
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
 
-  // O <Link> foi substituído por uma <div>
+  // O <Link> agora envolve apenas a secção de texto.
   return (
-    <div className="group block bg-white rounded-lg shadow-md overflow-hidden">
+    // EFEITO DE HOVER ADICIONADO AQUI
+    <div className="group bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="relative w-full h-56 bg-gray-200">
-        {imageUrl ? (
-          <img 
-            src={imageUrl} 
-            alt={`Foto de ${animal.nome}`} 
-            className="w-full h-full object-cover"
-            onError={handleImageError}
-          />
-        ) : (
-          <img 
-            src="https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto" 
-            alt={`Foto de ${animal.nome}`} 
-            className="w-full h-full object-cover"
-          />
-        )}
+        <img 
+          src={imageUrl} 
+          alt={`Foto de ${animal.nome}`} 
+          className="w-full h-full object-cover"
+          onError={handleImageError}
+        />
       </div>
-      <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-800">{animal.nome}</h3>
+      <Link href={`/adote/${animal.id}`} className="block p-4 hover:bg-gray-50 transition-colors duration-200">
+        <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">{animal.nome}</h3>
         <p className="text-sm text-gray-600 mt-1">Porto União, Santa Catarina</p>
-      </div>
+      </Link>
     </div>
   );
 };
 
 
-// --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL (COM DEPURAÇÃO) ---
+// --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
 export default function HomePage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,9 +51,6 @@ export default function HomePage() {
     const fetchAnimais = async () => {
       try {
         const response = await api.get<Animal[]>('/animais?disponivel=true');
-        
-        console.log("[HomePage] Dados recebidos da API:", response.data);
-        
         setAnimais(response.data);
       } catch (err) {
         console.error("Erro ao buscar animais:", err);
