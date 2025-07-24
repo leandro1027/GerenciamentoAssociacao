@@ -1,11 +1,9 @@
-// app/adote/[id]/page.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import api from '@/app/services/api';
-import { Animal } from '@/types';
+import { Animal, StatusAnimal } from '@/types'; 
 import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
@@ -18,10 +16,12 @@ const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-
 
 export default function AnimalDetailPage() {
   const params = useParams();
+  const router = useRouter(); // Para redirecionar se necessário
   const { user, isAuthenticated } = useAuth();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdoptionLoading, setIsAdoptionLoading] = useState(false);
 
   const id = params.id as string;
 
@@ -46,14 +46,23 @@ export default function AnimalDetailPage() {
   const handleAdoptionRequest = async () => {
     if (!isAuthenticated) {
       toast.error('Você precisa estar logado para solicitar uma adoção.');
+      router.push('/login'); // Redireciona para o login
       return;
     }
+    
+    setIsAdoptionLoading(true);
     try {
       await api.post('/adocoes', { animalId: id });
       toast.success('Pedido de adoção enviado com sucesso! Entraremos em contacto.');
-      // Opcional: desabilitar o botão após o pedido
+      // Opcional: Atualizar o estado do animal para "EM_PROCESSO_ADOCAO" na UI
+      if (animal) {
+        // CORREÇÃO: Usar o enum em vez da string
+        setAnimal({ ...animal, status: StatusAnimal.EM_PROCESSO_ADOCAO });
+      }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Não foi possível enviar o pedido.');
+      toast.error(err.response?.data?.message || 'Não foi possível enviar o pedido. Talvez você já tenha solicitado a adoção deste animal.');
+    } finally {
+      setIsAdoptionLoading(false);
     }
   };
 
@@ -104,8 +113,10 @@ export default function AnimalDetailPage() {
               <Button 
                 onClick={handleAdoptionRequest}
                 className="w-full text-lg"
+                isLoading={isAdoptionLoading}
+                disabled={animal.status !== 'DISPONIVEL' || isAdoptionLoading}
               >
-                Quero Adotar o {animal.nome}
+                {animal.status === 'DISPONIVEL' ? `Quero Adotar o ${animal.nome}` : 'Adoção em Processo'}
               </Button>
             </div>
           </div>

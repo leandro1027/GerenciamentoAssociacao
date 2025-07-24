@@ -1,3 +1,7 @@
+// Em: /types.ts
+
+// --- TIPOS GERAIS ---
+
 export interface Usuario {
   id: number;
   nome: string;
@@ -34,7 +38,7 @@ export interface Slide {
   subtitle?: string;
 }
 
-// --- NOVOS TIPOS E ENUMS PARA ANIMAIS ---
+// --- TIPOS E ENUMS PARA ANIMAIS E ADOÇÕES ---
 
 export enum Especie {
   CAO = 'CAO',
@@ -62,15 +66,38 @@ export enum StatusAnimal {
 export interface Animal {
   id: string;
   nome: string;
+  raca: string;
   descricao: string;
   especie: Especie;
   sexo: Sexo;
   porte: Porte;
   idade: string;
-  raca: string;
   disponivel: boolean;
   status: StatusAnimal;
   animalImageUrl?: string | null;
-  createdAt: string; // ou Date
-  updatedAt: string; // ou Date
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum StatusAdocao {
+  SOLICITADA = 'SOLICITADA',
+  EM_ANALISE = 'EM_ANALISE',
+  APROVADA = 'APROVADA',
+  RECUSADA = 'RECUSADA',
+}
+
+export interface Adocao {
+  id: string;
+  dataSolicitacao: string;
+  dataFinalizacao?: string | null;
+  status: StatusAdocao;
+  observacoesAdmin?: string | null;
+  
+  usuarioId: number;
+  animalId: string;
+
+  // CORREÇÃO: Propriedade 'animal' adicionada como opcional
+  // A API inclui este dado quando se usa o 'include' do Prisma.
+  animal?: Animal;
+  usuario?: Usuario;
 }

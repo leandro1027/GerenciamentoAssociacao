@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais';
+type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes';
 
 // --- COMPONENTES FILHOS ---
 
@@ -282,17 +282,14 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
     );
 };
 
-// 5. COMPONENTE PARA GERIR ANIMAIS (ATUALIZADO)
+// 5. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
-  // Estado para o formulário de criação
   const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
   const [especie, setEspecie] = useState<Especie>(Especie.CAO);
   const [sexo, setSexo] = useState<Sexo>(Sexo.MACHO);
   const [porte, setPorte] = useState<Porte>(Porte.PEQUENO);
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Estado para edição
   const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
 
   const handleCreateSubmit = async (event: FormEvent) => {
@@ -317,7 +314,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
       const response = await api.post<Animal>('/animais', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       setAnimals(prev => [response.data, ...prev]);
       toast.success('Animal cadastrado com sucesso!');
-      // Limpa o formulário
       setFormData({ nome: '', raca: '', idade: '', descricao: '' });
       setEspecie(Especie.CAO);
       setSexo(Sexo.MACHO);
@@ -354,8 +350,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     setIsLoading(true);
 
     try {
-      // Nota: A atualização de imagem não está incluída aqui para simplicidade.
-      // Seria necessário um endpoint PATCH que aceite multipart/form-data.
       const { id, nome, raca, idade, descricao, especie, sexo, porte } = editingAnimal;
       const response = await api.patch<Animal>(`/animais/${id}`, { nome, raca, idade, descricao, especie, sexo, porte });
       setAnimals(prev => prev.map(a => a.id === id ? response.data : a));
@@ -475,6 +469,68 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   );
 };
 
+// 6. NOVO COMPONENTE PARA GERIR ADOÇÕES
+const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
+    const getStatusClass = (status: StatusAdocao) => {
+        switch (status) {
+            case StatusAdocao.APROVADA: return 'bg-green-100 text-green-800';
+            case StatusAdocao.RECUSADA: return 'bg-red-100 text-red-800';
+            default: return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+
+    const handleUpdateStatus = async (adocaoId: string, status: StatusAdocao) => {
+        try {
+            const response = await api.patch<Adocao>(`/adocoes/${adocaoId}/status`, { status });
+            onUpdate(response.data);
+            toast.success(`Pedido ${status === StatusAdocao.APROVADA ? 'aprovado' : 'recusado'} com sucesso!`);
+        } catch (error) {
+            toast.error('Erro ao atualizar o status do pedido.');
+        }
+    };
+
+    return (
+        <section className="bg-white rounded-xl shadow p-6">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Animal</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {initialAdoptions.map(adocao => (
+                            (adocao.animal && adocao.usuario) && (
+                                <tr key={adocao.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{adocao.animal.nome}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{adocao.usuario.nome}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(adocao.status)}`}>
+                                            {adocao.status.replace('_', ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
+                                        {adocao.status === StatusAdocao.SOLICITADA && (
+                                            <>
+                                                <button onClick={() => handleUpdateStatus(adocao.id, StatusAdocao.APROVADA)} className="text-green-600 hover:text-green-900">Aprovar</button>
+                                                <button onClick={() => handleUpdateStatus(adocao.id, StatusAdocao.RECUSADA)} className="text-red-600 hover:text-red-900">Recusar</button>
+                                            </>
+                                        )}
+                                    </td>
+                                </tr>
+                            )
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+};
+
+
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
@@ -485,6 +541,7 @@ export default function AdminPanelPage() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [doacoes, setDoacoes] = useState<Doacao[]>([]);
   const [animais, setAnimais] = useState<Animal[]>([]);
+  const [adocoes, setAdocoes] = useState<Adocao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -494,18 +551,20 @@ export default function AdminPanelPage() {
         setLoading(true);
         setError(null);
         try {
-          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes] = await Promise.all([
+          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes] = await Promise.all([
             api.get<Voluntario[]>('/voluntario'),
             api.get<Usuario[]>('/usuario'),
             api.get<Slide[]>('/slide'),
             api.get<Doacao[]>('/doacao'),
             api.get<Animal[]>('/animais'),
+            api.get<Adocao[]>('/adocoes'),
           ]);
           setVoluntarios(voluntariosRes.data);
           setUsuarios(usuariosRes.data);
           setSlides(slidesRes.data);
           setDoacoes(doacoesRes.data);
           setAnimais(animaisRes.data);
+          setAdocoes(adocoesRes.data);
         } catch (err) {
           setError('Falha ao carregar os dados do painel.');
         } finally {
@@ -536,11 +595,12 @@ export default function AdminPanelPage() {
     <aside className={`bg-stone-800 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
         <div className="mb-8"><h2 className="text-2xl font-bold">Cadastro</h2></div>
         <nav className="flex flex-col space-y-2">
-            <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Listar/Cadastrar Slides</button>
+            <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Slides</button>
             <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
-            <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Listar Voluntários</button>
-            <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Listar Membros</button>
-            <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Listar Doações</button>
+            <button onClick={() => setActiveView('adocoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>❤️ Gerir Adoções</button>
+            <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
+            <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
+            <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -550,6 +610,7 @@ export default function AdminPanelPage() {
     const viewTitles: Record<AdminView, string> = {
       slides: 'Gestão do Carrossel',
       animais: 'Gestão de Animais para Adoção',
+      adocoes: 'Gestão de Pedidos de Adoção',
       voluntarios: 'Gestão de Voluntários',
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
@@ -571,6 +632,7 @@ export default function AdminPanelPage() {
                 <>
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
+                    {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
                     {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
@@ -586,5 +648,6 @@ export default function AdminPanelPage() {
         <Sidebar />
         <MainContent />
     </div>
-  );
+  
+  )
 }
