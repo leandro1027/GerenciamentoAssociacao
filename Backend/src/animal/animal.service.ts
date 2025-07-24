@@ -22,7 +22,6 @@ export class AnimalService {
 
   findAll(disponivel?: boolean) {
     const whereClause = disponivel ? { status: StatusAnimal.DISPONIVEL } : {};
-
     return this.prisma.animal.findMany({
       where: whereClause,
       orderBy: {

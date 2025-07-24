@@ -6,34 +6,32 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal } from '../types';
 
-// --- COMPONENTE PARA O CARD DO ANIMAL (COM DEBUG) ---
+// --- COMPONENTE PARA O CARD DO ANIMAL (SIMPLIFICADO) ---
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   const apiBaseUrl = api.defaults.baseURL;
-
-  const imageUrl = animal.animalImageUrl
-    ? `${apiBaseUrl}${animal.animalImageUrl}`
-    : 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
-
-  // --- INÍCIO DO CÓDIGO DE DEPURAÇÃO ---
-  console.log(`[AnimalCard] Renderizando animal: ${animal.nome}`);
-  console.log(`[AnimalCard] Objeto animal recebido:`, animal);
-  console.log(`[AnimalCard] URL final da imagem construída: ${imageUrl}`);
-  // --- FIM DO CÓDIGO DE DEPURAÇÃO ---
+  const imageUrl = animal.animalImageUrl ? `${apiBaseUrl}${animal.animalImageUrl}` : '';
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error(`[AnimalCard] FALHA AO CARREGAR IMAGEM: ${e.currentTarget.src}`);
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
 
   return (
     <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="relative w-full h-56 bg-gray-200">
-        <img 
-          src={imageUrl} 
-          alt={`Foto de ${animal.nome}`} 
-          className="w-full h-full object-cover"
-          onError={handleImageError}
-        />
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt={`Foto de ${animal.nome}`} 
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
+        ) : (
+          <img 
+            src="https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto" 
+            alt={`Foto de ${animal.nome}`} 
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
       </div>
       <div className="p-4">
@@ -45,7 +43,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 };
 
 
-// --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
+// --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL (COM DEPURAÇÃO) ---
 export default function HomePage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +53,10 @@ export default function HomePage() {
     const fetchAnimais = async () => {
       try {
         const response = await api.get<Animal[]>('/animais?disponivel=true');
+        
+        // --- CÓDIGO DE DEPURAÇÃO ADICIONADO AQUI ---
+        console.log("[HomePage] Dados recebidos da API:", response.data);
+        
         setAnimais(response.data);
       } catch (err) {
         console.error("Erro ao buscar animais:", err);
