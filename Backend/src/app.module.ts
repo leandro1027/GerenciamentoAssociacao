@@ -9,6 +9,7 @@ import { DoacaoModule } from './doacao/doacao.module';
 import { AuthModule } from './auth/auth.module';
 import { SlideModule } from './slide/slide.module';
 import { AnimalModule } from './animal/animal.module';
+import { AdocoesModule } from './adocoes/adocoes.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AnimalModule } from './animal/animal.module';
     AuthModule,
     SlideModule,
     AnimalModule,
+    AdocoesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
