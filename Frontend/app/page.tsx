@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+// import Link from 'next/link'; // Link removido
 import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal } from '../types';
 
-// --- COMPONENTE PARA O CARD DO ANIMAL (SIMPLIFICADO) ---
+// --- COMPONENTE PARA O CARD DO ANIMAL (SEM LINK) ---
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   const apiBaseUrl = api.defaults.baseURL;
   const imageUrl = animal.animalImageUrl ? `${apiBaseUrl}${animal.animalImageUrl}` : '';
@@ -15,8 +15,9 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
 
+  // O <Link> foi substituído por uma <div>
   return (
-    <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-lg shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <div className="group block bg-white rounded-lg shadow-md overflow-hidden">
       <div className="relative w-full h-56 bg-gray-200">
         {imageUrl ? (
           <img 
@@ -32,13 +33,12 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
             className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
       </div>
       <div className="p-4">
         <h3 className="text-lg font-bold text-gray-800">{animal.nome}</h3>
         <p className="text-sm text-gray-600 mt-1">Porto União, Santa Catarina</p>
       </div>
-    </Link>
+    </div>
   );
 };
 
@@ -54,7 +54,6 @@ export default function HomePage() {
       try {
         const response = await api.get<Animal[]>('/animais?disponivel=true');
         
-        // --- CÓDIGO DE DEPURAÇÃO ADICIONADO AQUI ---
         console.log("[HomePage] Dados recebidos da API:", response.data);
         
         setAnimais(response.data);
