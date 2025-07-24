@@ -8,9 +8,15 @@ import { StatusAnimal } from 'generated/prisma';
 export class AnimalService {
   constructor (private readonly prisma:PrismaService){}
 
-  create(createAnimalDto: CreateAnimalDto) {
+  create(createAnimalDto: CreateAnimalDto, file: Express.Multer.File) {
+    // Cria o caminho relativo que será guardado no banco de dados
+    const animalImageUrl = `/uploads/${file.filename}`;
+
     return this.prisma.animal.create({
-      data: createAnimalDto,
+      data: {
+        ...createAnimalDto,
+        animalImageUrl: animalImageUrl, // Adiciona o caminho da imagem aos dados
+      },
     });
   }
 
@@ -48,6 +54,12 @@ export class AnimalService {
 
   async remove(id: string) {
     await this.findOne(id);
+
+    // Adicional: Lógica para apagar o ficheiro de imagem do disco (opcional)
+    // const animal = await this.findOne(id);
+    // if (animal.animalImageUrl) {
+    //   // fs.unlinkSync(`.${animal.animalImageUrl}`);
+    // }
 
     return this.prisma.animal.delete({
       where: {id},

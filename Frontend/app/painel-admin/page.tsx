@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes';
+type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais';
 
 // --- COMPONENTES FILHOS ---
 
@@ -34,18 +36,20 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
       setSlides([response.data, ...slides]);
       setTitle(''); setSubtitle(''); setFile(null);
       (document.getElementById('slide-file-input') as HTMLInputElement).value = '';
+      toast.success('Slide criado com sucesso!');
     } catch (error) {
-      alert('Erro ao criar o slide.');
+      toast.error('Erro ao criar o slide.');
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem a certeza?')) {
+    if (confirm('Tem a certeza?')) {
       try {
         await api.delete(`/slide/${id}`);
         setSlides(slides.filter(slide => slide.id !== id));
+        toast.success('Slide apagado com sucesso!');
       } catch (error) {
-        alert('Erro ao apagar o slide.');
+        toast.error('Erro ao apagar o slide.');
       }
     }
   };
@@ -93,8 +97,9 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
         try {
           await api.patch(`/voluntario/${voluntarioId}`, { status });
           setVoluntarios(prev => prev.map(v => v.id === voluntarioId ? { ...v, status } : v));
+          toast.success('Status do voluntário atualizado!');
         } catch (err) {
-          alert('Erro ao atualizar o status.');
+          toast.error('Erro ao atualizar o status.');
         }
     };
 
@@ -108,48 +113,48 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
 
     return (
         <section>
-            <div className="bg-white rounded-xl shadow p-6">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {voluntarios.map(voluntario => (
-                                <tr key={voluntario.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{voluntario.usuario?.nome || 'Utilizador não encontrado'}</div>
-                                        <div className="text-sm text-gray-500">{voluntario.usuario?.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 max-w-sm whitespace-normal">{voluntario.motivo}</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(voluntario.status)}`}>{voluntario.status}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
-                                        {voluntario.status === 'pendente' && (
-                                            <>
-                                                <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Aprovar</button>
-                                                <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
-                                            </>
-                                        )}
-                                        {voluntario.status === 'aprovado' && (
-                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Alterar para Recusado</button>
-                                        )}
-                                        {voluntario.status === 'recusado' && (
-                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Alterar para Aprovado</button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+          <div className="bg-white rounded-xl shadow p-6">
+              <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                          <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                          </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                          {voluntarios.map(voluntario => (
+                              <tr key={voluntario.id}>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                      <div className="text-sm font-medium text-gray-900">{voluntario.usuario?.nome || 'Utilizador não encontrado'}</div>
+                                      <div className="text-sm text-gray-500">{voluntario.usuario?.email}</div>
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-600 max-w-sm whitespace-normal">{voluntario.motivo}</td>
+                                  <td className="px-6 py-4 text-center">
+                                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(voluntario.status)}`}>{voluntario.status}</span>
+                                  </td>
+                                  <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
+                                      {voluntario.status === 'pendente' && (
+                                          <>
+                                              <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Aprovar</button>
+                                              <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
+                                          </>
+                                      )}
+                                      {voluntario.status === 'aprovado' && (
+                                          <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Alterar para Recusado</button>
+                                      )}
+                                      {voluntario.status === 'recusado' && (
+                                          <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Alterar para Aprovado</button>
+                                      )}
+                                  </td>
+                              </tr>
+                          ))}
+                      </tbody>
+                  </table>
+              </div>
+          </div>
         </section>
     );
 };
@@ -160,12 +165,13 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
     const [editingUser, setEditingUser] = useState<Usuario | null>(null);
 
     const handleDelete = async (userId: number) => {
-        if (window.confirm('Tem a certeza de que deseja apagar este membro?')) {
+        if (confirm('Tem a certeza de que deseja apagar este membro?')) {
             try {
                 await api.delete(`/usuario/${userId}`);
                 setUsuarios(usuarios.filter(u => u.id !== userId));
+                toast.success('Membro apagado com sucesso!');
             } catch (error) {
-                alert('Erro ao apagar o membro.');
+                toast.error('Erro ao apagar o membro.');
             }
         }
     };
@@ -182,8 +188,9 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
             const response = await api.patch(`/usuario/${id}`, { nome, email, telefone });
             setUsuarios(usuarios.map(u => u.id === id ? response.data : u));
             setEditingUser(null);
+            toast.success('Membro atualizado com sucesso!');
         } catch (error) {
-            alert('Erro ao atualizar o membro.');
+            toast.error('Erro ao atualizar o membro.');
         }
     };
 
@@ -207,7 +214,7 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
                                         <>
                                             <td className="px-6 py-4"><Input value={editingUser.nome} onChange={e => setEditingUser({...editingUser, nome: e.target.value})} /></td>
                                             <td className="px-6 py-4"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
-                                            <td className="px-6 py-4"><Input value={editingUser.telefone} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
+                                            <td className="px-6 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
                                             <td className="px-6 py-4 text-center space-x-2">
                                                 <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
                                                 <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
@@ -234,22 +241,14 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
     );
 };
 
-// 4. NOVO COMPONENTE PARA LISTAR DOAÇÕES
+// 4. COMPONENTE PARA LISTAR DOAÇÕES
 const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) => {
-    
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-        }).format(value);
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
+        return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
     return (
@@ -283,20 +282,209 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
     );
 };
 
+// 5. COMPONENTE PARA GERIR ANIMAIS (ATUALIZADO)
+const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
+  // Estado para o formulário de criação
+  const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
+  const [especie, setEspecie] = useState<Especie>(Especie.CAO);
+  const [sexo, setSexo] = useState<Sexo>(Sexo.MACHO);
+  const [porte, setPorte] = useState<Porte>(Porte.PEQUENO);
+  const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Estado para edição
+  const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
+
+  const handleCreateSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!file) {
+        toast.error('Por favor, selecione uma imagem para o animal.');
+        return;
+    }
+    setIsLoading(true);
+
+    const data = new FormData();
+    data.append('nome', formData.nome);
+    data.append('raca', formData.raca);
+    data.append('idade', formData.idade);
+    data.append('descricao', formData.descricao);
+    data.append('especie', especie);
+    data.append('sexo', sexo);
+    data.append('porte', porte);
+    data.append('file', file);
+
+    try {
+      const response = await api.post<Animal>('/animais', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setAnimals(prev => [response.data, ...prev]);
+      toast.success('Animal cadastrado com sucesso!');
+      // Limpa o formulário
+      setFormData({ nome: '', raca: '', idade: '', descricao: '' });
+      setEspecie(Especie.CAO);
+      setSexo(Sexo.MACHO);
+      setPorte(Porte.PEQUENO);
+      setFile(null);
+      (document.getElementById('animal-file-input') as HTMLInputElement).value = '';
+    } catch (error) {
+      console.error('Erro ao cadastrar animal:', error);
+      toast.error('Não foi possível cadastrar o animal.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleDelete = async (animalId: string) => {
+    if (confirm('Tem a certeza que deseja apagar este animal?')) {
+      try {
+        await api.delete(`/animais/${animalId}`);
+        setAnimals(prev => prev.filter(a => a.id !== animalId));
+        toast.success('Animal apagado com sucesso!');
+      } catch (error) {
+        toast.error('Erro ao apagar o animal.');
+      }
+    }
+  };
+
+  const handleEdit = (animal: Animal) => {
+    setEditingAnimal({ ...animal });
+  };
+
+  const handleUpdate = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!editingAnimal) return;
+    setIsLoading(true);
+
+    try {
+      // Nota: A atualização de imagem não está incluída aqui para simplicidade.
+      // Seria necessário um endpoint PATCH que aceite multipart/form-data.
+      const { id, nome, raca, idade, descricao, especie, sexo, porte } = editingAnimal;
+      const response = await api.patch<Animal>(`/animais/${id}`, { nome, raca, idade, descricao, especie, sexo, porte });
+      setAnimals(prev => prev.map(a => a.id === id ? response.data : a));
+      setEditingAnimal(null);
+      toast.success('Animal atualizado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao atualizar o animal.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section className="space-y-8">
+      <div className="bg-white rounded-xl shadow p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Cadastrar Novo Animal</h3>
+        <form onSubmit={handleCreateSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+              <Input id="nome" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Bob" required />
+            </div>
+            <div>
+              <label htmlFor="raca" className="block text-sm font-medium text-gray-700 mb-2">Raça</label>
+              <Input id="raca" value={formData.raca} onChange={(e) => setFormData({...formData, raca: e.target.value})} placeholder="Ex: Sem Raça Definida (SRD)" required />
+            </div>
+            <div>
+              <label htmlFor="idade" className="block text-sm font-medium text-gray-700 mb-2">Idade</label>
+              <Input id="idade" value={formData.idade} onChange={(e) => setFormData({...formData, idade: e.target.value})} placeholder="Ex: Aprox. 2 anos" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="especie" className="block text-sm font-medium text-gray-700 mb-2">Espécie</label>
+              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value={Especie.CAO}>Cão</option>
+                <option value={Especie.GATO}>Gato</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
+              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value={Sexo.MACHO}>Macho</option>
+                <option value={Sexo.FEMEA}>Fêmea</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="porte" className="block text-sm font-medium text-gray-700 mb-2">Porte</label>
+              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value={Porte.PEQUENO}>Pequeno</option>
+                <option value={Porte.MEDIO}>Médio</option>
+                <option value={Porte.GRANDE}>Grande</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="animal-file-input" className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
+            <input id="animal-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required />
+          </div>
+          <div>
+            <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
+            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" isLoading={isLoading}>Cadastrar Animal</Button>
+          </div>
+        </form>
+      </div>
+      <div className="bg-white rounded-xl shadow p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Animais Cadastrados</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Raça</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {animals.map(animal => (
+                <tr key={animal.id}>
+                  {editingAnimal?.id === animal.id ? (
+                    <>
+                      <td className="px-6 py-4">-</td>
+                      <td className="px-6 py-4"><Input value={editingAnimal.nome} onChange={e => setEditingAnimal({...editingAnimal, nome: e.target.value})} /></td>
+                      <td className="px-6 py-4"><Input value={editingAnimal.raca} onChange={e => setEditingAnimal({...editingAnimal, raca: e.target.value})} /></td>
+                      <td className="px-6 py-4">-</td>
+                      <td className="px-6 py-4 text-center space-x-2">
+                          <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
+                          <button onClick={() => setEditingAnimal(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4">
+                        <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.raca}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
+                      <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
+                        <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
+                        <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
-
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
-  
   const [activeView, setActiveView] = useState<AdminView>('slides');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [slides, setSlides] = useState<Slide[]>([]);
-  const [doacoes, setDoacoes] = useState<Doacao[]>([]); // Estado para doações
-  
+  const [doacoes, setDoacoes] = useState<Doacao[]>([]);
+  const [animais, setAnimais] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -306,16 +494,18 @@ export default function AdminPanelPage() {
         setLoading(true);
         setError(null);
         try {
-          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes] = await Promise.all([
+          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes] = await Promise.all([
             api.get<Voluntario[]>('/voluntario'),
             api.get<Usuario[]>('/usuario'),
             api.get<Slide[]>('/slide'),
-            api.get<Doacao[]>('/doacao'), // Busca as doações
+            api.get<Doacao[]>('/doacao'),
+            api.get<Animal[]>('/animais'),
           ]);
           setVoluntarios(voluntariosRes.data);
           setUsuarios(usuariosRes.data);
           setSlides(slidesRes.data);
-          setDoacoes(doacoesRes.data); // Guarda as doações no estado
+          setDoacoes(doacoesRes.data);
+          setAnimais(animaisRes.data);
         } catch (err) {
           setError('Falha ao carregar os dados do painel.');
         } finally {
@@ -347,6 +537,7 @@ export default function AdminPanelPage() {
         <div className="mb-8"><h2 className="text-2xl font-bold">Cadastro</h2></div>
         <nav className="flex flex-col space-y-2">
             <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Listar/Cadastrar Slides</button>
+            <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Listar Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Listar Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Listar Doações</button>
@@ -358,6 +549,7 @@ export default function AdminPanelPage() {
   const MainContent = () => {
     const viewTitles: Record<AdminView, string> = {
       slides: 'Gestão do Carrossel',
+      animais: 'Gestão de Animais para Adoção',
       voluntarios: 'Gestão de Voluntários',
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
@@ -378,6 +570,7 @@ export default function AdminPanelPage() {
             {!loading && !error && (
                 <>
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
+                    {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
                     {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}

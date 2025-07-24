@@ -2,8 +2,8 @@ export interface Usuario {
   id: number;
   nome: string;
   email: string;
-  senha?: string; 
-  role: 'USER' | 'ADMIN'; 
+  senha?: string;
+  role: 'USER' | 'ADMIN';
   telefone?: string;
   profileImageUrl?: string;
 }
@@ -15,7 +15,7 @@ export interface Voluntario {
   usuarioId: number;
   motivo: string;
   status: StatusVoluntario;
-  usuario?: Usuario; 
+  usuario?: Usuario;
 }
 
 export interface Doacao {
@@ -34,3 +34,43 @@ export interface Slide {
   subtitle?: string;
 }
 
+// --- NOVOS TIPOS E ENUMS PARA ANIMAIS ---
+
+export enum Especie {
+  CAO = 'CAO',
+  GATO = 'GATO',
+  OUTRO = 'OUTRO',
+}
+
+export enum Sexo {
+  MACHO = 'MACHO',
+  FEMEA = 'FEMEA',
+}
+
+export enum Porte {
+  PEQUENO = 'PEQUENO',
+  MEDIO = 'MEDIO',
+  GRANDE = 'GRANDE',
+}
+
+export enum StatusAnimal {
+  DISPONIVEL = 'DISPONIVEL',
+  EM_PROCESSO_ADOCAO = 'EM_PROCESSO_ADOCAO',
+  ADOTADO = 'ADOTADO',
+}
+
+export interface Animal {
+  id: string;
+  nome: string;
+  descricao: string;
+  especie: Especie;
+  sexo: Sexo;
+  porte: Porte;
+  idade: string;
+  raca: string;
+  disponivel: boolean;
+  status: StatusAnimal;
+  animalImageUrl?: string | null;
+  createdAt: string; // ou Date
+  updatedAt: string; // ou Date
+}

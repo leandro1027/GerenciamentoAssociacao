@@ -51,7 +51,6 @@ model Slide {
 enum Especie {
   CAO
   GATO
-  OUTRO
 }
 
 enum Sexo {
@@ -79,6 +78,7 @@ model Animal {
   especie          Especie
   sexo             Sexo
   porte            Porte
+  raca             String
   idade            String
   disponivel       Boolean      @default(true)
   status           StatusAnimal @default(DISPONIVEL)

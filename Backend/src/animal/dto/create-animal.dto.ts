@@ -22,6 +22,10 @@ export class CreateAnimalDto {
   @IsNotEmpty()
   porte: Porte;
 
+ @IsString()
+  @IsNotEmpty()
+  raca: string;
+
   @IsString()
   @IsNotEmpty()
   idade: string;
