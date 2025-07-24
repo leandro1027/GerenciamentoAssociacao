@@ -11,10 +11,10 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 
 // Tipos
-import { Doacao, Voluntario, Usuario } from '../../types';
-type ProfileView = 'overview' | 'edit_profile' | 'change_password';
+import { Doacao, Voluntario, Usuario, Adocao } from '../../types'; // Adocao importado
+type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos'; // 'meus_pedidos' adicionado
 
-// --- ÍCONES DEFINIDOS LOCALMENTE PARA SIMPLICIDADE ---
+// --- ÍCONES DEFINIDOS LOCALMENTE ---
 const Icon = ({ path, className = "h-6 w-6" }: { path: string; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
@@ -28,6 +28,52 @@ const ICONS = {
   gift: <Icon className="h-8 w-8 text-blue-500" path="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />,
   heart: <Icon className="h-8 w-8" path="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 20.25l-7.682-7.682a4.5 4.5 0 010-6.364z" />,
   camera: <Icon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" path="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z" />,
+  clipboard: <Icon path="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />,
+};
+
+// COMPONENTE PARA MOSTRAR OS PEDIDOS DE ADOÇÃO (CORRIGIDO)
+const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
+    const getStatusClass = (status: string) => {
+        switch (status) {
+            case 'APROVADA': return 'bg-green-100 text-green-800';
+            case 'RECUSADA': return 'bg-red-100 text-red-800';
+            default: return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+
+    return (
+        <div className="bg-white p-8 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">Meus Pedidos de Adoção</h2>
+            {pedidos.length === 0 ? (
+                <p className="text-gray-600">Você ainda não fez nenhum pedido de adoção.</p>
+            ) : (
+                <div className="space-y-4">
+                    {pedidos.map(pedido => (
+                       
+                        pedido.animal && (
+                            <div key={pedido.id} className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                                <div className="flex items-center space-x-4">
+                                    <img 
+                                        src={`${api.defaults.baseURL}${pedido.animal.animalImageUrl}`} 
+                                        alt={pedido.animal.nome}
+                                        className="w-16 h-16 object-cover rounded-md"
+                                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Sem+Foto'; }}
+                                    />
+                                    <div>
+                                        <p className="font-bold text-gray-800">{pedido.animal.nome}</p>
+                                        <p className="text-sm text-gray-500">Pedido em: {new Date(pedido.dataSolicitacao).toLocaleDateString('pt-BR')}</p>
+                                    </div>
+                                </div>
+                                <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusClass(pedido.status)}`}>
+                                    {pedido.status.replace('_', ' ')}
+                                </span>
+                            </div>
+                        )
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 };
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
@@ -47,6 +93,7 @@ export default function ProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pedidos, setPedidos] = useState<Adocao[]>([]); // Estado para os pedidos de adoção
 
   useEffect(() => {
     if (user) {
@@ -54,11 +101,12 @@ export default function ProfilePage() {
       setEmail(user.email);
       setTelefone(user.telefone || '');
 
-      const fetchStats = async () => {
+      const fetchAllData = async () => {
         try {
-          const [donationsRes, volunteersRes] = await Promise.all([
+          const [donationsRes, volunteersRes, adocoesRes] = await Promise.all([
             api.get<Doacao[]>('/doacao'),
             api.get<Voluntario[]>('/voluntario'),
+            api.get<Adocao[]>('/adocoes/meus-pedidos'),
           ]);
 
           const userDonations = donationsRes.data.filter(d => d.usuarioId === user.id);
@@ -66,13 +114,15 @@ export default function ProfilePage() {
 
           const userVolunteer = volunteersRes.data.find(v => v.usuarioId === user.id);
           setVolunteerStatus(userVolunteer ? userVolunteer.status : 'Não se candidatou');
+          
+          setPedidos(adocoesRes.data);
 
         } catch (error) {
-          console.error("Erro ao buscar estatísticas do perfil:", error);
-          toast.error('Não foi possível carregar os dados do perfil.');
+          console.error("Erro ao buscar dados do perfil:", error);
+          toast.error('Não foi possível carregar todos os dados do perfil.');
         }
       };
-      fetchStats();
+      fetchAllData();
     }
   }, [user]);
 
@@ -194,6 +244,10 @@ export default function ProfilePage() {
                 {ICONS.lock}
                 <span>Alterar Senha</span>
               </button>
+              <button onClick={() => setActiveView('meus_pedidos')} className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-all duration-200 ${activeView === 'meus_pedidos' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}>
+                {ICONS.clipboard}
+                <span>Meus Pedidos</span>
+              </button>
             </div>
           </nav>
 
@@ -237,7 +291,6 @@ export default function ProfilePage() {
                     <Input id="telefone" value={telefone} onChange={e => setTelefone(e.target.value)} disabled={isProfileLoading} />
                   </div>
                   <div className="pt-4 flex justify-end space-x-3">
-                    {/* CORREÇÃO APLICADA AQUI */}
                     <Button type="button" onClick={() => setActiveView('overview')} className="bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold" disabled={isProfileLoading}>Cancelar</Button>
                     <Button type="submit" isLoading={isProfileLoading}>Guardar Alterações</Button>
                   </div>
@@ -258,13 +311,14 @@ export default function ProfilePage() {
                     <Input id="novaSenha" type={showNewPassword ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} icon={showNewPassword ? '👁️' : '👁️‍🗨️'} onIconClick={() => setShowNewPassword(!showNewPassword)} disabled={isPasswordLoading} />
                   </div>
                   <div className="pt-4 flex justify-end space-x-3">
-                    {/* CORREÇÃO APLICADA AQUI */}
                     <Button type="button" onClick={() => setActiveView('overview')} className="bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold" disabled={isPasswordLoading}>Cancelar</Button>
                     <Button type="submit" isLoading={isPasswordLoading}>Alterar Senha</Button>
                   </div>
                 </form>
               </div>
             )}
+
+            {activeView === 'meus_pedidos' && <MeusPedidosView pedidos={pedidos} />}
           </div>
         </div>
       </div>
