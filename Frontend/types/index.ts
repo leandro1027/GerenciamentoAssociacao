@@ -92,7 +92,10 @@ export interface Adocao {
   dataFinalizacao?: string | null;
   status: StatusAdocao;
   observacoesAdmin?: string | null;
-  
+  tipoMoradia?: string | null;
+  outrosAnimais?: string | null;
+  tempoDisponivel?: string | null;
+  motivoAdocao?: string | null;
   usuarioId: number;
   animalId: string;
 

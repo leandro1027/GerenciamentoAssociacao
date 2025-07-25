@@ -99,14 +99,16 @@ model Adocao {
   dataSolicitacao   DateTime     @default(now())
   dataFinalizacao   DateTime?
   status            StatusAdocao @default(SOLICITADA)
-  observacoesAdmin  String?  
+  observacoesAdmin  String?
 
-  // Relacionamento com o usuário que quer adotar
-  // ***** CORREÇÃO APLICADA AQUI *****
+  tipoMoradia      String?  // Ex: "Casa com pátio", "Apartamento"
+  outrosAnimais    String?  // Ex: "Sim, um cão", "Não"
+  tempoDisponivel  String?  // Ex: "Manhãs e noites", "Integral"
+  motivoAdocao     String?
+  
   usuario           Usuario      @relation(fields: [usuarioId], references: [id])
   usuarioId         Int
 
-  // Relacionamento com o animal a ser adotado
   animal            Animal       @relation(fields: [animalId], references: [id])
   animalId          String
 

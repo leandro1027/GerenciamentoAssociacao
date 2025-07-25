@@ -8,7 +8,7 @@ export class AdocoesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAdocaoDto: CreateAdocoeDto, userId: number) {
-    const { animalId } = createAdocaoDto;
+    const { animalId, tipoMoradia, outrosAnimais, tempoDisponivel, motivoAdocao } = createAdocaoDto;
 
     // Verifica se já existe um pedido do mesmo utilizador para o mesmo animal
     const existingAdoption = await this.prisma.adocao.findFirst({
@@ -24,8 +24,12 @@ export class AdocoesService {
 
     return this.prisma.adocao.create({
       data: {
-        animalId: animalId,
+        animalId,
         usuarioId: userId,
+        tipoMoradia,
+        outrosAnimais,
+        tempoDisponivel,
+        motivoAdocao,
       },
     });
   }
@@ -90,3 +94,4 @@ export class AdocoesService {
     });
   }
 }
+
