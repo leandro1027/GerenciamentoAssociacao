@@ -72,12 +72,12 @@ export default function AdotePage() {
                 {/* Pesquisa por Nome */}
                 <div className="md:col-span-2">
                     <label htmlFor="search-nome" className="block text-sm font-medium text-gray-700">Pesquisar por nome</label>
-                    <input type="text" id="search-nome" value={nome} onChange={e => setNome(e.target.value)} placeholder="Digite o nome do animal..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-500 text-gray-900" />
+                    <input type="text" id="search-nome" value={nome} onChange={e => setNome(e.target.value)} placeholder="Digite o nome do animal..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 placeholder:text-gray-500 text-gray-900" />
                 </div>
                 {/* Filtro de Espécie */}
                 <div>
                     <label htmlFor="filter-especie" className="block text-sm font-medium text-gray-700">Espécie</label>
-                    <select id="filter-especie" value={especie} onChange={e => setEspecie(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!especie ? 'text-gray-500' : 'text-gray-900'}`}>
+                    <select id="filter-especie" value={especie} onChange={e => setEspecie(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 ${!especie ? 'text-gray-500' : 'text-gray-900'}`}>
                         <option value="">Todas</option>
                         <option value={Especie.CAO}>Cão</option>
                         <option value={Especie.GATO}>Gato</option>
@@ -86,7 +86,7 @@ export default function AdotePage() {
                 {/* Filtro de Sexo */}
                 <div>
                     <label htmlFor="filter-sexo" className="block text-sm font-medium text-gray-700">Sexo</label>
-                    <select id="filter-sexo" value={sexo} onChange={e => setSexo(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!sexo ? 'text-gray-500' : 'text-gray-900'}`}>
+                    <select id="filter-sexo" value={sexo} onChange={e => setSexo(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 ${!sexo ? 'text-gray-500' : 'text-gray-900'}`}>
                         <option value="">Todos</option>
                         <option value={Sexo.MACHO}>Macho</option>
                         <option value={Sexo.FEMEA}>Fêmea</option>
@@ -95,7 +95,7 @@ export default function AdotePage() {
                 {/* Filtro de Porte */}
                 <div>
                     <label htmlFor="filter-porte" className="block text-sm font-medium text-gray-700">Porte</label>
-                    <select id="filter-porte" value={porte} onChange={e => setPorte(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!porte ? 'text-gray-500' : 'text-gray-900'}`}>
+                    <select id="filter-porte" value={porte} onChange={e => setPorte(e.target.value)} className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 ${!porte ? 'text-gray-500' : 'text-gray-900'}`}>
                         <option value="">Todos</option>
                         <option value={Porte.PEQUENO}>Pequeno</option>
                         <option value={Porte.MEDIO}>Médio</option>
@@ -104,7 +104,7 @@ export default function AdotePage() {
                 </div>
             </div>
             <div className="flex justify-end">
-                <button onClick={handleResetFilters} className="text-sm font-medium text-blue-600 hover:text-blue-800">Limpar filtros</button>
+                <button onClick={handleResetFilters} className="text-sm font-medium text-amber-800 hover:text-amber-900">Limpar filtros</button>
             </div>
         </div>
 

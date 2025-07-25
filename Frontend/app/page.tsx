@@ -114,7 +114,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <Link href="/adote" className="inline-block bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-lg shadow-sm hover:bg-gray-300 transition-colors">
+                    <Link href="/adote" className="inline-block bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-lg shadow-sm group-hover:text-amber-800 transition-colors duration-200">
                         Ver Mais
                     </Link>
                 </div>
