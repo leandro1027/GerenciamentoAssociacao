@@ -11,7 +11,7 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 
 // Tipos
-import { Doacao, Voluntario, Usuario, Adocao } from '../../types'; // Adocao importado
+import { Doacao, Voluntario, Usuario, Adocao } from '../../types'; // Importar Adocao
 type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos'; // 'meus_pedidos' adicionado
 
 // --- ÍCONES DEFINIDOS LOCALMENTE ---
@@ -31,7 +31,7 @@ const ICONS = {
   clipboard: <Icon path="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />,
 };
 
-// COMPONENTE PARA MOSTRAR OS PEDIDOS DE ADOÇÃO (CORRIGIDO)
+// NOVO COMPONENTE PARA MOSTRAR OS PEDIDOS DE ADOÇÃO
 const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
     const getStatusClass = (status: string) => {
         switch (status) {
@@ -49,7 +49,6 @@ const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
             ) : (
                 <div className="space-y-4">
                     {pedidos.map(pedido => (
-                       
                         pedido.animal && (
                             <div key={pedido.id} className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                                 <div className="flex items-center space-x-4">
@@ -93,7 +92,7 @@ export default function ProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pedidos, setPedidos] = useState<Adocao[]>([]); // Estado para os pedidos de adoção
+  const [pedidos, setPedidos] = useState<Adocao[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -304,7 +303,7 @@ export default function ProfilePage() {
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div>
                     <label htmlFor="senhaAtual" className="block mb-2 text-sm font-medium text-gray-700">Senha Atual</label>
-                    <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} icon={showCurrentPassword ? '👁️' : '👁️‍🗨️'} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
+                    <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} icon={showCurrentPassword ? '👁️' : '�️‍🗨️'} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
                   </div>
                   <div>
                     <label htmlFor="novaSenha" className="block mb-2 text-sm font-medium text-gray-700">Nova Senha</label>

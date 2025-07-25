@@ -1,7 +1,3 @@
-// ================================================================
-// ARQUIVO: src/adocoes/adocoes.controller.ts
-// ================================================================
-
 import { Controller, Post, Body, UseGuards, Request, Get, Patch, Param, ParseUUIDPipe } from '@nestjs/common';
 import { AdocoesService } from './adocoes.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -49,4 +45,3 @@ export class AdocoesController {
     return this.adocoesService.updateStatus(id, updateAdocaoStatusDto.status);
   }
 }
-
