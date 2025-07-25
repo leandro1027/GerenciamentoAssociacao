@@ -170,7 +170,7 @@ export default function AnimalDetailPage() {
               </div>
 
               <div className="mt-8">
-                <h2 className="text-xl font-bold text-gray-800">Sobre o {animal.nome}</h2>
+                <h2 className="text-xl font-bold text-gray-800">Sobre o(a) {animal.nome}</h2>
                 <p className="mt-4 text-gray-600 leading-relaxed">{animal.descricao}</p>
               </div>
 

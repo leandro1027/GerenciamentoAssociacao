@@ -43,6 +43,7 @@ const Navbar = () => {
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/voluntario" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Seja Voluntário</Link>
               <Link href="/doacoes" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Faça uma Doação</Link>
+               <Link href="/adote" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Quero adotar</Link>
               {isAuthenticated && user?.role === 'ADMIN' && (
                 <Link href="/painel-admin" className="text-gray-600 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Painel Admin</Link>
               )}

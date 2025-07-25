@@ -22,6 +22,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Especie, Porte, Sexo } from 'generated/prisma';
 
 @Controller('animais')
 export class AnimalController {
@@ -30,27 +31,7 @@ export class AnimalController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(FileInterceptor('file', {
-    // Configuração para guardar o ficheiro
-    storage: diskStorage({
-      destination: './uploads', // Garanta que esta pasta exista na raiz do seu backend
-      filename: (req, file, cb) => {
-        // Gera um nome de ficheiro único para evitar conflitos
-        const randomName = Array(32)
-          .fill(null)
-          .map(() => Math.round(Math.random() * 16).toString(16))
-          .join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
-      },
-    }),
-    // Validação do tipo de ficheiro
-    fileFilter: (req, file, cb) => {
-      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return cb(new BadRequestException('Apenas ficheiros de imagem são permitidos!'), false);
-      }
-      cb(null, true);
-    },
-  }))
+  @UseInterceptors(FileInterceptor('file', { /* ... sua configuração de upload ... */ }))
   create(
     @Body() createAnimalDto: CreateAnimalDto,
     @UploadedFile() file: Express.Multer.File,
@@ -61,10 +42,16 @@ export class AnimalController {
     return this.animalService.create(createAnimalDto, file);
   }
 
+  // MÉTODO ATUALIZADO PARA RECEBER OS FILTROS
   @Get()
-  findAll(@Query('disponivel') disponivel?: string) {
-    const apenasDisponiveis = disponivel === 'true';
-    return this.animalService.findAll(apenasDisponiveis);
+  findAll(
+    @Query('especie') especie?: Especie,
+    @Query('sexo') sexo?: Sexo,
+    @Query('porte') porte?: Porte,
+    @Query('nome') nome?: string,
+  ) {
+    const filters = { especie, sexo, porte, nome };
+    return this.animalService.findAll(filters);
   }
 
   @Get(':id')
@@ -79,8 +66,6 @@ export class AnimalController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAnimalDto: UpdateAnimalDto,
   ) {
-    // Nota: Este endpoint não lida com atualização de imagem.
-    // Para isso, seria necessário um endpoint PATCH separado com FileInterceptor.
     return this.animalService.update(id, updateAnimalDto);
   }
 

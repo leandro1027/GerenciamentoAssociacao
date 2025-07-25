@@ -38,4 +38,5 @@ Frontend:
 npx create-next-app@latest
 npm install qrcode
 npm install @types/qrcode --save-dev
+npm install use-debounce
 
