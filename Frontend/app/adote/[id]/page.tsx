@@ -1,3 +1,5 @@
+// app/adote/[id]/page.tsx
+
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
@@ -13,7 +15,7 @@ const PawIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5
 const RulerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm3.293 1.293a1 1 0 00-1.414 0l-2 2a1 1 0 001.414 1.414L6 6.414l.293.293a1 1 0 001.414-1.414l-2-2zM10 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm3.293 1.293a1 1 0 00-1.414 0l-2 2a1 1 0 001.414 1.414L13 6.414l.293.293a1 1 0 001.414-1.414l-2-2z" clipRule="evenodd" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
 
-// Componente para o Modal do Questionário
+// Componente para o Modal do Questionário (COM CORREÇÃO DE ESTILO)
 const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose: () => void, onSubmit: (data: any) => Promise<void> }) => {
   const [formData, setFormData] = useState({
     tipoMoradia: '',
@@ -31,14 +33,20 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Questionário de Adoção para {animal.nome}</h2>
+    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
+      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+        {/* Header do Modal */}
+        <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Questionário de Adoção</h2>
+            <p className="text-gray-600 mt-1">Interessado em adotar o(a) <span className="font-semibold text-blue-600">{animal.nome}</span></p>
+        </div>
+
+        {/* Formulário */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Qual o seu tipo de moradia?</label>
-            <select value={formData.tipoMoradia} onChange={e => setFormData({...formData, tipoMoradia: e.target.value})} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-              <option value="">Selecione...</option>
+            <select value={formData.tipoMoradia} onChange={e => setFormData({...formData, tipoMoradia: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.tipoMoradia ? 'text-gray-400' : 'text-gray-900'}`}>
+              <option value="" disabled>Selecione uma opção</option>
               <option value="Casa com pátio fechado">Casa com pátio fechado</option>
               <option value="Apartamento">Apartamento</option>
               <option value="Chácara/Sítio">Chácara/Sítio</option>
@@ -46,16 +54,16 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Você possui outros animais?</label>
-            <select value={formData.outrosAnimais} onChange={e => setFormData({...formData, outrosAnimais: e.target.value})} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-              <option value="">Selecione...</option>
+            <select value={formData.outrosAnimais} onChange={e => setFormData({...formData, outrosAnimais: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.outrosAnimais ? 'text-gray-400' : 'text-gray-900'}`}>
+              <option value="" disabled>Selecione uma opção</option>
               <option value="Sim">Sim</option>
               <option value="Não">Não</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Quanto tempo você terá disponível para o animal?</label>
-            <select value={formData.tempoDisponivel} onChange={e => setFormData({...formData, tempoDisponivel: e.target.value})} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-              <option value="">Selecione...</option>
+            <select value={formData.tempoDisponivel} onChange={e => setFormData({...formData, tempoDisponivel: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.tempoDisponivel ? 'text-gray-400' : 'text-gray-900'}`}>
+              <option value="" disabled>Selecione uma opção</option>
               <option value="Manhãs e noites">Manhãs e noites</option>
               <option value="Apenas noites">Apenas noites</option>
               <option value="Tempo integral">Tempo integral</option>
@@ -63,10 +71,11 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Porque você gostaria de adotar o {animal.nome}?</label>
-            <textarea value={formData.motivoAdocao} onChange={e => setFormData({...formData, motivoAdocao: e.target.value})} rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+            {/* CORREÇÃO APLICADA AQUI */}
+            <textarea value={formData.motivoAdocao} onChange={e => setFormData({...formData, motivoAdocao: e.target.value})} rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos um pouco..."></textarea>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 hover:bg-gray-300">Cancelar</Button>
+            <Button type="button" onClick={onClose} className="bg-red-550 text-red-800 hover:bg-red-700">Cancelar</Button>
             <Button type="submit" isLoading={isLoading}>Enviar Pedido</Button>
           </div>
         </form>

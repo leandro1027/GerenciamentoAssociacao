@@ -24,7 +24,10 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return alert('Por favor, selecione uma imagem.');
+    if (!file) {
+      toast.error('Por favor, selecione uma imagem.');
+      return;
+    }
     
     const formData = new FormData();
     formData.append('file', file);
@@ -472,6 +475,10 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
 // 6. COMPONENTE PARA GERIR ADOÇÕES (COM MODAL ATUALIZADO)
 const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
     const [selectedAdoption, setSelectedAdoption] = useState<Adocao | null>(null);
+    const [activeTab, setActiveTab] = useState<'pendentes' | 'finalizadas'>('pendentes');
+
+    const pendingAdoptions = initialAdoptions.filter(a => a.status === StatusAdocao.SOLICITADA || a.status === StatusAdocao.EM_ANALISE);
+    const finalizedAdoptions = initialAdoptions.filter(a => a.status === StatusAdocao.APROVADA || a.status === StatusAdocao.RECUSADA);
 
     const getStatusClass = (status: StatusAdocao) => {
         switch (status) {
@@ -486,27 +493,44 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
             const response = await api.patch<Adocao>(`/adocoes/${adocaoId}/status`, { status });
             onUpdate(response.data);
             toast.success(`Pedido ${status === StatusAdocao.APROVADA ? 'aprovado' : 'recusado'} com sucesso!`);
-            setSelectedAdoption(null); // Fecha o modal após a ação
+            setSelectedAdoption(null);
         } catch (error) {
             toast.error('Erro ao atualizar o status do pedido.');
         }
     };
 
-    const handleWhatsAppContact = (adocao: Adocao) => {
+    const handleWhatsAppContact = (adocao: Adocao, isFollowUp: boolean = false) => {
         if (!adocao.usuario?.telefone) {
             toast.error('Este utilizador não possui um número de telefone registado.');
             return;
         }
-        const numero = adocao.usuario.telefone.replace(/\D/g, ''); // Remove caracteres não numéricos
+        const numero = adocao.usuario.telefone.replace(/\D/g, '');
         const nomeAnimal = adocao.animal?.nome;
-        const texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Vimos o seu interesse em adotar o(a) ${nomeAnimal}. Gostaríamos de conversar mais sobre o processo! 🐾`);
+        let texto;
+
+        if (isFollowUp) {
+            texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Somos da associação de protetores independentes Fabiana Forte Huergo e gostaríamos de fazer o acompanhamento da adoção do(a) ${nomeAnimal}. Como ele(a) está a adaptar-se ao novo lar?`);
+        } else {
+            texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Vimos o seu interesse em adotar o(a) ${nomeAnimal}. Gostaríamos de conversar mais sobre o processo!`);
+        }
         
-        // Assumindo DDI do Brasil (55)
         window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
     };
 
     return (
         <section className="bg-white rounded-xl shadow p-6">
+            {/* Abas de Navegação */}
+            <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                        Pedidos Pendentes ({pendingAdoptions.length})
+                    </button>
+                    <button onClick={() => setActiveTab('finalizadas')} className={`${activeTab === 'finalizadas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                        Adoções Finalizadas ({finalizedAdoptions.length})
+                    </button>
+                </nav>
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -518,7 +542,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {initialAdoptions.map(adocao => (
+                        {(activeTab === 'pendentes' ? pendingAdoptions : finalizedAdoptions).map(adocao => (
                             (adocao.animal && adocao.usuario) && (
                                 <tr key={adocao.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{adocao.animal.nome}</td>
@@ -529,7 +553,13 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
-                                        <button onClick={() => setSelectedAdoption(adocao)} className="text-blue-600 hover:text-blue-900">Ver Detalhes</button>
+                                        {activeTab === 'pendentes' ? (
+                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-blue-600 hover:text-blue-900">Analisar Pedido</button>
+                                        ) : (
+                                            adocao.status === StatusAdocao.APROVADA && (
+                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Acompanhar via WhatsApp</button>
+                                            )
+                                        )}
                                     </td>
                                 </tr>
                             )
@@ -599,9 +629,8 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t space-y-4 sm:space-y-0">
                             <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.001 2C5.582 2 2 5.582 2 10.001c0 1.511.413 2.925 1.15 4.156l-1.15 4.156 4.296-1.13c1.21.69 2.598 1.093 4.054 1.093 4.418 0 8-3.582 8-8.001 0-4.418-3.582-8-8-8zm4.134 9.478c-.23.645-.854 1.11-1.48 1.228-.51.1-.926.04-1.37-.158-.58-.26-1.18-.59-1.73-.99-1.12-0.8-1.88-1.88-2.08-2.22-.2-.34-.48-.59-.48-.96 0-.37.23-.59.48-.79.25-.2.53-.26.73-.26h.3c.23 0 .45.03.65.34.2.31.68.82.73.88.05.06.1.12.01.23-.09.11-.14.17-.26.31-.12.14-.23.28-.34.39-.12.12-.23.26-.11.48.11.22.53.88 1.12 1.44.79.79 1.41 1.02 1.63 1.12.22.1.34.09.48-.06.14-.15.59-.68.73-.88.14-.2.31-.23.53-.23.2 0 .48.01.68.03.2.02.31.01.45.14.14.13.23.29.26.48.03.19.03.91-.2 1.556z" /></svg>
-                                Contactar via WhatsApp
+                                Contactar Candidato
                             </Button>
-                            
                             <div className="flex space-x-3 w-full sm:w-auto">
                                 {selectedAdoption.status === StatusAdocao.SOLICITADA ? (
                                     <>
