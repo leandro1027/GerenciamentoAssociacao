@@ -33,6 +33,8 @@ npm install @types/nodemailer --save-dev
 //segurança no back
 npm install @nestjs/config
 
+npm install class-transformer
+
 
 Frontend:
 npx create-next-app@latest

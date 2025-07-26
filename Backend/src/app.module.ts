@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { SlideModule } from './slide/slide.module';
 import { AnimalModule } from './animal/animal.module';
 import { AdocoesModule } from './adocoes/adocoes.module';
+import { DivulgacaoModule } from './divulgacao/divulgacao.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdocoesModule } from './adocoes/adocoes.module';
     SlideModule,
     AnimalModule,
     AdocoesModule,
+    DivulgacaoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

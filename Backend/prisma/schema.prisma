@@ -19,6 +19,7 @@ model Usuario {
   voluntario           Voluntario?
   doacoes              Doacao[]
   adocoes              Adocao[]
+  divulgacoes Divulgacao[]
   passwordResetToken   String?
   passwordResetExpires DateTime?
 }
@@ -100,17 +101,37 @@ model Adocao {
   dataFinalizacao   DateTime?
   status            StatusAdocao @default(SOLICITADA)
   observacoesAdmin  String?
-
   tipoMoradia      String?  // Ex: "Casa com pátio", "Apartamento"
   outrosAnimais    String?  // Ex: "Sim, um cão", "Não"
   tempoDisponivel  String?  // Ex: "Manhãs e noites", "Integral"
   motivoAdocao     String?
-  
   usuario           Usuario      @relation(fields: [usuarioId], references: [id])
   usuarioId         Int
-
   animal            Animal       @relation(fields: [animalId], references: [id])
   animalId          String
 
   @@unique([usuarioId, animalId])
 }
+
+enum DivulgacaoStatus {
+  PENDENTE
+  REVISADO
+  REJEITADO
+}
+
+model Divulgacao {
+  id              String   @id @default(uuid())
+  localizacao     String
+  raca            String
+  castrado        Boolean
+  resgate         Boolean
+  imageUrl        String
+  descricao       String?
+  status          DivulgacaoStatus @default(PENDENTE)
+  createdAt       DateTime @default(now())
+
+  // Relação com o utilizador que fez a divulgação
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId       Int
+}
+

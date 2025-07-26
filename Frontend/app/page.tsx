@@ -75,12 +75,9 @@ export default function HomePage() {
                 {/* Coluna Direita */}
                 <div>
                     <div className="mt-4">
-                        <button 
-                          onClick={() => alert('Funcionalidade em desenvolvimento!')} 
-                          className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors"
-                        >
+                      <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
                             Quero divulgar um animal
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
