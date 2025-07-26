@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, createParamDecorator, ExecutionContext, ParseIntPipe } from '@nestjs/common';
 import { VoluntarioService } from './voluntario.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Request as ExpressRequest } from 'express';
+import { Usuario } from 'generated/prisma';
+
+export const GetUser = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  },
+);
 
 @Controller('voluntario')
 export class VoluntarioController {
@@ -23,6 +32,12 @@ export class VoluntarioController {
   @Roles('ADMIN')
   findAll() {
     return this.voluntarioService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('meu-status')
+  findMyStatus(@GetUser() user: Usuario) {
+    return this.voluntarioService.findOneByUserId(user.id);
   }
 
   // Rota de ADMIN: Apenas administradores podem aprovar/recusar candidaturas.

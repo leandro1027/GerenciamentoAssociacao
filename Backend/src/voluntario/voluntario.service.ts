@@ -37,6 +37,12 @@ export class VoluntarioService {
     return voluntario;
   }
 
+ findOneByUserId(userId: number) {
+    return this.prisma.voluntario.findUnique({
+      where: { usuarioId: userId },
+    });
+  }
+
   async update(id: number, updateVoluntarioDto: UpdateVoluntarioDto) {
     await this.findOne(id);
 

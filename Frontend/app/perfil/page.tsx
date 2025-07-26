@@ -11,8 +11,8 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 
 // Tipos
-import { Doacao, Voluntario, Usuario, Adocao } from '../../types'; // Importar Adocao
-type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos'; // 'meus_pedidos' adicionado
+import { Doacao, Voluntario, Usuario, Adocao } from '../../types';
+type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos';
 
 // --- ÍCONES DEFINIDOS LOCALMENTE ---
 const Icon = ({ path, className = "h-6 w-6" }: { path: string; className?: string }) => (
@@ -27,11 +27,11 @@ const ICONS = {
   lock: <Icon path="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
   gift: <Icon className="h-8 w-8 text-blue-500" path="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />,
   heart: <Icon className="h-8 w-8" path="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 20.25l-7.682-7.682a4.5 4.5 0 010-6.364z" />,
-  camera: <Icon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" path="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z" />,
+  camera: <Icon className="h-5 w-5 mr-2" path="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z" />,
   clipboard: <Icon path="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />,
 };
 
-// NOVO COMPONENTE PARA MOSTRAR OS PEDIDOS DE ADOÇÃO
+// COMPONENTE PARA MOSTRAR OS PEDIDOS DE ADOÇÃO
 const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
     const getStatusClass = (status: string) => {
         switch (status) {
@@ -42,7 +42,7 @@ const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
     };
 
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-lg">
+        <div className="bg-white p-8 rounded-2xl shadow-lg animate-fade-in-up">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Meus Pedidos de Adoção</h2>
             {pedidos.length === 0 ? (
                 <p className="text-gray-600">Você ainda não fez nenhum pedido de adoção.</p>
@@ -79,20 +79,25 @@ const MeusPedidosView = ({ pedidos }: { pedidos: Adocao[] }) => {
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading: isAuthLoading, updateUser } = useAuth();
   const [activeView, setActiveView] = useState<ProfileView>('overview');
-
-  const [donationCount, setDonationCount] = useState(0);
-  const [volunteerStatus, setVolunteerStatus] = useState<string | null>(null);
+  
+  // Estados dos formulários e dados
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
+  const [donationCount, setDonationCount] = useState(0);
+  const [volunteerStatus, setVolunteerStatus] = useState<string | null>(null);
+  const [pedidos, setPedidos] = useState<Adocao[]>([]);
+  
+  // Estados de loading e UI
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pedidos, setPedidos] = useState<Adocao[]>([]);
+
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -100,18 +105,24 @@ export default function ProfilePage() {
       setEmail(user.email);
       setTelefone(user.telefone || '');
 
+      if (user.profileImageUrl) {
+        setAvatarUrl(`${api.defaults.baseURL}${user.profileImageUrl}?t=${new Date().getTime()}`);
+      } else {
+        setAvatarUrl(`https://ui-avatars.com/api/?name=${user.nome.replace(' ', '+')}&background=0ea5e9&color=fff&size=128`);
+      }
+
       const fetchAllData = async () => {
         try {
-          const [donationsRes, volunteersRes, adocoesRes] = await Promise.all([
+          const [donationsRes, volunteerRes, adocoesRes] = await Promise.all([
             api.get<Doacao[]>('/doacao'),
-            api.get<Voluntario[]>('/voluntario'),
+            api.get<Voluntario | null>('/voluntario/meu-status'),
             api.get<Adocao[]>('/adocoes/meus-pedidos'),
           ]);
 
           const userDonations = donationsRes.data.filter(d => d.usuarioId === user.id);
           setDonationCount(userDonations.length);
 
-          const userVolunteer = volunteersRes.data.find(v => v.usuarioId === user.id);
+          const userVolunteer = volunteerRes.data;
           setVolunteerStatus(userVolunteer ? userVolunteer.status : 'Não se candidatou');
           
           setPedidos(adocoesRes.data);
@@ -191,11 +202,6 @@ export default function ProfilePage() {
     );
   }
 
-  const apiBaseUrl = api.defaults.baseURL;
-  const avatarUrl = user.profileImageUrl
-    ? `${apiBaseUrl}${user.profileImageUrl}?t=${new Date().getTime()}`
-    : `https://ui-avatars.com/api/?name=${user.nome.replace(' ', '+')}&background=0ea5e9&color=fff&size=128`;
-
   const getStatusClasses = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'aprovado': return 'text-green-600 bg-green-100 border-green-200';
@@ -211,18 +217,22 @@ export default function ProfilePage() {
         
         <div className="w-full bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 mb-8">
           <div className="relative">
-            <img src={avatarUrl} alt="Foto de Perfil" className="w-32 h-32 rounded-full object-cover border-4 border-slate-50" />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Alterar foto de perfil"
-              className="absolute inset-0 rounded-full bg-black bg-opacity-0 hover:bg-opacity-50 flex items-center justify-center cursor-pointer transition-all duration-300 group"
-            >
-              {ICONS.camera}
-            </button>
+            <img 
+              src={avatarUrl} 
+              alt="Foto de Perfil" 
+              className="w-32 h-32 rounded-full object-cover border-4 border-slate-50 bg-slate-200" 
+            />
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-bold text-slate-800">{user.nome}</h1>
             <p className="text-slate-500 mt-1">{user.email}</p>
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-4 bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold"
+            >
+              {ICONS.camera}
+              Alterar Foto
+            </Button>
           </div>
         </div>
         <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
@@ -303,7 +313,7 @@ export default function ProfilePage() {
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div>
                     <label htmlFor="senhaAtual" className="block mb-2 text-sm font-medium text-gray-700">Senha Atual</label>
-                    <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} icon={showCurrentPassword ? '👁️' : '�️‍🗨️'} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
+                    <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} icon={showCurrentPassword ? '👁️' : '👁️‍🗨️'} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
                   </div>
                   <div>
                     <label htmlFor="novaSenha" className="block mb-2 text-sm font-medium text-gray-700">Nova Senha</label>
