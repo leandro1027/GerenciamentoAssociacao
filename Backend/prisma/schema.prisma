@@ -81,6 +81,7 @@ model Animal {
   porte            Porte
   raca             String
   idade            String
+  castrado         Boolean 
   disponivel       Boolean      @default(true)
   status           StatusAnimal @default(DISPONIVEL)
   pedidosAdocao    Adocao[]

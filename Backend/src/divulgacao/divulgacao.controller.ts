@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseInterceptors, UploadedFile, BadRequestException, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseInterceptors, UploadedFile, BadRequestException, Get, UseGuards, Request, Param, ParseUUIDPipe, Patch, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -7,12 +7,12 @@ import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { UpdateAnimalDivulgacaoDto } from 'src/animal/dto/update-animal-divulgacao.dto';
 
 @Controller('divulgacao')
 export class DivulgacaoController {
   constructor(private readonly divulgacaoService: DivulgacaoService) {}
 
-  // Endpoint PROTEGIDO para utilizadores logados enviarem uma divulgação
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
@@ -24,6 +24,7 @@ export class DivulgacaoController {
       },
     }),
   }))
+
   create(
     @Body() createDivulgacaoDto: CreateDivulgacaoDto,
     @UploadedFile() file: Express.Multer.File,
@@ -36,11 +37,35 @@ export class DivulgacaoController {
     return this.divulgacaoService.create(createDivulgacaoDto, file, userId);
   }
 
-  // Endpoint para o ADMIN ver todas as divulgações
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   findAll() {
     return this.divulgacaoService.findAll();
   }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() UpdateAnimalDivulgacaoDto: UpdateAnimalDivulgacaoDto,
+  ) {
+    return this.divulgacaoService.updateStatus(id, UpdateAnimalDivulgacaoDto.status);
+  }
+
+  @Post(':id/convert-to-animal')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  convertToAnimal(@Param('id', ParseUUIDPipe) id: string) {
+    return this.divulgacaoService.convertToAnimal(id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.divulgacaoService.remove(id);
+  }
 }
+

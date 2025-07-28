@@ -33,4 +33,6 @@ export class CreateAnimalDto {
   @IsString()
   @IsOptional()
   animalImageUrl?: string;
+
+  castrado: boolean;
 }
