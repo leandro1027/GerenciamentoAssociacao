@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
 import { AnimalService } from 'src/animal/animal.service';
@@ -50,7 +50,6 @@ export class DivulgacaoService {
     });
   }
 
-  // NOVO MÉTODO: Converte uma divulgação num animal para adoção
   async convertToAnimal(id: string) {
     const divulgacao = await this.prisma.divulgacao.findUniqueOrThrow({
       where: { id },
@@ -59,23 +58,31 @@ export class DivulgacaoService {
     // 1. Cria um novo animal com os dados da divulgação
     const novoAnimal = await this.prisma.animal.create({
       data: {
-        nome: 'A Definir', // O admin definirá o nome final no painel
+        nome: `A Definir (${divulgacao.raca})`, // Nome provisório
         raca: divulgacao.raca,
         descricao: divulgacao.descricao || 'Sem descrição.',
         animalImageUrl: divulgacao.imageUrl,
         castrado: divulgacao.castrado,
-        // O admin precisará de preencher o resto dos detalhes
-        especie: 'CAO', // Valor padrão, admin pode alterar
-        sexo: 'MACHO',    // Valor padrão, admin pode alterar
-        porte: 'MEDIO',   // Valor padrão, admin pode alterar
-        idade: 'Não informada', // Valor padrão, admin pode alterar
+        // O admin precisará preencher o resto dos detalhes no painel "Gerir Animais"
+        especie: 'CAO', // Valor padrão
+        sexo: 'MACHO',    // Valor padrão
+        porte: 'MEDIO',   // Valor padrão
+        idade: 'A apurar', // Valor padrão
       },
     });
 
-    // 2. Atualiza o status da divulgação para 'REVISADO'
-    await this.updateStatus(id, DivulgacaoStatus.REVISADO);
+    // 2. DELETA a divulgação original após a conversão
+    await this.prisma.divulgacao.delete({ where: { id } });
 
     return novoAnimal;
+  }
+
+  async remove(id: string) {
+    const divulgacao = await this.prisma.divulgacao.findUnique({ where: { id } });
+    if (!divulgacao) {
+      throw new NotFoundException(`Divulgação com ID "${id}" não encontrada.`);
+    }
+    return this.prisma.divulgacao.delete({ where: { id } });
   }
 }
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes';
+type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes';
 
 // --- COMPONENTES FILHOS ---
 
@@ -472,7 +472,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   );
 };
 
-// 6. COMPONENTE PARA GERIR ADOÇÕES (COM MODAL ATUALIZADO)
+// 6. COMPONENTE PARA GERIR ADOÇÕES
 const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
     const [selectedAdoption, setSelectedAdoption] = useState<Adocao | null>(null);
     const [activeTab, setActiveTab] = useState<'pendentes' | 'finalizadas'>('pendentes');
@@ -519,7 +519,6 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
 
     return (
         <section className="bg-white rounded-xl shadow p-6">
-            {/* Abas de Navegação */}
             <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-6" aria-label="Tabs">
                     <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
@@ -568,20 +567,16 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                 </table>
             </div>
 
-            {/* MODAL DE DETALHES DA ADOÇÃO (NOVO DESIGN) */}
             {selectedAdoption && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
                     <div className="bg-gray-50 rounded-xl shadow-2xl p-8 max-w-3xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
-                        {/* Header com título e botão de fechar */}
                         <div className="flex justify-between items-center pb-4 border-b">
                             <h2 className="text-2xl font-bold text-gray-800">Detalhes do Pedido de Adoção</h2>
                             <button onClick={() => setSelectedAdoption(null)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        
                         <div className="py-6 space-y-6">
-                            {/* Informações do Animal e Candidato */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <h3 className="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Informações do Animal</h3>
@@ -600,8 +595,6 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Questionário */}
                             <div>
                                 <h3 className="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Respostas do Questionário</h3>
                                 <div className="bg-white p-4 rounded-lg border space-y-3 text-gray-600">
@@ -624,8 +617,6 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                 </div>
                             </div>
                         </div>
-
-                        {/* Footer com botões de ação */}
                         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t space-y-4 sm:space-y-0">
                             <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.001 2C5.582 2 2 5.582 2 10.001c0 1.511.413 2.925 1.15 4.156l-1.15 4.156 4.296-1.13c1.21.69 2.598 1.093 4.054 1.093 4.418 0 8-3.582 8-8.001 0-4.418-3.582-8-8-8zm4.134 9.478c-.23.645-.854 1.11-1.48 1.228-.51.1-.926.04-1.37-.158-.58-.26-1.18-.59-1.73-.99-1.12-0.8-1.88-1.88-2.08-2.22-.2-.34-.48-.59-.48-.96 0-.37.23-.59.48-.79.25-.2.53-.26.73-.26h.3c.23 0 .45.03.65.34.2.31.68.82.73.88.05.06.1.12.01.23-.09.11-.14.17-.26.31-.12.14-.23.28-.34.39-.12.12-.23.26-.11.48.11.22.53.88 1.12 1.44.79.79 1.41 1.02 1.63 1.12.22.1.34.09.48-.06.14-.15.59-.68.73-.88.14-.2.31-.23.53-.23.2 0 .48.01.68.03.2.02.31.01.45.14.14.13.23.29.26.48.03.19.03.91-.2 1.556z" /></svg>
@@ -649,6 +640,184 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     );
 };
 
+// 7. COMPONENTE PARA GERIR DIVULGAÇÕES (COM HISTÓRICO)
+const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'pendentes' | 'historico'>('pendentes');
+
+  const pendingDivulgacoes = initialDivulgacoes.filter(d => d.status === DivulgacaoStatus.PENDENTE);
+  const processedDivulgacoes = initialDivulgacoes.filter(d => d.status !== DivulgacaoStatus.PENDENTE);
+
+  const handleAction = async (action: Promise<any>, successMessage: string) => {
+    try {
+      await action;
+      toast.success(successMessage);
+      onUpdate(); 
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Ocorreu um erro.";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleWhatsAppContact = (divulgacao: Divulgacao) => {
+      if (!divulgacao.usuario?.telefone) {
+          toast.error('Este utilizador não possui um número de telefone registado.');
+          return;
+      }
+      const numero = divulgacao.usuario.telefone.replace(/\D/g, '');
+      const nomeAnimal = divulgacao.raca;
+      const texto = encodeURIComponent(`Olá ${divulgacao.usuario.nome}! Somos da associação e vimos a sua divulgação sobre um animal (${nomeAnimal}) na localização "${divulgacao.localizacao}". Gostaríamos de conversar para saber mais detalhes!`);
+      
+      window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
+  };
+
+  const handleStatusChange = async (id: string, status: DivulgacaoStatus) => {
+    setLoadingStates(prev => ({ ...prev, [`status-${id}`]: true }));
+    await handleAction(
+      api.patch(`/divulgacao/${id}/status`, { status }),
+      `Divulgação atualizada com sucesso!`
+    );
+    setLoadingStates(prev => ({ ...prev, [`status-${id}`]: false }));
+  };
+  
+  const handleConvertToAnimal = async (id: string) => {
+    setLoadingStates(prev => ({ ...prev, [`convert-${id}`]: true }));
+    await handleAction(
+      api.post(`/divulgacao/${id}/convert-to-animal`),
+      "Animal listado para adoção com sucesso!"
+    );
+    setLoadingStates(prev => ({ ...prev, [`convert-${id}`]: false }));
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Tem a certeza que deseja excluir esta divulgação?")) {
+      return;
+    }
+    setLoadingStates(prev => ({ ...prev, [`delete-${id}`]: true }));
+    await handleAction(api.delete(`/divulgacao/${id}`), "Divulgação excluída.");
+    setLoadingStates(prev => ({ ...prev, [`delete-${id}`]: false }));
+  };
+  
+  const StatusBadge = ({ status }: { status: DivulgacaoStatus }) => {
+    const styles: Record<DivulgacaoStatus, string> = {
+      PENDENTE: 'bg-yellow-100 text-yellow-800',
+      REVISADO: 'bg-green-100 text-green-800',
+      REJEITADO: 'bg-red-100 text-red-800',
+    };
+    return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${styles[status]}`}>{status}</span>;
+  };
+
+  const divulgacoesToShow = activeTab === 'pendentes' ? pendingDivulgacoes : processedDivulgacoes;
+
+  return (
+    <section>
+      <div className="bg-white rounded-xl shadow p-6">
+        {/* Abas de Navegação */}
+        <div className="border-b border-gray-200 mb-6">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    Pendentes ({pendingDivulgacoes.length})
+                </button>
+                <button onClick={() => setActiveTab('historico')} className={`${activeTab === 'historico' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    Histórico ({processedDivulgacoes.length})
+                </button>
+            </nav>
+        </div>
+
+        {divulgacoesToShow.length === 0 && (
+          <div className="text-center text-gray-500 py-16">
+            {activeTab === 'pendentes' ? 'Nenhuma divulgação pendente encontrada.' : 'Nenhuma divulgação no histórico.'}
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {divulgacoesToShow.map((divulgacao) => (
+            <div key={divulgacao.id} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-transform hover:scale-105 border">
+              <div className="relative">
+                <img 
+                  src={`${api.defaults.baseURL}${divulgacao.imageUrl}`} 
+                  alt={divulgacao.raca} 
+                  className="w-full h-56 object-cover cursor-pointer"
+                  onClick={() => setSelectedImage(`${api.defaults.baseURL}${divulgacao.imageUrl}`)}
+                />
+                <div className="absolute top-2 right-2">
+                  <StatusBadge status={divulgacao.status} />
+                </div>
+              </div>
+              
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-lg font-bold text-gray-800">{divulgacao.raca}</h3>
+                <p className="text-sm text-gray-500">{divulgacao.localizacao}</p>
+                
+                <div className="my-3 text-sm space-y-1">
+                  <p><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
+                  <p><strong>Data:</strong> {new Date(divulgacao.createdAt).toLocaleDateString()}</p>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'}`}>
+                      {divulgacao.castrado ? 'Castrado' : 'Não Castrado'}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.resgate ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
+                      {divulgacao.resgate ? 'Resgate' : 'Particular'}
+                    </span>
+                  </div>
+                </div>
+
+                {divulgacao.descricao && <p className="text-sm text-gray-600 mb-4 flex-1">"{divulgacao.descricao}"</p>}
+
+                <div className="mt-auto pt-4 border-t border-gray-200 space-y-2">
+                  <Button 
+                    variant="primary"
+                    onClick={() => handleWhatsAppContact(divulgacao)}
+                    className="w-full bg-green-500 hover:bg-green-600"
+                  >
+                    Contactar via WhatsApp
+                  </Button>
+
+                  {divulgacao.status === 'PENDENTE' && (
+                    <div className="flex flex-col space-y-2">
+                      <Button 
+                        variant="success" 
+                        onClick={() => handleConvertToAnimal(divulgacao.id)} 
+                        isLoading={loadingStates[`convert-${divulgacao.id}`]}
+                      >
+                        Aprovar e Listar
+                      </Button>
+                      <Button 
+                        variant="danger" 
+                        onClick={() => handleStatusChange(divulgacao.id, DivulgacaoStatus.REJEITADO)} 
+                        isLoading={loadingStates[`status-${divulgacao.id}`]}
+                      >
+                        Rejeitar
+                      </Button>
+                    </div>
+                  )}
+                   <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleDelete(divulgacao.id)}
+                      isLoading={loadingStates[`delete-${divulgacao.id}`]}
+                   >
+                      Excluir Permanentemente
+                   </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Modal para ver a imagem */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img src={selectedImage} alt="Visualização ampliada" className="max-w-full max-h-full rounded-lg" />
+        </div>
+      )}
+    </section>
+  );
+};
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
@@ -661,40 +830,45 @@ export default function AdminPanelPage() {
   const [doacoes, setDoacoes] = useState<Doacao[]>([]);
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [adocoes, setAdocoes] = useState<Adocao[]>([]);
+  const [divulgacoes, setDivulgacoes] = useState<Divulgacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchData = useCallback(async () => {
+    setError(null);
+    try {
+      const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes, divulgacoesRes] = await Promise.all([
+        api.get<Voluntario[]>('/voluntario'),
+        api.get<Usuario[]>('/usuario'),
+        api.get<Slide[]>('/slide'),
+        api.get<Doacao[]>('/doacao'),
+        api.get<Animal[]>('/animais'),
+        api.get<Adocao[]>('/adocoes'),
+        api.get<Divulgacao[]>('/divulgacao'), 
+      ]);
+      setVoluntarios(voluntariosRes.data);
+      setUsuarios(usuariosRes.data);
+      setSlides(slidesRes.data);
+      setDoacoes(doacoesRes.data);
+      setAnimais(animaisRes.data);
+      setAdocoes(adocoesRes.data);
+      setDivulgacoes(divulgacoesRes.data);
+    } catch (err) {
+      setError('Falha ao carregar os dados do painel.');
+      toast.error('Falha ao carregar os dados do painel.');
+    } finally {
+      setLoading(false);
+    }
+  }, []); 
+
   useEffect(() => {
     if (isAuthenticated && user?.role === 'ADMIN') {
-      const fetchData = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes] = await Promise.all([
-            api.get<Voluntario[]>('/voluntario'),
-            api.get<Usuario[]>('/usuario'),
-            api.get<Slide[]>('/slide'),
-            api.get<Doacao[]>('/doacao'),
-            api.get<Animal[]>('/animais'),
-            api.get<Adocao[]>('/adocoes'),
-          ]);
-          setVoluntarios(voluntariosRes.data);
-          setUsuarios(usuariosRes.data);
-          setSlides(slidesRes.data);
-          setDoacoes(doacoesRes.data);
-          setAnimais(animaisRes.data);
-          setAdocoes(adocoesRes.data);
-        } catch (err) {
-          setError('Falha ao carregar os dados do painel.');
-        } finally {
-          setLoading(false);
-        }
-      };
+      setLoading(true);
       fetchData();
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchData]);
   
   if (!isAuthenticated || user?.role !== 'ADMIN') {
     return (
@@ -717,6 +891,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Slides</button>
             <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
             <button onClick={() => setActiveView('adocoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>❤️ Gerir Adoções</button>
+            <button onClick={() => setActiveView('divulgacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📢 Gerir Divulgações</button>
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
@@ -733,6 +908,7 @@ export default function AdminPanelPage() {
       voluntarios: 'Gestão de Voluntários',
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
+      divulgacoes: 'Gestão de Divulgações da Comunidade'
     };
 
     return (
@@ -744,7 +920,7 @@ export default function AdminPanelPage() {
             <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
         </header>
         <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
-            {loading && <p>A carregar dados...</p>}
+            {loading && <p className="text-center text-gray-600">A carregar dados...</p>}
             {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
             
             {!loading && !error && (
@@ -752,6 +928,7 @@ export default function AdminPanelPage() {
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                     {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
+                    {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
                     {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}

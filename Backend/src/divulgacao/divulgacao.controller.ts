@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseInterceptors, UploadedFile, BadRequestException, Get, UseGuards, Request, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { Controller, Post, Body, UseInterceptors, UploadedFile, BadRequestException, Get, UseGuards, Request, Param, ParseUUIDPipe, Patch, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -13,7 +13,6 @@ import { UpdateAnimalDivulgacaoDto } from 'src/animal/dto/update-animal-divulgac
 export class DivulgacaoController {
   constructor(private readonly divulgacaoService: DivulgacaoService) {}
 
-  // Endpoint PROTEGIDO para utilizadores logados enviarem uma divulgação
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
@@ -25,6 +24,7 @@ export class DivulgacaoController {
       },
     }),
   }))
+
   create(
     @Body() createDivulgacaoDto: CreateDivulgacaoDto,
     @UploadedFile() file: Express.Multer.File,
@@ -37,13 +37,13 @@ export class DivulgacaoController {
     return this.divulgacaoService.create(createDivulgacaoDto, file, userId);
   }
 
-  // Endpoint para o ADMIN ver todas as divulgações
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   findAll() {
     return this.divulgacaoService.findAll();
   }
+
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -54,12 +54,18 @@ export class DivulgacaoController {
     return this.divulgacaoService.updateStatus(id, UpdateAnimalDivulgacaoDto.status);
   }
 
-  // NOVO ENDPOINT: Para o admin converter uma divulgação em animal
   @Post(':id/convert-to-animal')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   convertToAnimal(@Param('id', ParseUUIDPipe) id: string) {
     return this.divulgacaoService.convertToAnimal(id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.divulgacaoService.remove(id);
   }
 }
 

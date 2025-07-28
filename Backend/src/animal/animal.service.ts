@@ -7,13 +7,23 @@ import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class AnimalService {
-  constructor (private readonly prisma:PrismaService){}
+  constructor(private readonly prisma: PrismaService) {}
 
   create(createAnimalDto: CreateAnimalDto, file: Express.Multer.File) {
     const animalImageUrl = `/uploads/${file.filename}`;
+    
+    // Extrai o campo 'castrado' e o resto dos dados do DTO
+    const { castrado, ...restOfDto } = createAnimalDto;
+
     return this.prisma.animal.create({
       data: {
-        ...createAnimalDto,
+        // Usa o resto dos dados que já estão no formato correto
+        ...restOfDto, 
+        
+        // Converte a string 'castrado' para um booleano real
+        castrado: String(castrado) === 'true',
+        
+        // Adiciona a URL da imagem
         animalImageUrl: animalImageUrl,
       },
     });
@@ -35,7 +45,7 @@ export class AnimalService {
       where.porte = filters.porte;
     }
     if (filters.nome) {
-      // CORREÇÃO: A propriedade 'mode' foi removida para ser compatível com SQLite.
+      // Usando 'contains' para busca de texto parcial, compatível com SQLite
       where.nome = {
         contains: filters.nome,
       };
@@ -45,17 +55,17 @@ export class AnimalService {
       where,
       orderBy: {
         createdAt: 'desc',
-      }
+      },
     });
   }
 
   async findOne(id: string) {
     const animal = await this.prisma.animal.findUnique({
-      where: {id},
+      where: { id },
     });
 
-    if(!animal){
-      throw new NotFoundException(`Animal com ID "${id}" não encontrado.`)
+    if (!animal) {
+      throw new NotFoundException(`Animal com ID "${id}" não encontrado.`);
     }
 
     return animal;
@@ -63,8 +73,14 @@ export class AnimalService {
 
   async update(id: string, updateAnimalDto: UpdateAnimalDto) {
     await this.findOne(id);
+    
+    // Se o campo 'castrado' vier no DTO de atualização, também precisa ser convertido
+    if (updateAnimalDto.castrado !== undefined) {
+        (updateAnimalDto as any).castrado = String(updateAnimalDto.castrado) === 'true';
+    }
+
     return this.prisma.animal.update({
-      where: {id},
+      where: { id },
       data: updateAnimalDto,
     });
   }
@@ -72,7 +88,7 @@ export class AnimalService {
   async remove(id: string) {
     await this.findOne(id);
     return this.prisma.animal.delete({
-      where: {id},
+      where: { id },
     });
   }
 }
