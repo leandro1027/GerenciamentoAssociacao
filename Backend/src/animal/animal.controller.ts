@@ -24,6 +24,17 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Especie, Porte, Sexo } from 'generated/prisma';
 
+// Helper para gerar nomes de arquivo únicos
+const generateUniqueFilename = (file: Express.Multer.File) => {
+  const name = file.originalname.split('.')[0];
+  const fileExtName = extname(file.originalname);
+  const randomName = Array(4)
+    .fill(null)
+    .map(() => Math.round(Math.random() * 16).toString(16))
+    .join('');
+  return `${name}-${randomName}${fileExtName}`;
+};
+
 @Controller('animais')
 export class AnimalController {
   constructor(private readonly animalService: AnimalService) {}
@@ -31,7 +42,25 @@ export class AnimalController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(FileInterceptor('file', { /* ... sua configuração de upload ... */ }))
+  // AQUI ESTÁ A CORREÇÃO PRINCIPAL: A configuração completa do FileInterceptor
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads', // Pasta onde os arquivos serão salvos
+        filename: (req, file, callback) => {
+          // Gera um nome de arquivo único para o arquivo
+          callback(null, generateUniqueFilename(file));
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        // Validação simples para aceitar apenas imagens
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+          return callback(new Error('Apenas ficheiros de imagem são permitidos!'), false);
+        }
+        callback(null, true);
+      },
+    }),
+  )
   create(
     @Body() createAnimalDto: CreateAnimalDto,
     @UploadedFile() file: Express.Multer.File,
@@ -39,10 +68,10 @@ export class AnimalController {
     if (!file) {
       throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
+    // Agora 'file.filename' terá o nome gerado pelo diskStorage
     return this.animalService.create(createAnimalDto, file);
   }
 
-  // MÉTODO ATUALIZADO PARA RECEBER OS FILTROS
   @Get()
   findAll(
     @Query('especie') especie?: Especie,
