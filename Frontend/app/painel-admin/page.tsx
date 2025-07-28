@@ -647,7 +647,9 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   const [activeTab, setActiveTab] = useState<'pendentes' | 'historico'>('pendentes');
 
   const pendingDivulgacoes = initialDivulgacoes.filter(d => d.status === DivulgacaoStatus.PENDENTE);
-  const processedDivulgacoes = initialDivulgacoes.filter(d => d.status !== DivulgacaoStatus.PENDENTE);
+  const processedDivulgacoes = initialDivulgacoes.filter(
+    d => d.status === DivulgacaoStatus.REVISADO || d.status === DivulgacaoStatus.REJEITADO
+  );
 
   const handleAction = async (action: Promise<any>, successMessage: string) => {
     try {
