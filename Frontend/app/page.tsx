@@ -29,7 +29,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
       </div>
       <Link href={`/adote/${animal.id}`} className="block p-4 hover:bg-gray-50 transition-colors duration-200">
         <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">{animal.nome}</h3>
-        <p className="text-sm text-gray-600 mt-1">Porto União, Santa Catarina</p>
+        <p className="text-sm text-gray-600 mt-1">{animal.raca}</p>
       </Link>
     </div>
   );
