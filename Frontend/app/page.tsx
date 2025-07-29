@@ -2,36 +2,51 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Carousel from './components/layout/carousel'; // Re-importado
+import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal } from '../types';
 
-// --- COMPONENTE PARA O CARD DO ANIMAL ---
-// Este componente deve idealmente estar no seu próprio ficheiro, como fizemos antes.
+// --- COMPONENTES AUXILIARES PARA A UI ---
+
+const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+  </svg>
+);
+
+// Componente para o Card do Animal (Estilo consistente com a página /adote)
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal || !animal.animalImageUrl) {
     return null; 
   }
   const apiBaseUrl = api.defaults.baseURL;
   const imageUrl = `${apiBaseUrl}${animal.animalImageUrl}`;
+  
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
+
   return (
-    <div className="group bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="relative w-full h-56 bg-gray-200">
+    <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
+      <div className="relative overflow-hidden h-56">
         <img 
           src={imageUrl} 
           alt={`Foto de ${animal.nome}`} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
           onError={handleImageError}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute bottom-4 left-4">
+          <h3 className="text-xl font-bold text-white">{animal.nome}</h3>
+          <p className="text-sm text-gray-200">{animal.raca}</p>
+        </div>
       </div>
-      <Link href={`/adote/${animal.id}`} className="block p-4 hover:bg-gray-50 transition-colors duration-200">
-        <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">{animal.nome}</h3>
-        <p className="text-sm text-gray-600 mt-1">{animal.raca}</p>
-      </Link>
-    </div>
+      <div className="p-4 bg-white">
+        <span className="inline-block w-full bg-amber-800 text-white text-center font-semibold px-4 py-2 rounded-lg group-hover:bg-amber-900 transition-colors">
+          Quero Adotar
+        </span>
+      </div>
+    </Link>
   );
 };
 
@@ -60,6 +75,7 @@ export default function HomePage() {
   return (
     <>
       <Carousel />
+      
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             {/* Grelha de duas colunas para as imagens e botões */}
@@ -75,7 +91,7 @@ export default function HomePage() {
                 {/* Coluna Direita */}
                 <div>
                     <div className="mt-4">
-                      <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
+                        <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
                             Quero divulgar um animal
                         </Link>
                     </div>
@@ -92,27 +108,21 @@ export default function HomePage() {
 
       {/* Secção de Pré-visualização dos Animais */}
       <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <header className="mb-10 text-center">
-              <h2 className="text-4xl font-bold text-gray-800">
-                Conheça alguns deles
-              </h2>
-            </header>
-
+        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
             {loading && <p className="text-center text-gray-600">A carregar animais...</p>}
             {error && <p className="text-center text-red-600">{error}</p>}
 
             {!loading && !error && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                   {animais.map(animal => (
                     <AnimalCard key={animal.id} animal={animal} />
                   ))}
                 </div>
 
                 <div className="mt-12 text-center">
-                    <Link href="/adote" className="inline-block bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-lg shadow-sm group-hover:text-amber-800 transition-colors duration-200">
-                        Ver Mais
+                    <Link href="/adote" className="inline-block bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
+                        Ver todos os animais
                     </Link>
                 </div>
               </>

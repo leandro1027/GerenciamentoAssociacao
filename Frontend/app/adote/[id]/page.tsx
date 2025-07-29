@@ -10,12 +10,22 @@ import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
-// Ícones para os detalhes
-const PawIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h.5a1.5 1.5 0 010 3H14a1 1 0 00-1 1v.5a1.5 1.5 0 01-3 0V8a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H9a1 1 0 001-1v-.5z" /><path d="M9.5 11.5a1.5 1.5 0 013 0V12a1 1 0 001 1h.5a1.5 1.5 0 010 3H13a1 1 0 00-1 1v.5a1.5 1.5 0 01-3 0V16a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H8a1 1 0 001-1v-.5zM6.5 7a1.5 1.5 0 00-3 0V6.5a1 1 0 011-1h.5a1.5 1.5 0 000-3H4a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0V4a1 1 0 011-1h.5a1.5 1.5 0 000-3H1.5a1.5 1.5 0 000 3H2a1 1 0 011 1v.5a1.5 1.5 0 003 0V8a1 1 0 01-1-1h-.5z" /></svg>;
-const RulerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm3.293 1.293a1 1 0 00-1.414 0l-2 2a1 1 0 001.414 1.414L6 6.414l.293.293a1 1 0 001.414-1.414l-2-2zM10 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm3.293 1.293a1 1 0 00-1.414 0l-2 2a1 1 0 001.414 1.414L13 6.414l.293.293a1 1 0 001.414-1.414l-2-2z" clipRule="evenodd" /></svg>;
-const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
+const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+  </svg>
+);
 
-// Componente para o Modal do Questionário (COM CORREÇÃO DE ESTILO)
+const AnimalFeature = ({ iconPath, label, value }: { iconPath: string, label: string, value: string }) => (
+  <div className="flex flex-col items-center justify-center p-4 bg-gray-100 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow">
+    <div className="p-3 bg-amber-100 rounded-full mb-2">
+      <Icon path={iconPath} className="w-6 h-6 text-amber-800" />
+    </div>
+    <p className="text-sm font-semibold text-gray-600">{label}</p>
+    <p className="text-lg font-bold text-gray-900">{value}</p>
+  </div>
+);
+
 const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose: () => void, onSubmit: (data: any) => Promise<void> }) => {
   const [formData, setFormData] = useState({
     tipoMoradia: '',
@@ -33,57 +43,38 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
-        {/* Header do Modal */}
+    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full animate-fade-in-up">
         <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Questionário de Adoção</h2>
-            <p className="text-gray-600 mt-1">Interessado em adotar o(a) <span className="font-semibold text-blue-600">{animal.nome}</span></p>
+          <h2 className="text-2xl font-bold text-gray-800">Questionário de Adoção</h2>
+          <p className="text-gray-600 mt-1">Interessado em adotar <span className="font-semibold text-amber-800">{animal.nome}</span>?</p>
         </div>
 
-        {/* Formulário */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {['tipoMoradia', 'outrosAnimais', 'tempoDisponivel'].map((field, idx) => (
+            <div key={idx}>
+              <label className="block text-sm font-medium text-gray-700 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
+              <select value={(formData as any)[field]} onChange={e => setFormData({...formData, [field]: e.target.value})} required className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 ${!(formData as any)[field] ? 'text-gray-400' : 'text-gray-900'}`}>
+                <option value="" disabled>Selecione uma opção</option>
+                {field === 'tipoMoradia' && ['Casa com pátio fechado', 'Apartamento', 'Chácara/Sítio'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {field === 'outrosAnimais' && ['Sim', 'Não'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {field === 'tempoDisponivel' && ['Manhãs e noites', 'Apenas noites', 'Tempo integral'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          ))}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Qual o seu tipo de moradia?</label>
-            <select value={formData.tipoMoradia} onChange={e => setFormData({...formData, tipoMoradia: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.tipoMoradia ? 'text-gray-400' : 'text-gray-900'}`}>
-              <option value="" disabled>Selecione uma opção</option>
-              <option value="Casa com pátio fechado">Casa com pátio fechado</option>
-              <option value="Apartamento">Apartamento</option>
-              <option value="Chácara/Sítio">Chácara/Sítio</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Você possui outros animais?</label>
-            <select value={formData.outrosAnimais} onChange={e => setFormData({...formData, outrosAnimais: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.outrosAnimais ? 'text-gray-400' : 'text-gray-900'}`}>
-              <option value="" disabled>Selecione uma opção</option>
-              <option value="Sim">Sim</option>
-              <option value="Não">Não</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Quanto tempo você terá disponível para o animal?</label>
-            <select value={formData.tempoDisponivel} onChange={e => setFormData({...formData, tempoDisponivel: e.target.value})} required className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${!formData.tempoDisponivel ? 'text-gray-400' : 'text-gray-900'}`}>
-              <option value="" disabled>Selecione uma opção</option>
-              <option value="Manhãs e noites">Manhãs e noites</option>
-              <option value="Apenas noites">Apenas noites</option>
-              <option value="Tempo integral">Tempo integral</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Porque você gostaria de adotar o {animal.nome}?</label>
-            {/* CORREÇÃO APLICADA AQUI */}
-            <textarea value={formData.motivoAdocao} onChange={e => setFormData({...formData, motivoAdocao: e.target.value})} rows={3} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos um pouco..."></textarea>
+            <label className="block text-sm font-medium text-gray-700">Por que deseja adotar {animal.nome}?</label>
+            <textarea value={formData.motivoAdocao} onChange={e => setFormData({...formData, motivoAdocao: e.target.value})} rows={3} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos um pouco..."></textarea>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" onClick={onClose} className="bg-red-550 text-red-800 hover:bg-red-700">Cancelar</Button>
-            <Button type="submit" isLoading={isLoading}>Enviar Pedido</Button>
+            <Button type="button" onClick={onClose} variant="outline">Cancelar</Button>
+            <Button type="submit" isLoading={isLoading} className="bg-amber-800 hover:bg-amber-900 focus:ring-amber-500">Enviar Pedido</Button>
           </div>
         </form>
       </div>
     </div>
   );
 };
-
 
 export default function AnimalDetailPage() {
   const params = useParams();
@@ -136,7 +127,7 @@ export default function AnimalDetailPage() {
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-screen"><p>A carregar...</p></div>;
+  if (loading) return <div className="flex justify-center items-center h-screen"><p>Carregando...</p></div>;
   if (error) return <div className="flex justify-center items-center h-screen"><p className="text-red-500">{error}</p></div>;
   if (!animal) return null;
 
@@ -153,31 +144,30 @@ export default function AnimalDetailPage() {
           onSubmit={handleAdoptionSubmit}
         />
       )}
-      <main className="bg-gray-50 py-12 sm:py-16">
+      <main className="bg-gradient-to-b from-gray-50 to-white py-12 sm:py-16 min-h-screen">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden md:grid md:grid-cols-2 md:gap-x-8">
-            <div className="relative h-80 md:h-full">
-              <img src={imageUrl} alt={`Foto de ${animal.nome}`} className="w-full h-full object-cover" />
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden md:grid md:grid-cols-2">
+            <div className="relative min-h-[400px] md:min-h-full">
+              <img src={imageUrl} alt={`Foto de ${animal.nome}`} className="absolute w-full h-full object-cover rounded-l-3xl" />
             </div>
-            <div className="p-8">
-              <h1 className="text-4xl font-extrabold text-gray-900">{animal.nome}</h1>
-              <p className="mt-2 text-lg text-gray-600">{animal.raca}</p>
-              
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center"><PawIcon /><span className="text-gray-700"><strong className="font-semibold">Sexo:</strong> {animal.sexo}</span></div>
-                <div className="flex items-center"><RulerIcon /><span className="text-gray-700"><strong className="font-semibold">Porte:</strong> {animal.porte}</span></div>
-                <div className="flex items-center"><CalendarIcon /><span className="text-gray-700"><strong className="font-semibold">Idade:</strong> {animal.idade}</span></div>
+            <div className="p-8 flex flex-col">
+              <h1 className="text-4xl font-extrabold text-gray-900 mb-1">{animal.nome}</h1>
+              <p className="text-lg text-gray-600 mb-4 italic">{animal.raca}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <AnimalFeature iconPath="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" label="Sexo" value={animal.sexo} />
+                <AnimalFeature iconPath="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18" label="Idade" value={animal.idade} />
+                <AnimalFeature iconPath="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" label="Porte" value={animal.porte} />
               </div>
 
-              <div className="mt-8">
-                <h2 className="text-xl font-bold text-gray-800">Sobre o(a) {animal.nome}</h2>
-                <p className="mt-4 text-gray-600 leading-relaxed">{animal.descricao}</p>
+              <div className="space-y-4 text-gray-700 flex-1">
+                <h2 className="text-xl font-semibold text-gray-800">Sobre {animal.nome}</h2>
+                <p className="leading-relaxed text-justify">{animal.descricao}</p>
               </div>
 
               <div className="mt-10">
                 <Button 
                   onClick={handleOpenAdoptionModal}
-                  className="w-full text-lg"
+                  className="w-full text-lg bg-amber-800 hover:bg-amber-900 focus:ring-amber-500"
                   disabled={animal.status !== 'DISPONIVEL'}
                 >
                   {animal.status === 'DISPONIVEL' ? `Quero Adotar o ${animal.nome}` : 'Adoção em Processo'}

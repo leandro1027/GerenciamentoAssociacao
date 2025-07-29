@@ -285,7 +285,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
     );
 };
 
-// 5. COMPONENTE PARA GERIR ANIMAIS
+// 5. COMPONENTE PARA GERIR ANIMAIS (COM CORREÇÕES DE ESTILO E EDIÇÃO)
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
   const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
   const [especie, setEspecie] = useState<Especie>(Especie.CAO);
@@ -387,21 +387,21 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="especie" className="block text-sm font-medium text-gray-700 mb-2">Espécie</label>
-              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
                 <option value={Especie.CAO}>Cão</option>
                 <option value={Especie.GATO}>Gato</option>
               </select>
             </div>
             <div>
               <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
-              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
                 <option value={Sexo.MACHO}>Macho</option>
                 <option value={Sexo.FEMEA}>Fêmea</option>
               </select>
             </div>
             <div>
               <label htmlFor="porte" className="block text-sm font-medium text-gray-700 mb-2">Porte</label>
-              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
                 <option value={Porte.PEQUENO}>Pequeno</option>
                 <option value={Porte.MEDIO}>Médio</option>
                 <option value={Porte.GRANDE}>Grande</option>
@@ -414,7 +414,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           </div>
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
-            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
+            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
           </div>
           <div className="flex justify-end">
             <Button type="submit" isLoading={isLoading}>Cadastrar Animal</Button>
@@ -429,7 +429,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Raça</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
               </tr>
@@ -441,7 +441,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
                     <>
                       <td className="px-6 py-4">-</td>
                       <td className="px-6 py-4"><Input value={editingAnimal.nome} onChange={e => setEditingAnimal({...editingAnimal, nome: e.target.value})} /></td>
-                      <td className="px-6 py-4"><Input value={editingAnimal.raca} onChange={e => setEditingAnimal({...editingAnimal, raca: e.target.value})} /></td>
+                      <td className="px-6 py-4"><Input value={editingAnimal.descricao} onChange={e => setEditingAnimal({...editingAnimal, descricao: e.target.value})} /></td>
                       <td className="px-6 py-4">-</td>
                       <td className="px-6 py-4 text-center space-x-2">
                           <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
@@ -454,7 +454,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
                         <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.raca}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{animal.descricao}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
                       <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
                         <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
@@ -749,12 +749,12 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
               
               <div className="p-4 flex flex-col flex-1">
                 <h3 className="text-lg font-bold text-gray-800">{divulgacao.raca}</h3>
-                <p className="text-sm text-gray-500">{divulgacao.localizacao}</p>
+                <p className="text-sm text-gray-600">{divulgacao.localizacao}</p>
                 
-                <div className="my-3 text-sm space-y-1">
+                <div className="my-3 text-sm space-y-1 text-gray-700">
                   <p><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
                   <p><strong>Data:</strong> {new Date(divulgacao.createdAt).toLocaleDateString()}</p>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 pt-1">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'}`}>
                       {divulgacao.castrado ? 'Castrado' : 'Não Castrado'}
                     </span>

@@ -47,8 +47,8 @@ const Navbar = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <Link href="/voluntario" className={linkStyle}>Quero Ajudar</Link>
+               <Link href="/doacoes" className={linkStyle}>Quero Doar</Link>
               <Link href="/adote" className={linkStyle}>Quero Adotar</Link>
-              {/* Adicionei os outros links do seu exemplo */}
               <Link href="#" className={linkStyle}>Quem Somos</Link>
               <Link href="#" className={linkStyle}>Parceiros</Link>
               <Link href="#" className={linkStyle}>Animais Comunitários</Link>

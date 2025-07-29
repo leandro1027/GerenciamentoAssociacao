@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -8,9 +8,27 @@ import { NotFoundError } from 'rxjs';
 export class VoluntarioService {
   constructor(private readonly prisma:PrismaService) {}
 
-  create(createVoluntarioDto: CreateVoluntarioDto) {
+   async create(createVoluntarioDto: CreateVoluntarioDto) {
+    const { usuarioId, motivo } = createVoluntarioDto;
+
+    // 2. Verifique se já existe uma candidatura para este utilizador
+    const existingVoluntario = await this.prisma.voluntario.findUnique({
+      where: {
+        usuarioId: usuarioId,
+      },
+    });
+
+    // 3. Se já existir, retorne um erro claro
+    if (existingVoluntario) {
+      throw new ConflictException('Este utilizador já enviou uma candidatura.');
+    }
+
+    // 4. Se não existir, crie a nova candidatura
     return this.prisma.voluntario.create({
-      data: createVoluntarioDto,
+      data: {
+        usuarioId,
+        motivo,
+      },
     });
   }
 
