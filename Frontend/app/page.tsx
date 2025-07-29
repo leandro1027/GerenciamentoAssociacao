@@ -50,6 +50,50 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
   );
 };
 
+// --- NOVO COMPONENTE: SEÇÃO SOBRE NÓS ---
+const AboutSection = () => (
+  <section className="bg-white py-16 sm:py-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        {/* Coluna de Texto */}
+        <div className="text-gray-700">
+          <h2 className="text-3xl sm:text-4xl font-bold text-amber-900 tracking-tight">
+            Nossa Missão é Unir Corações e Patas
+          </h2>
+          <p className="mt-4 text-lg">
+            Somos uma associação dedicada ao resgate, cuidado e adoção de animais em Porto União, Santa Catarina. Acreditamos que cada animal merece um lar seguro e cheio de amor.
+          </p>
+          <ul className="mt-6 space-y-3 list-disc list-inside">
+            <li>Resgate de animais em situação de risco.</li>
+            <li>Cuidados veterinários completos, incluindo vacinação e castração.</li>
+            <li>Busca por lares responsáveis e amorosos.</li>
+            <li>Conscientização sobre a posse responsável.</li>
+            <li>Promoção de eventos e feiras de adoção.</li>
+          </ul>
+          <div className="mt-8">
+            <Link href="/quem-somos" className="inline-block bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
+              Saiba Mais
+            </Link>
+          </div>
+        </div>
+        {/* Coluna da Imagem/Vídeo */}
+        <div className="relative rounded-xl overflow-hidden shadow-2xl">
+          <img 
+            src="https://casadurvalpaiva.org.br/wp-content/uploads/2024/06/Por-que-doar.png" 
+            alt="Criança interagindo com um cão"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
+              <Icon path="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" className="w-10 h-10" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
 export default function HomePage() {
@@ -76,11 +120,10 @@ export default function HomePage() {
     <>
       <Carousel />
       
+      {/* Seção de Ações Principais */}
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            {/* Grelha de duas colunas para as imagens e botões */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Coluna Esquerda */}
                 <div>
                     <div className="mt-4">
                         <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
@@ -88,7 +131,6 @@ export default function HomePage() {
                         </Link>
                     </div>
                 </div>
-                {/* Coluna Direita */}
                 <div>
                     <div className="mt-4">
                         <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
@@ -97,14 +139,11 @@ export default function HomePage() {
                     </div>
                 </div>
             </div>
-
-            {/* Bloco de texto abaixo da grelha */}
-            <div className="mt-12">
-                <h2 className="text-3xl font-bold text-gray-800">Adote um animalzinho!</h2>
-                <p className="mt-2 text-gray-600">O nosso site está cheio de cãezinhos e gatinhos ansiosos por uma família. Vem ver!</p>
-            </div>
         </section>
       </main>
+
+      {/* NOVA SEÇÃO SOBRE NÓS */}
+      <AboutSection />
 
       {/* Secção de Pré-visualização dos Animais */}
       <div className="bg-gray-50">

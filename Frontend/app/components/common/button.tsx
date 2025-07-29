@@ -24,7 +24,7 @@ const Button = ({
 
   // Estilos específicos para cada variante
   const variantClasses: Record<ButtonVariant, string> = {
-    primary: 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-400',
+    primary: 'text-white bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 disabled:bg-amber-400',
     success: 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500 disabled:bg-green-400',
     danger: 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500 disabled:bg-red-400',
     outline: 'text-gray-700 bg-transparent border border-gray-400 hover:bg-gray-100 focus:ring-gray-500 disabled:bg-gray-200',

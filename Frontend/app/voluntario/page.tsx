@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { Voluntario, StatusVoluntario } from '../../types';
 import toast from 'react-hot-toast';
 
-// Ícone Genérico
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
@@ -25,16 +24,16 @@ export default function VoluntarioPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      setIsCheckingStatus(true);
       const checkStatus = async () => {
         try {
-          const response = await api.get<Voluntario[]>('/voluntario');
-          const minhaCandidatura = response.data.find(v => v.usuarioId === user.id);
-          if (minhaCandidatura) {
-            setVoluntarioStatus(minhaCandidatura.status);
+          const response = await api.get<Voluntario>('/voluntario/meu-status');
+          if (response.data?.status) {
+            setVoluntarioStatus(response.data.status);
           }
-        } catch (error) {
-          console.error("Erro ao verificar status de voluntário", error);
+        } catch (error: any) {
+          if (error.response?.status !== 404) {
+            console.error("Erro ao verificar status de voluntário", error);
+          }
         } finally {
           setIsCheckingStatus(false);
         }
@@ -53,13 +52,8 @@ export default function VoluntarioPage() {
     }
 
     setIsLoading(true);
-
     try {
-      await api.post('/voluntario', {
-        usuarioId: user.id,
-        motivo,
-      });
-
+      await api.post('/voluntario', { usuarioId: user.id, motivo });
       toast.success('Candidatura enviada com sucesso!');
       setMotivo('');
       setVoluntarioStatus('pendente');
@@ -73,8 +67,8 @@ export default function VoluntarioPage() {
 
   if (isCheckingStatus) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-gray-700 text-lg">Verificando o seu status...</p>
+      <main className="min-h-screen flex items-center justify-center bg-white">
+        <p>Carregando informações...</p>
       </main>
     );
   }
@@ -82,13 +76,15 @@ export default function VoluntarioPage() {
   const renderContent = () => {
     if (!isAuthenticated) {
       return (
-        <div className="text-center space-y-4">
-          <Icon path="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" className="mx-auto h-14 w-14 text-amber-700" />
-          <h2 className="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
-          <p className="text-gray-600">Faça login para se candidatar como voluntário.</p>
-          <Link href="/login" className="inline-block mt-4 bg-amber-800 text-white px-6 py-2 rounded-lg shadow hover:bg-amber-900 transition">
-            Ir para Login
-          </Link>
+        <div className="text-center">
+          <Icon path="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" className="mx-auto h-12 w-12 text-amber-700" />
+          <h2 className="mt-4 text-2xl font-bold text-gray-800">Acesso Restrito</h2>
+          <p className="mt-2 text-gray-600">Você precisa estar logado para se candidatar como voluntário.</p>
+          <div className="mt-8">
+            <Link href="/login" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition">
+              Ir para o Login
+            </Link>
+          </div>
         </div>
       );
     }
@@ -97,57 +93,58 @@ export default function VoluntarioPage() {
       const statusInfo = {
         pendente: {
           icon: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z",
-          color: "yellow-500",
+          color: "amber",
           title: "Candidatura em Análise",
-          message: "Sua candidatura foi recebida e está sendo analisada. Entraremos em contato em breve!",
+          message: "Sua candidatura está sendo analisada. Entraremos em contato em breve!",
         },
         aprovado: {
           icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-          color: "green-500",
-          title: "Candidatura Aprovada!",
-          message: "Parabéns! Você agora faz parte da equipe de voluntários. Obrigado por se juntar a nós.",
+          color: "green",
+          title: "Aprovado!",
+          message: "Parabéns! Você agora faz parte da nossa equipe de voluntários.",
         },
         recusado: {
           icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636",
-          color: "red-500",
-          title: "Candidatura Recusada",
-          message: "Agradecemos seu interesse, mas sua candidatura não foi aprovada neste momento.",
+          color: "red",
+          title: "Não Aprovado",
+          message: "Agradecemos seu interesse, mas sua candidatura não foi aprovada.",
         }
       };
-
-      const { icon, color, title, message } = statusInfo[voluntarioStatus];
+      const currentStatus = statusInfo[voluntarioStatus];
 
       return (
-        <div className="text-center space-y-4">
-          <Icon path={icon} className={`mx-auto h-14 w-14 text-${color}`} />
-          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-          <p className="text-gray-600">{message}</p>
-          <Link href="/" className="text-sm text-amber-800 hover:underline">
-            Voltar à Página Inicial
-          </Link>
+        <div className="text-center">
+          <Icon path={currentStatus.icon} className={`mx-auto h-12 w-12 text-${currentStatus.color}-600`} />
+          <h2 className="mt-4 text-2xl font-bold text-gray-800">{currentStatus.title}</h2>
+          <p className="mt-2 text-gray-600">{currentStatus.message}</p>
+          <div className="mt-8">
+            <Link href="/" className="text-sm font-medium text-amber-800 hover:text-amber-900">
+              Voltar para a Home
+            </Link>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
+      <>
+        <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">Seja um Voluntário</h1>
-          <p className="text-gray-600">Junte-se a nós e ajude a transformar vidas.</p>
+          <p className="mt-2 text-gray-600">Ajude a transformar vidas. Preencha a candidatura abaixo.</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Candidato:</label>
-            <div className="p-3 bg-gray-100 rounded-lg border border-gray-200">
+            <label className="block mb-2 text-sm font-medium text-gray-700">Candidatando-se como:</label>
+            <div className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg">
               <p className="font-semibold text-gray-800">{user?.nome}</p>
               <p className="text-sm text-gray-500">{user?.email}</p>
             </div>
           </div>
           <div>
-            <label htmlFor="motivo" className="block text-sm font-medium text-gray-700 mb-1">Motivação</label>
+            <label htmlFor="motivo" className="block mb-2 text-sm font-medium text-gray-700">Por que deseja ser voluntário?</label>
             <Textarea
               id="motivo"
-              placeholder="Conte-nos o que te motiva a ser voluntário..."
+              placeholder="Fale sobre sua motivação..."
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               required
@@ -157,23 +154,24 @@ export default function VoluntarioPage() {
             Enviar Candidatura
           </Button>
         </form>
-      </div>
+      </>
     );
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-gray-200 py-10 px-4">
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-        <div className="hidden md:block">
-          <img
-            src="https://img.freepik.com/fotos-premium/um-tipo-happy-e-sorridente-com-um-cao-em-laranja_87910-8370.jpg"
-            alt="Voluntário com cachorro"
-            className="rounded-2xl shadow-2xl object-cover"
-          />
-        </div>
-
-        <div className="bg-white p-8 rounded-2xl shadow-xl w-full">
-          {renderContent()}
+    <main className="min-h-screen flex flex-col bg-white">
+      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl w-full grid md:grid-cols-2 gap-10 items-center">
+          <div className="hidden md:block h-full overflow-hidden rounded-2xl shadow-xl">
+            <img 
+              src="https://img.freepik.com/fotos-premium/um-tipo-feliz-e-sorridente-com-um-cao-em-laranja_87910-8370.jpg" 
+              alt="Voluntário com um cão" 
+              className="object-cover w-full h-full" 
+            />
+          </div>
+          <div className="bg-white p-8 rounded-2xl shadow-xl">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </main>
