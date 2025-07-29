@@ -50,7 +50,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
   );
 };
 
-// --- NOVO COMPONENTE: SEÇÃO SOBRE NÓS ---
+// --- COMPONENTE: SEÇÃO SOBRE NÓS ---
 const AboutSection = () => (
   <section className="bg-white py-16 sm:py-20">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,34 +120,27 @@ export default function HomePage() {
     <>
       <Carousel />
       
-      {/* Seção de Ações Principais */}
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            {/* Grelha de duas colunas para os botões de ação */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <div className="mt-4">
-                        <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
-                            Quero Adotar
-                        </Link>
-                    </div>
+                    <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
+                        Quero Adotar
+                    </Link>
                 </div>
                 <div>
-                    <div className="mt-4">
-                        <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
-                            Quero divulgar um animal
-                        </Link>
-                    </div>
+                    <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
+                        Quero divulgar um animal
+                    </Link>
                 </div>
             </div>
         </section>
       </main>
 
-      {/* NOVA SEÇÃO SOBRE NÓS */}
-      <AboutSection />
-
       {/* Secção de Pré-visualização dos Animais */}
       <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto pt-16 px-4 sm:px-6 lg:px-8">
             {loading && <p className="text-center text-gray-600">A carregar animais...</p>}
             {error && <p className="text-center text-red-600">{error}</p>}
 
@@ -168,6 +161,9 @@ export default function HomePage() {
             )}
         </div>
       </div>
+
+      {/* SEÇÃO SOBRE NÓS */}
+      <AboutSection />
     </>
   );
 }
