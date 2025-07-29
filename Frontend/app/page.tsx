@@ -58,9 +58,9 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
   );
 };
 
-// --- COMPONENTE: SEÇÃO SOBRE NÓS (AGORA DINÂMICO) ---
+// --- COMPONENTE: SEÇÃO SOBRE NÓS (DINÂMICO) ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
-  if (!conteudo) return null; // Não renderiza nada se o conteúdo não for carregado
+  if (!conteudo) return null;
 
   const itensList = JSON.parse(conteudo.itens || '[]');
 
@@ -96,6 +96,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
             />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
               <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
+                 <Icon path="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" className="w-10 h-10" />
               </button>
             </div>
           </div>
@@ -104,6 +105,27 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     </section>
   );
 };
+
+// --- NOVO COMPONENTE: Secção de Chamada para Ação com Parallax ---
+const ParallaxCtaSection = () => (
+  <section 
+    className="relative bg-cover bg-center bg-fixed" 
+    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')" }}
+  >
+    <div className="absolute inset-0 bg-amber-900/70"></div>
+    <div className="relative max-w-4xl mx-auto text-center py-20 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
+        <span className="block">Junte-se a nós e faça parte desta história.</span>
+      </h2>
+      <p className="mt-4 text-lg leading-6 text-amber-100">
+        A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
+      </p>
+      <Link href="/voluntario" className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-amber-800 bg-white hover:bg-amber-50 sm:w-auto">
+        Quero Ajudar
+      </Link>
+    </div>
+  </section>
+);
 
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
@@ -180,6 +202,9 @@ export default function HomePage() {
 
       {/* SEÇÃO SOBRE NÓS DINÂMICA */}
       <AboutSection conteudo={conteudoHome} />
+
+      {/* NOVA SEÇÃO DE CHAMADA PARA AÇÃO COM PARALLAX */}
+      <ParallaxCtaSection />
     </>
   );
 }
