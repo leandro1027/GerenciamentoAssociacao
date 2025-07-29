@@ -7,11 +7,12 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
+import Textarea from '../components/common/textarea'; // Adicionado para o ConteudoManager
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes';
+type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
 
 // --- COMPONENTES FILHOS ---
 
@@ -285,7 +286,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
     );
 };
 
-// 5. COMPONENTE PARA GERIR ANIMAIS (COM CORREÇÕES DE ESTILO E EDIÇÃO)
+// 5. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
   const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
   const [especie, setEspecie] = useState<Especie>(Especie.CAO);
@@ -821,6 +822,97 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   );
 };
 
+// --- NOVO COMPONENTE: GERIR CONTEÚDO DA PÁGINA INICIAL ---
+const ConteudoManager = () => {
+  const [conteudo, setConteudo] = useState({ titulo: '', subtitulo: '', itens: '[]', imagemUrl: '' });
+  const [itensList, setItensList] = useState<string[]>(['']);
+  const [file, setFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchConteudo = async () => {
+      try {
+        const response = await api.get('/conteudo-home');
+        setConteudo(response.data);
+        setItensList(JSON.parse(response.data.itens || '[]'));
+      } catch (error) {
+        toast.error('Erro ao carregar conteúdo da página inicial.');
+      }
+    };
+    fetchConteudo();
+  }, []);
+
+  const handleItemChange = (index: number, value: string) => {
+    const newItens = [...itensList];
+    newItens[index] = value;
+    setItensList(newItens);
+  };
+
+  const addItem = () => setItensList([...itensList, '']);
+  const removeItem = (index: number) => setItensList(itensList.filter((_, i) => i !== index));
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData();
+    formData.append('titulo', conteudo.titulo);
+    formData.append('subtitulo', conteudo.subtitulo);
+    formData.append('itens', JSON.stringify(itensList.filter(item => item.trim() !== '')));
+    if (file) {
+      formData.append('file', file);
+    }
+
+    try {
+      await api.patch('/conteudo-home', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Conteúdo da página inicial atualizado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao atualizar o conteúdo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <section className="bg-white p-8 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold text-slate-800 mb-6">Gerir Conteúdo da Página Inicial</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Título da Secção "Sobre"</label>
+          <Input value={conteudo.titulo} onChange={e => setConteudo({...conteudo, titulo: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Subtítulo (parágrafo)</label>
+          <Textarea value={conteudo.subtitulo} onChange={e => setConteudo({...conteudo, subtitulo: e.target.value})} rows={3} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Tópicos da Lista</label>
+          <div className="space-y-2">
+            {itensList.map((item, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input value={item} onChange={e => handleItemChange(index, e.target.value)} placeholder={`Tópico ${index + 1}`} />
+                <Button type="button" variant="danger" onClick={() => removeItem(index)} className="px-3 py-2 h-full">X</Button>
+              </div>
+            ))}
+          </div>
+          <Button type="button" variant="outline" onClick={addItem} className="mt-2">Adicionar Tópico</Button>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Imagem da Secção</label>
+          <input type="file" onChange={e => setFile(e.target.files ? e.target.files[0] : null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
+          <img src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} alt="Preview" className="mt-4 w-48 h-auto rounded-lg" />
+        </div>
+        <div className="flex justify-end">
+          <Button type="submit" isLoading={isLoading} className="bg-amber-800 hover:bg-amber-900">Guardar Alterações</Button>
+        </div>
+      </form>
+    </section>
+  );
+};
+
+
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
@@ -897,6 +989,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
+            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Conteúdo</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -910,7 +1003,8 @@ export default function AdminPanelPage() {
       voluntarios: 'Gestão de Voluntários',
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
-      divulgacoes: 'Gestão de Divulgações da Comunidade'
+      divulgacoes: 'Gestão de Divulgações da Comunidade',
+      conteudo: 'Gestão de Conteúdo da Página Inicial'
     };
 
     return (
@@ -934,6 +1028,7 @@ export default function AdminPanelPage() {
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
                     {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
+                    {activeView === 'conteudo' && <ConteudoManager />}
                 </>
             )}
         </div>

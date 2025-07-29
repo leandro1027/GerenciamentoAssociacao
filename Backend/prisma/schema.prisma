@@ -136,3 +136,12 @@ model Divulgacao {
   usuarioId       Int
 }
 
+model ConteudoHome {
+  id        Int      @id @default(1) // Usaremos sempre o ID 1 para ter uma única entrada
+  titulo    String
+  subtitulo String
+  itens     String   // Guardaremos a lista de tópicos como uma string JSON
+  imagemUrl String
+  updatedAt DateTime @updatedAt
+}
+

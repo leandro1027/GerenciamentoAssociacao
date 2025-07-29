@@ -6,6 +6,14 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal } from '../types';
 
+// --- Interface para o conteúdo da Home ---
+interface ConteudoHome {
+  titulo: string;
+  subtitulo: string;
+  itens: string; // Virá como uma string JSON
+  imagemUrl: string;
+}
+
 // --- COMPONENTES AUXILIARES PARA A UI ---
 
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
@@ -14,7 +22,7 @@ const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: str
   </svg>
 );
 
-// Componente para o Card do Animal (Estilo consistente com a página /adote)
+// Componente para o Card do Animal
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal || !animal.animalImageUrl) {
     return null; 
@@ -50,70 +58,78 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
   );
 };
 
-// --- COMPONENTE: SEÇÃO SOBRE NÓS ---
-const AboutSection = () => (
-  <section className="bg-white py-16 sm:py-20">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        {/* Coluna de Texto */}
-        <div className="text-gray-700">
-          <h2 className="text-3xl sm:text-4xl font-bold text-amber-900 tracking-tight">
-            Nossa Missão é Unir Corações e Patas
-          </h2>
-          <p className="mt-4 text-lg">
-            Somos uma associação dedicada ao resgate, cuidado e adoção de animais em Porto União, Santa Catarina. Acreditamos que cada animal merece um lar seguro e cheio de amor.
-          </p>
-          <ul className="mt-6 space-y-3 list-disc list-inside">
-            <li>Resgate de animais em situação de risco.</li>
-            <li>Cuidados veterinários completos, incluindo vacinação e castração.</li>
-            <li>Busca por lares responsáveis e amorosos.</li>
-            <li>Conscientização sobre a posse responsável.</li>
-            <li>Promoção de eventos e feiras de adoção.</li>
-          </ul>
-          <div className="mt-8">
-            <Link href="/quem-somos" className="inline-block bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
-              Saiba Mais
-            </Link>
+// --- COMPONENTE: SEÇÃO SOBRE NÓS (AGORA DINÂMICO) ---
+const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
+  if (!conteudo) return null; // Não renderiza nada se o conteúdo não for carregado
+
+  const itensList = JSON.parse(conteudo.itens || '[]');
+
+  return (
+    <section className="bg-white py-16 sm:py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Coluna de Texto */}
+          <div className="text-gray-700">
+            <h2 className="text-3xl sm:text-4xl font-bold text-amber-900 tracking-tight">
+              {conteudo.titulo}
+            </h2>
+            <p className="mt-4 text-lg">
+              {conteudo.subtitulo}
+            </p>
+            <ul className="mt-6 space-y-3 list-disc list-inside">
+              {itensList.map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+            <div className="mt-8">
+              <Link href="/quem-somos" className="inline-block bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
+                Saiba Mais
+              </Link>
+            </div>
           </div>
-        </div>
-        {/* Coluna da Imagem/Vídeo */}
-        <div className="relative rounded-xl overflow-hidden shadow-2xl">
-          <img 
-            src="https://casadurvalpaiva.org.br/wp-content/uploads/2024/06/Por-que-doar.png" 
-            alt="Criança interagindo com um cão"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
-              <Icon path="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" className="w-10 h-10" />
-            </button>
+          {/* Coluna da Imagem/Vídeo */}
+          <div className="relative rounded-xl overflow-hidden shadow-2xl">
+            <img 
+              src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} 
+              alt="Imagem sobre a associação"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
 export default function HomePage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
+  const [conteudoHome, setConteudoHome] = useState<ConteudoHome | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAnimais = async () => {
+    const fetchAllData = async () => {
       try {
-        const response = await api.get<Animal[]>('/animais?disponivel=true');
-        setAnimais(response.data.slice(0, 8)); // Limita a 8 animais
+        const [animaisRes, conteudoRes] = await Promise.all([
+          api.get<Animal[]>('/animais?disponivel=true'),
+          api.get<ConteudoHome>('/conteudo-home'),
+        ]);
+        setAnimais(animaisRes.data.slice(0, 8));
+        setConteudoHome(conteudoRes.data);
       } catch (err) {
-        console.error("Erro ao buscar animais:", err);
-        setError('Não foi possível carregar os animais.');
+        console.error("Erro ao buscar dados da página inicial:", err);
+        setError('Não foi possível carregar a página.');
       } finally {
         setLoading(false);
       }
     };
-    fetchAnimais();
+    fetchAllData();
   }, []);
 
   return (
@@ -122,26 +138,26 @@ export default function HomePage() {
       
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            {/* Grelha de duas colunas para os botões de ação */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
-                        Quero Adotar
-                    </Link>
-                </div>
-                <div>
-                    <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
-                        Quero divulgar um animal
-                    </Link>
-                </div>
+          {/* Grelha de duas colunas para os botões de ação */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
+                Quero Adotar
+              </Link>
             </div>
+            <div>
+              <Link href="/divulgar-animal" className="w-full block text-center bg-white text-amber-800 border border-amber-800 font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-50 transition-colors">
+                Quero divulgar um animal
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
 
       {/* Secção de Pré-visualização dos Animais */}
       <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto pt-16 px-4 sm:px-6 lg:px-8">
-            {loading && <p className="text-center text-gray-600">A carregar animais...</p>}
+        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+            {loading && <p className="text-center text-gray-600">A carregar...</p>}
             {error && <p className="text-center text-red-600">{error}</p>}
 
             {!loading && !error && (
@@ -162,8 +178,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* SEÇÃO SOBRE NÓS */}
-      <AboutSection />
+      {/* SEÇÃO SOBRE NÓS DINÂMICA */}
+      <AboutSection conteudo={conteudoHome} />
     </>
   );
 }

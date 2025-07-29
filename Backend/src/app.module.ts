@@ -11,6 +11,7 @@ import { SlideModule } from './slide/slide.module';
 import { AnimalModule } from './animal/animal.module';
 import { AdocoesModule } from './adocoes/adocoes.module';
 import { DivulgacaoModule } from './divulgacao/divulgacao.module';
+import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { DivulgacaoModule } from './divulgacao/divulgacao.module';
     AnimalModule,
     AdocoesModule,
     DivulgacaoModule,
+    ConteudoHomeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
