@@ -54,7 +54,7 @@ export default function LoginPage() {
           </div>
           
           <div className="text-right text-sm">
-            <Link href="/esqueci-senha" className="font-medium text-blue-600 hover:underline">
+            <Link href="/esqueci-senha" className="font-medium text-amber-600 hover:underline">
               Esqueceu a sua senha?
             </Link>
           </div>
@@ -64,7 +64,7 @@ export default function LoginPage() {
 
         <div className="text-center text-sm text-gray-600">
           Não tem uma conta?{' '}
-          <Link href="/cadastro" className="font-medium text-blue-600 hover:underline">Registe-se</Link>
+          <Link href="/cadastro" className="font-medium text-amber-600 hover:underline">Registe-se</Link>
         </div>
       </div>
     </main>

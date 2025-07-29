@@ -66,7 +66,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
           <Input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="Subtítulo (opcional)" />
           <div>
             <label htmlFor="slide-file-input" className="block mb-2 text-sm font-medium text-gray-700">Imagem do Slide</label>
-            <input id="slide-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required />
+            <input id="slide-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required />
           </div>
           <Button type="submit">Adicionar Slide</Button>
         </form>
@@ -219,7 +219,7 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
                                             <td className="px-6 py-4"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
                                             <td className="px-6 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
                                             <td className="px-6 py-4 text-center space-x-2">
-                                                <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
+                                                <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Guardar</button>
                                                 <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
                                             </td>
                                         </>
@@ -387,21 +387,21 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="especie" className="block text-sm font-medium text-gray-700 mb-2">Espécie</label>
-              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Especie.CAO}>Cão</option>
                 <option value={Especie.GATO}>Gato</option>
               </select>
             </div>
             <div>
               <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
-              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Sexo.MACHO}>Macho</option>
                 <option value={Sexo.FEMEA}>Fêmea</option>
               </select>
             </div>
             <div>
               <label htmlFor="porte" className="block text-sm font-medium text-gray-700 mb-2">Porte</label>
-              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Porte.PEQUENO}>Pequeno</option>
                 <option value={Porte.MEDIO}>Médio</option>
                 <option value={Porte.GRANDE}>Grande</option>
@@ -410,11 +410,11 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           </div>
           <div>
             <label htmlFor="animal-file-input" className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
-            <input id="animal-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required />
+            <input id="animal-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required />
           </div>
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
-            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
+            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
           </div>
           <div className="flex justify-end">
             <Button type="submit" isLoading={isLoading}>Cadastrar Animal</Button>
@@ -444,7 +444,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
                       <td className="px-6 py-4"><Input value={editingAnimal.descricao} onChange={e => setEditingAnimal({...editingAnimal, descricao: e.target.value})} /></td>
                       <td className="px-6 py-4">-</td>
                       <td className="px-6 py-4 text-center space-x-2">
-                          <button onClick={handleUpdate} className="text-blue-600 hover:text-blue-900">Guardar</button>
+                          <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Guardar</button>
                           <button onClick={() => setEditingAnimal(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
                       </td>
                     </>
@@ -521,10 +521,10 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
         <section className="bg-white rounded-xl shadow p-6">
             <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-                    <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                         Pedidos Pendentes ({pendingAdoptions.length})
                     </button>
-                    <button onClick={() => setActiveTab('finalizadas')} className={`${activeTab === 'finalizadas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    <button onClick={() => setActiveTab('finalizadas')} className={`${activeTab === 'finalizadas' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                         Adoções Finalizadas ({finalizedAdoptions.length})
                     </button>
                 </nav>
@@ -553,7 +553,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                     </td>
                                     <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
                                         {activeTab === 'pendentes' ? (
-                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-blue-600 hover:text-blue-900">Analisar Pedido</button>
+                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900">Analisar Pedido</button>
                                         ) : (
                                             adocao.status === StatusAdocao.APROVADA && (
                                                 <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Acompanhar via WhatsApp</button>
@@ -625,7 +625,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                             <div className="flex space-x-3 w-full sm:w-auto">
                                 {selectedAdoption.status === StatusAdocao.SOLICITADA ? (
                                     <>
-                                        <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.APROVADA)} className="w-full bg-blue-600 hover:bg-blue-700">Aprovar</Button>
+                                        <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.APROVADA)} className="w-full bg-amber-600 hover:bg-amber-700">Aprovar</Button>
                                         <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.RECUSADA)} className="w-full bg-red-600 hover:bg-red-700">Recusar</Button>
                                     </>
                                 ) : (
@@ -718,10 +718,10 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
         {/* Abas de Navegação */}
         <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-                <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                     Pendentes ({pendingDivulgacoes.length})
                 </button>
-                <button onClick={() => setActiveTab('historico')} className={`${activeTab === 'historico' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                <button onClick={() => setActiveTab('historico')} className={`${activeTab === 'historico' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                     Histórico ({processedDivulgacoes.length})
                 </button>
             </nav>
@@ -755,7 +755,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
                   <p><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
                   <p><strong>Data:</strong> {new Date(divulgacao.createdAt).toLocaleDateString()}</p>
                   <div className="flex items-center space-x-2 pt-1">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}`}>
                       {divulgacao.castrado ? 'Castrado' : 'Não Castrado'}
                     </span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.resgate ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
@@ -878,7 +878,7 @@ export default function AdminPanelPage() {
         <div className="w-full max-w-md p-8 text-center bg-white rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
           <p className="mt-2 text-gray-700">Você não tem permissão para aceder a esta página.</p>
-          <Link href="/" className="mt-6 inline-block text-blue-600 hover:underline">
+          <Link href="/" className="mt-6 inline-block text-amber-600 hover:underline">
             Voltar à Página Inicial
           </Link>
         </div>
@@ -887,13 +887,13 @@ export default function AdminPanelPage() {
   }
 
   const Sidebar = () => (
-    <aside className={`bg-stone-800 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
+    <aside className={`bg-stone-900 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
         <div className="mb-8"><h2 className="text-2xl font-bold">Cadastro</h2></div>
         <nav className="flex flex-col space-y-2">
             <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Slides</button>
             <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
             <button onClick={() => setActiveView('adocoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>❤️ Gerir Adoções</button>
-            <button onClick={() => setActiveView('divulgacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📢 Gerir Divulgações</button>
+            <button onClick={() => setActiveView('divulgacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-amber-700'}`}>📢 Gerir Divulgações</button>
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>

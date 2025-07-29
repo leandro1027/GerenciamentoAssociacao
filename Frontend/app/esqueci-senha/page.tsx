@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder="o.seu.email@exemplo.com" 
+              placeholder="email@exemplo.com" 
               required 
             />
           </div>
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
           </Button>
         </form>
         <div className="text-center">
-            <Link href="/login" className="text-sm font-medium text-blue-600 hover:underline">
+            <Link href="/login" className="text-sm font-medium text-amber-600 hover:underline">
                 Voltar para o Login
             </Link>
         </div>
