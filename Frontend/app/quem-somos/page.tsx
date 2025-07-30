@@ -85,22 +85,7 @@ export default function QuemSomosPage() {
         </div>
       </section>
 
-      {/* --- SECÇÃO: Nossos Números --- */}
-      <section className="bg-gray-100 py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800">Nosso Impacto em Números</h2>
-            <p className="mt-3 text-lg text-gray-600">Cada número representa uma vida transformada.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <StatCard value="+500" label="Animais Resgatados" />
-            <StatCard value="+450" label="Adoções Bem-sucedidas" />
-            <StatCard value="+50" label="Voluntários Ativos" />
-          </div>
-        </div>
-      </section>
-      
-      {/* --- Secção de Chamada para Ação com efeito Parallax --- */}
+        {/* --- Secção de Chamada para Ação com efeito Parallax --- */}
       <section 
         className="relative bg-cover bg-center bg-fixed" 
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')" }}
@@ -119,6 +104,23 @@ export default function QuemSomosPage() {
           </Link>
         </div>
       </section>
+
+      {/* --- SECÇÃO: Nossos Números --- */}
+      <section className="bg-gray-100 py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800">Nosso Impacto em Números</h2>
+            <p className="mt-3 text-lg text-gray-600">Cada número representa uma vida transformada.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <StatCard value="+500" label="Animais Resgatados" />
+            <StatCard value="+450" label="Adoções Bem-sucedidas" />
+            <StatCard value="+50" label="Voluntários Ativos" />
+          </div>
+        </div>
+      </section>
+      
+    
     </main>
   );
 }
