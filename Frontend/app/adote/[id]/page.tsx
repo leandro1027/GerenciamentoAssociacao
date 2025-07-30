@@ -10,6 +10,8 @@ import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
+// --- Componentes Auxiliares ---
+
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
@@ -26,6 +28,7 @@ const AnimalFeature = ({ iconPath, label, value }: { iconPath: string, label: st
   </div>
 );
 
+// Componente para o Modal do Questionário (COM CORREÇÃO DE ESTILO NOS SELECTS)
 const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose: () => void, onSubmit: (data: any) => Promise<void> }) => {
   const [formData, setFormData] = useState({
     tipoMoradia: '',
@@ -42,6 +45,12 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
     setIsLoading(false);
   };
 
+  const selectOptions = {
+    tipoMoradia: ['Casa com pátio fechado', 'Apartamento', 'Chácara/Sítio'],
+    outrosAnimais: ['Sim', 'Não'],
+    tempoDisponivel: ['Manhãs e noites', 'Apenas noites', 'Tempo integral'],
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full animate-fade-in-up">
@@ -51,17 +60,27 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {['tipoMoradia', 'outrosAnimais', 'tempoDisponivel'].map((field, idx) => (
-            <div key={idx}>
-              <label className="block text-sm font-medium text-gray-700 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-              <select value={(formData as any)[field]} onChange={e => setFormData({...formData, [field]: e.target.value})} required className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 ${!(formData as any)[field] ? 'text-gray-400' : 'text-gray-900'}`}>
-                <option value="" disabled>Selecione uma opção</option>
-                {field === 'tipoMoradia' && ['Casa com pátio fechado', 'Apartamento', 'Chácara/Sítio'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                {field === 'outrosAnimais' && ['Sim', 'Não'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                {field === 'tempoDisponivel' && ['Manhãs e noites', 'Apenas noites', 'Tempo integral'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            </div>
-          ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Qual o seu tipo de moradia?</label>
+            <select value={formData.tipoMoradia} onChange={e => setFormData({...formData, tipoMoradia: e.target.value})} required className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 text-gray-900">
+              <option value="" disabled>Selecione uma opção</option>
+              {selectOptions.tipoMoradia.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Você possui outros animais?</label>
+            <select value={formData.outrosAnimais} onChange={e => setFormData({...formData, outrosAnimais: e.target.value})} required className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 text-gray-900">
+              <option value="" disabled>Selecione uma opção</option>
+              {selectOptions.outrosAnimais.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Quanto tempo você terá disponível para o animal?</label>
+            <select value={formData.tempoDisponivel} onChange={e => setFormData({...formData, tempoDisponivel: e.target.value})} required className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 text-gray-900">
+              <option value="" disabled>Selecione uma opção</option>
+              {selectOptions.tempoDisponivel.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Por que deseja adotar {animal.nome}?</label>
             <textarea value={formData.motivoAdocao} onChange={e => setFormData({...formData, motivoAdocao: e.target.value})} rows={3} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos um pouco..."></textarea>
@@ -75,6 +94,7 @@ const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose:
     </div>
   );
 };
+
 
 export default function AnimalDetailPage() {
   const params = useParams();
@@ -148,7 +168,7 @@ export default function AnimalDetailPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden md:grid md:grid-cols-2">
             <div className="relative min-h-[400px] md:min-h-full">
-              <img src={imageUrl} alt={`Foto de ${animal.nome}`} className="absolute w-full h-full object-cover rounded-l-3xl" />
+              <img src={imageUrl} alt={`Foto de ${animal.nome}`} className="absolute w-full h-full object-cover" />
             </div>
             <div className="p-8 flex flex-col">
               <h1 className="text-4xl font-extrabold text-gray-900 mb-1">{animal.nome}</h1>

@@ -8,26 +8,39 @@ import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 import { Voluntario, StatusVoluntario } from '../../types';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
+// --- Componente de Ícone ---
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
   </svg>
 );
 
+// --- Componente Principal da Página ---
 export default function VoluntarioPage() {
   const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [motivo, setMotivo] = useState('');
   const [voluntarioStatus, setVoluntarioStatus] = useState<StatusVoluntario | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    // Se não estiver autenticado, mostra um aviso e redireciona
+    if (!isAuthenticated) {
+      toast.error('Você precisa estar logado para se candidatar como voluntário.');
+      router.push('/login');
+      return;
+    }
+
+    // Se estiver autenticado, verifica o status
+    if (user) {
+      setIsCheckingStatus(true);
       const checkStatus = async () => {
         try {
           const response = await api.get<Voluntario>('/voluntario/meu-status');
-          if (response.data?.status) {
+          if (response.data && response.data.status) {
             setVoluntarioStatus(response.data.status);
           }
         } catch (error: any) {
@@ -40,9 +53,9 @@ export default function VoluntarioPage() {
       };
       checkStatus();
     } else {
-      setIsCheckingStatus(false);
+        setIsCheckingStatus(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -52,8 +65,13 @@ export default function VoluntarioPage() {
     }
 
     setIsLoading(true);
+
     try {
-      await api.post('/voluntario', { usuarioId: user.id, motivo });
+      await api.post('/voluntario', {
+        usuarioId: user.id,
+        motivo,
+      });
+
       toast.success('Candidatura enviada com sucesso!');
       setMotivo('');
       setVoluntarioStatus('pendente');
@@ -64,50 +82,35 @@ export default function VoluntarioPage() {
       setIsLoading(false);
     }
   };
-
-  if (isCheckingStatus) {
+  
+  if (isCheckingStatus || !isAuthenticated) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-white">
-        <p>Carregando informações...</p>
+      <main className="flex-grow flex items-center justify-center bg-gray-50">
+        <p>A carregar...</p>
       </main>
     );
   }
 
   const renderContent = () => {
-    if (!isAuthenticated) {
-      return (
-        <div className="text-center">
-          <Icon path="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" className="mx-auto h-12 w-12 text-amber-700" />
-          <h2 className="mt-4 text-2xl font-bold text-gray-800">Acesso Restrito</h2>
-          <p className="mt-2 text-gray-600">Você precisa estar logado para se candidatar como voluntário.</p>
-          <div className="mt-8">
-            <Link href="/login" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition">
-              Ir para o Login
-            </Link>
-          </div>
-        </div>
-      );
-    }
-
     if (voluntarioStatus) {
       const statusInfo = {
         pendente: {
           icon: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z",
           color: "amber",
           title: "Candidatura em Análise",
-          message: "Sua candidatura está sendo analisada. Entraremos em contato em breve!",
+          message: "A sua candidatura foi recebida e está a ser analisada pela nossa equipa. Entraremos em contacto em breve!",
         },
         aprovado: {
           icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
           color: "green",
-          title: "Aprovado!",
-          message: "Parabéns! Você agora faz parte da nossa equipe de voluntários.",
+          title: "Candidatura Aprovada!",
+          message: "Parabéns! Você agora faz parte da nossa equipa de voluntários. Obrigado por se juntar à nossa causa.",
         },
         recusado: {
           icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636",
           color: "red",
-          title: "Não Aprovado",
-          message: "Agradecemos seu interesse, mas sua candidatura não foi aprovada.",
+          title: "Candidatura Não Aprovada",
+          message: "Agradecemos o seu interesse, mas neste momento não foi possível aprovar a sua candidatura. Obrigado pela sua compreensão.",
         }
       };
       const currentStatus = statusInfo[voluntarioStatus];
@@ -119,7 +122,7 @@ export default function VoluntarioPage() {
           <p className="mt-2 text-gray-600">{currentStatus.message}</p>
           <div className="mt-8">
             <Link href="/" className="text-sm font-medium text-amber-800 hover:text-amber-900">
-              Voltar para a Home
+              Voltar à Página Inicial
             </Link>
           </div>
         </div>
@@ -130,7 +133,7 @@ export default function VoluntarioPage() {
       <>
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800">Seja um Voluntário</h1>
-          <p className="mt-2 text-gray-600">Ajude a transformar vidas. Preencha a candidatura abaixo.</p>
+          <p className="mt-2 text-gray-600">Junte-se a nós e faça a diferença. Preencha a sua candidatura abaixo.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 pt-6">
           <div>
@@ -141,10 +144,10 @@ export default function VoluntarioPage() {
             </div>
           </div>
           <div>
-            <label htmlFor="motivo" className="block mb-2 text-sm font-medium text-gray-700">Por que deseja ser voluntário?</label>
+            <label htmlFor="motivo" className="block mb-2 text-sm font-medium text-gray-700">Por que você quer ser voluntário?</label>
             <Textarea
               id="motivo"
-              placeholder="Fale sobre sua motivação..."
+              placeholder="Conte-nos um pouco sobre a sua motivação para ajudar a nossa causa..."
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               required
@@ -159,21 +162,12 @@ export default function VoluntarioPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col bg-white">
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl w-full grid md:grid-cols-2 gap-10 items-center">
-          <div className="hidden md:block h-full overflow-hidden rounded-2xl shadow-xl">
-            <img 
-              src="https://img.freepik.com/fotos-premium/um-tipo-feliz-e-sorridente-com-um-cao-em-laranja_87910-8370.jpg" 
-              alt="Voluntário com um cão" 
-              className="object-cover w-full h-full" 
-            />
-          </div>
-          <div className="bg-white p-8 rounded-2xl shadow-xl">
-            {renderContent()}
-          </div>
+    <main className="flex-grow flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-lg w-full">
+             <div className="bg-white p-8 rounded-2xl shadow-xl">
+                {renderContent()}
+            </div>
         </div>
-      </div>
     </main>
   );
 }

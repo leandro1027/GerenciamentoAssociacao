@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
 import Input from '../components/common/input';
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import Link from 'next/link';
 import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -16,11 +17,20 @@ const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: str
 );
 
 export default function DoacoesPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
   const [valor, setValor] = useState<string>('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [pixKey, setPixKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Após a verificação inicial de autenticação, se o utilizador não estiver logado, redireciona.
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.error('Você precisa estar logado para fazer uma doação.');
+      router.push('/login');
+    }
+  }, [isAuthenticated, isAuthLoading, router]);
 
   const handleGenerateQRCode = (event: FormEvent) => {
     event.preventDefault();
@@ -73,23 +83,17 @@ export default function DoacoesPage() {
     toast.success('Chave PIX copiada!');
   };
 
-  if (!isAuthenticated) {
+  // Mostra um ecrã de carregamento enquanto verifica a autenticação ou redireciona
+  if (isAuthLoading || !isAuthenticated) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 px-4">
-        <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg text-center space-y-6">
-          <Icon path="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" className="mx-auto h-14 w-14 text-amber-700" />
-          <h2 className="text-2xl font-bold text-gray-800">Acesso Restrito</h2>
-          <p className="text-gray-600">Você precisa estar logado para fazer uma doação.</p>
-          <Link href="/login" className="inline-block w-full bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow hover:bg-amber-900 transition">
-            Ir para Login
-          </Link>
-        </div>
+      <main className="flex-grow flex items-center justify-center bg-gray-50">
+        <p>A carregar...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-gray-200 py-10 px-4">
+    <main className="flex-grow min-h-screen bg-gradient-to-br from-white via-gray-100 to-gray-200 py-10 px-4">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
         <div className="hidden md:block">
           <img src="https://casadurvalpaiva.org.br/wp-content/uploads/2024/06/Por-que-doar.png" alt="Ilustração de doação" className="rounded-2xl shadow-2xl" />
