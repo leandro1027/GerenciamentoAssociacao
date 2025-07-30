@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Carousel from './components/layout/carousel';
 import api from './services/api';
-import { Animal } from '../types';
+import { Animal, Parceiro } from '../types';
 
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
@@ -68,7 +68,6 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     <section className="bg-white py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Coluna de Texto */}
           <div className="text-gray-700">
             <h2 className="text-3xl sm:text-4xl font-bold text-amber-900 tracking-tight">
               {conteudo.titulo}
@@ -87,7 +86,6 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
               </Link>
             </div>
           </div>
-          {/* Coluna da Imagem/Vídeo */}
           <div className="relative rounded-xl overflow-hidden shadow-2xl">
             <img 
               src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} 
@@ -106,7 +104,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
   );
 };
 
-// --- NOVO COMPONENTE: Secção de Chamada para Ação com Parallax ---
+// --- COMPONENTE: Secção de Chamada para Ação com Parallax ---
 const ParallaxCtaSection = () => (
   <section 
     className="relative bg-cover bg-center bg-fixed" 
@@ -120,30 +118,84 @@ const ParallaxCtaSection = () => (
       <p className="mt-4 text-lg leading-6 text-amber-100">
         A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
       </p>
-      <Link href="/voluntario" className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-amber-800 bg-white hover:bg-amber-50 sm:w-auto">
+      <Link href="/quero-ajudar" className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-amber-800 bg-white hover:bg-amber-50 sm:w-auto">
         Quero Ajudar
       </Link>
     </div>
   </section>
 );
 
+// --- COMPONENTE: Secção de Parceiros com Carrossel Infinito (ATUALIZADO) ---
+const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
+    if (partners.length === 0) return null;
+
+    // Duplica a lista para o efeito de scroll contínuo
+    const extendedPartners = [...partners, ...partners];
+
+    return (
+        <section id="parceiros" className="bg-gray-50 py-16 sm:py-20">
+            <style>
+                {`
+                    @keyframes scroll {
+                        0% { transform: translateX(0); }
+                        100% { transform: translateX(-50%); }
+                    }
+                    .scrolling-wrapper {
+                        animation: scroll 30s linear infinite;
+                    }
+                    .scrolling-container:hover .scrolling-wrapper {
+                        animation-play-state: paused;
+                    }
+                `}
+            </style>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold text-gray-800 sm:text-4xl tracking-tight">
+                        Nossos Parceiros
+                    </h2>
+                    <p className="mt-4 text-lg text-gray-600">
+                        Agradecemos a todos que nos ajudam a continuar o nosso trabalho.
+                    </p>
+                </div>
+                <div className="w-full overflow-hidden relative scrolling-container">
+                    <div className="flex w-max scrolling-wrapper">
+                        {extendedPartners.map((partner, index) => (
+                            <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
+                                <img 
+                                    src={`${api.defaults.baseURL}${partner.logoUrl}`} 
+                                    alt={partner.nome}
+                                    // Classes atualizadas para arredondar a logo
+                                    className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA INICIAL ---
 export default function HomePage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [conteudoHome, setConteudoHome] = useState<ConteudoHome | null>(null);
+  const [parceiros, setParceiros] = useState<Parceiro[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [animaisRes, conteudoRes] = await Promise.all([
+        const [animaisRes, conteudoRes, parceirosRes] = await Promise.all([
           api.get<Animal[]>('/animais?disponivel=true'),
           api.get<ConteudoHome>('/conteudo-home'),
+          api.get<Parceiro[]>('/parceiros'),
         ]);
         setAnimais(animaisRes.data.slice(0, 8));
         setConteudoHome(conteudoRes.data);
+        setParceiros(parceirosRes.data);
       } catch (err) {
         console.error("Erro ao buscar dados da página inicial:", err);
         setError('Não foi possível carregar a página.');
@@ -160,7 +212,6 @@ export default function HomePage() {
       
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          {/* Grelha de duas colunas para os botões de ação */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <Link href="/adote" className="w-full block text-center bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
@@ -176,7 +227,6 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Secção de Pré-visualização dos Animais */}
       <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
             {loading && <p className="text-center text-gray-600">A carregar...</p>}
@@ -200,11 +250,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* SEÇÃO SOBRE NÓS DINÂMICA */}
       <AboutSection conteudo={conteudoHome} />
-
-      {/* NOVA SEÇÃO DE CHAMADA PARA AÇÃO COM PARALLAX */}
       <ParallaxCtaSection />
+      <PartnersSection partners={parceiros} />
     </>
   );
 }

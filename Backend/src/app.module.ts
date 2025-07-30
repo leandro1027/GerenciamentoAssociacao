@@ -12,6 +12,7 @@ import { AnimalModule } from './animal/animal.module';
 import { AdocoesModule } from './adocoes/adocoes.module';
 import { DivulgacaoModule } from './divulgacao/divulgacao.module';
 import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
+import { ParceirosModule } from './parceiros/parceiros.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
     AdocoesModule,
     DivulgacaoModule,
     ConteudoHomeModule,
+    ParceirosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

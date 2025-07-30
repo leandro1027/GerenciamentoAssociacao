@@ -2,16 +2,16 @@
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
-import Textarea from '../components/common/textarea'; // Adicionado para o ConteudoManager
+import Textarea from '../components/common/textarea';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-// TIPO PARA CONTROLAR A VISTA ATIVA
+// TIPO PARA CONTROLAR A VISTA ATIVA (OPÇÃO 'parceiros' REMOVIDA)
 type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
 
 // --- COMPONENTES FILHOS ---
@@ -641,7 +641,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     );
 };
 
-// 7. COMPONENTE PARA GERIR DIVULGAÇÕES (COM HISTÓRICO)
+// 7. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -716,7 +716,6 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   return (
     <section>
       <div className="bg-white rounded-xl shadow p-6">
-        {/* Abas de Navegação */}
         <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-6" aria-label="Tabs">
                 <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
@@ -800,7 +799,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
                       onClick={() => handleDelete(divulgacao.id)}
                       isLoading={loadingStates[`delete-${divulgacao.id}`]}
                    >
-                      Excluir Permanentemente
+                     Excluir Permanentemente
                    </Button>
                 </div>
               </div>
@@ -809,7 +808,6 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
         </div>
       </div>
       
-      {/* Modal para ver a imagem */}
       {selectedImage && (
         <div 
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -822,92 +820,189 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   );
 };
 
-// --- NOVO COMPONENTE: GERIR CONTEÚDO DA PÁGINA INICIAL ---
+// 8. COMPONENTE PARA GERIR CONTEÚDO E PARCEIROS (ATUALIZADO)
 const ConteudoManager = () => {
+  const [activeTab, setActiveTab] = useState<'sobre' | 'parceiros'>('sobre');
+
+  // Estados para a secção "Sobre"
   const [conteudo, setConteudo] = useState({ titulo: '', subtitulo: '', itens: '[]', imagemUrl: '' });
   const [itensList, setItensList] = useState<string[]>(['']);
-  const [file, setFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [fileSobre, setFileSobre] = useState<File | null>(null);
+  const [isLoadingSobre, setIsLoadingSobre] = useState(false);
 
-  useEffect(() => {
-    const fetchConteudo = async () => {
-      try {
-        const response = await api.get('/conteudo-home');
-        setConteudo(response.data);
-        setItensList(JSON.parse(response.data.itens || '[]'));
-      } catch (error) {
-        toast.error('Erro ao carregar conteúdo da página inicial.');
-      }
-    };
-    fetchConteudo();
+  // Estados para a secção "Parceiros"
+  const [parceiros, setParceiros] = useState<Parceiro[]>([]);
+  const [nomeParceiro, setNomeParceiro] = useState('');
+  const [fileParceiro, setFileParceiro] = useState<File | null>(null);
+  const [isLoadingParceiros, setIsLoadingParceiros] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [conteudoRes, parceirosRes] = await Promise.all([
+        api.get('/conteudo-home'),
+        api.get<Parceiro[]>('/parceiros')
+      ]);
+      
+      setConteudo(conteudoRes.data);
+      setItensList(JSON.parse(conteudoRes.data.itens || '[]'));
+      setParceiros(parceirosRes.data);
+
+    } catch (error) {
+      toast.error('Erro ao carregar dados de conteúdo.');
+    }
   }, []);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Funções para "Sobre"
   const handleItemChange = (index: number, value: string) => {
     const newItens = [...itensList];
     newItens[index] = value;
     setItensList(newItens);
   };
-
   const addItem = () => setItensList([...itensList, '']);
   const removeItem = (index: number) => setItensList(itensList.filter((_, i) => i !== index));
-
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmitSobre = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+    setIsLoadingSobre(true);
     const formData = new FormData();
     formData.append('titulo', conteudo.titulo);
     formData.append('subtitulo', conteudo.subtitulo);
     formData.append('itens', JSON.stringify(itensList.filter(item => item.trim() !== '')));
-    if (file) {
-      formData.append('file', file);
+    if (fileSobre) {
+      formData.append('file', fileSobre);
     }
-
     try {
-      await api.patch('/conteudo-home', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await api.patch('/conteudo-home', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success('Conteúdo da página inicial atualizado com sucesso!');
+      fetchData(); // Recarrega os dados
     } catch (error) {
       toast.error('Erro ao atualizar o conteúdo.');
     } finally {
-      setIsLoading(false);
+      setIsLoadingSobre(false);
+    }
+  };
+
+  // Funções para "Parceiros"
+  const handleCreateParceiro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fileParceiro) {
+      toast.error('Por favor, selecione um logótipo.');
+      return;
+    }
+    setIsLoadingParceiros(true);
+    const formData = new FormData();
+    formData.append('file', fileParceiro);
+    formData.append('nome', nomeParceiro);
+    try {
+      await api.post<Parceiro>('/parceiros', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setNomeParceiro('');
+      setFileParceiro(null);
+      (document.getElementById('partner-file-input') as HTMLInputElement).value = '';
+      toast.success('Parceiro criado com sucesso!');
+      fetchData(); // Recarrega os dados
+    } catch (error) {
+      toast.error('Erro ao criar o parceiro.');
+    } finally {
+      setIsLoadingParceiros(false);
+    }
+  };
+
+  const handleDeleteParceiro = async (id: number) => {
+    if (confirm('Tem a certeza que deseja apagar este parceiro?')) {
+      try {
+        await api.delete(`/parceiros/${id}`);
+        toast.success('Parceiro apagado com sucesso!');
+        fetchData(); // Recarrega os dados
+      } catch (error) {
+        toast.error('Erro ao apagar o parceiro.');
+      }
     }
   };
 
   return (
-    <section className="bg-white p-8 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold text-slate-800 mb-6">Gerir Conteúdo da Página Inicial</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Título da Secção "Sobre"</label>
-          <Input value={conteudo.titulo} onChange={e => setConteudo({...conteudo, titulo: e.target.value})} />
+    <section className="bg-white p-6 rounded-2xl shadow-lg">
+        <div className="border-b border-gray-200 mb-6">
+            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                <button onClick={() => setActiveTab('sobre')} className={`${activeTab === 'sobre' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    Conteúdo "Sobre"
+                </button>
+                <button onClick={() => setActiveTab('parceiros')} className={`${activeTab === 'parceiros' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                    Gestão de Parceiros
+                </button>
+            </nav>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Subtítulo (parágrafo)</label>
-          <Textarea value={conteudo.subtitulo} onChange={e => setConteudo({...conteudo, subtitulo: e.target.value})} rows={3} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tópicos da Lista</label>
-          <div className="space-y-2">
-            {itensList.map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input value={item} onChange={e => handleItemChange(index, e.target.value)} placeholder={`Tópico ${index + 1}`} />
-                <Button type="button" variant="danger" onClick={() => removeItem(index)} className="px-3 py-2 h-full">X</Button>
-              </div>
-            ))}
-          </div>
-          <Button type="button" variant="outline" onClick={addItem} className="mt-2">Adicionar Tópico</Button>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Imagem da Secção</label>
-          <input type="file" onChange={e => setFile(e.target.files ? e.target.files[0] : null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
-          <img src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} alt="Preview" className="mt-4 w-48 h-auto rounded-lg" />
-        </div>
-        <div className="flex justify-end">
-          <Button type="submit" isLoading={isLoading} className="bg-amber-800 hover:bg-amber-900">Guardar Alterações</Button>
-        </div>
-      </form>
+
+        {activeTab === 'sobre' && (
+            <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-6">Editar Secção "Sobre" da Página Inicial</h2>
+                <form onSubmit={handleSubmitSobre} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Título da Secção</label>
+                        <Input value={conteudo.titulo} onChange={e => setConteudo({...conteudo, titulo: e.target.value})} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Subtítulo (parágrafo)</label>
+                        <Textarea value={conteudo.subtitulo} onChange={e => setConteudo({...conteudo, subtitulo: e.target.value})} rows={3} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tópicos da Lista</label>
+                        <div className="space-y-2">
+                        {itensList.map((item, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                            <Input value={item} onChange={e => handleItemChange(index, e.target.value)} placeholder={`Tópico ${index + 1}`} />
+                            <Button type="button" variant="danger" onClick={() => removeItem(index)} className="px-3 py-2 h-full">X</Button>
+                            </div>
+                        ))}
+                        </div>
+                        <Button type="button" variant="outline" onClick={addItem} className="mt-2">Adicionar Tópico</Button>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Imagem da Secção</label>
+                        <input type="file" onChange={e => setFileSobre(e.target.files ? e.target.files[0] : null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
+                        {conteudo.imagemUrl && <img src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} alt="Preview" className="mt-4 w-48 h-auto rounded-lg" />}
+                    </div>
+                    <div className="flex justify-end">
+                        <Button type="submit" isLoading={isLoadingSobre} className="bg-amber-800 hover:bg-amber-900">Guardar Alterações do Conteúdo</Button>
+                    </div>
+                </form>
+            </div>
+        )}
+
+        {activeTab === 'parceiros' && (
+            <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-6">Editar Parceiros</h2>
+                <div className="bg-white rounded-xl p-0">
+                    <form onSubmit={handleCreateParceiro} className="mb-6 p-4 border rounded-lg space-y-3 bg-gray-50">
+                        <h3 className="font-semibold text-gray-800">Adicionar Novo Parceiro</h3>
+                        <Input value={nomeParceiro} onChange={e => setNomeParceiro(e.target.value)} placeholder="Nome do Parceiro" required />
+                        <div>
+                            <label htmlFor="partner-file-input" className="block mb-2 text-sm font-medium text-gray-700">Logótipo do Parceiro</label>
+                            <input id="partner-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFileParceiro(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required />
+                        </div>
+                        <Button type="submit" isLoading={isLoadingParceiros}>Adicionar Parceiro</Button>
+                    </form>
+                    <div>
+                        <h3 className="font-semibold mb-2 text-gray-800">Parceiros Atuais</h3>
+                        <div className="space-y-2">
+                        {parceiros.map(parceiro => (
+                            <div key={parceiro.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
+                            <div className="flex items-center space-x-4">
+                                <img src={`${api.defaults.baseURL}${parceiro.logoUrl}`} alt={parceiro.nome} className="w-20 h-12 object-contain rounded-md bg-gray-100 p-1" />
+                                <div>
+                                <p className="font-semibold text-gray-900">{parceiro.nome}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => handleDeleteParceiro(parceiro.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
+                            </div>
+                        ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
     </section>
   );
 };
@@ -989,7 +1084,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
-            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Conteúdo</button>
+            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Conteúdos</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -1004,7 +1099,7 @@ export default function AdminPanelPage() {
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
       divulgacoes: 'Gestão de Divulgações da Comunidade',
-      conteudo: 'Gestão de Conteúdo da Página Inicial'
+      conteudo: 'Gestão de Conteúdo e Parceiros'
     };
 
     return (

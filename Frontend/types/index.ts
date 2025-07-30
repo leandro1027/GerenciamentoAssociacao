@@ -115,3 +115,11 @@ export interface Divulgacao {
   usuarioId: number;
   usuario?: Usuario;
 }
+
+
+export interface Parceiro {
+  id: number;
+  nome: string;
+  logoUrl: string;
+  createdAt: string;
+}

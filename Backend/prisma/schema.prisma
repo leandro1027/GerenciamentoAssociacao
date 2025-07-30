@@ -144,4 +144,11 @@ model ConteudoHome {
   imagemUrl String
   updatedAt DateTime @updatedAt
 }
+model Parceiro {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  logoUrl   String
+  createdAt DateTime @default(now())
+}
+
 

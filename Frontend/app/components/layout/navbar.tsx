@@ -50,7 +50,7 @@ const Navbar = () => {
                <Link href="/doacoes" className={linkStyle}>Quero Doar</Link>
               <Link href="/adote" className={linkStyle}>Quero Adotar</Link>
               <Link href="/quem-somos" className={linkStyle}>Quem Somos</Link>
-              <Link href="#" className={linkStyle}>Parceiros</Link>
+              <Link href="/#parceiros" className={linkStyle}>Parceiros</Link>
               <Link href="#" className={linkStyle}>Animais Comunitários</Link>
               {isAuthenticated && user?.role === 'ADMIN' && (
                 <Link href="/painel-admin" className={linkStyle}>Painel Admin</Link>
