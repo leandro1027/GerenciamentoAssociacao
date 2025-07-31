@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link'; // ADICIONADO: Importação do Link
+import Link from 'next/link';
 import api from '@/app/services/api';
 import { Animal, StatusAnimal, Sexo } from '@/types';
 import Button from '@/app/components/common/button';
@@ -17,7 +17,6 @@ const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: strin
   </svg>
 );
 
-// Card de característica do animal com novo design
 const AnimalFeature = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
   <div className="flex items-center gap-4 p-4 bg-amber-50/70 rounded-xl">
     <div className="p-3 bg-white rounded-full shadow-sm">
@@ -30,7 +29,6 @@ const AnimalFeature = ({ icon, label, value }: { icon: React.ReactNode, label: s
   </div>
 );
 
-// Componente para o Modal do Questionário (sem alterações na lógica, apenas no estilo)
 const AdoptionModal = ({ animal, onClose, onSubmit }: { animal: Animal, onClose: () => void, onSubmit: (data: any) => Promise<void> }) => {
   const [formData, setFormData] = useState({
     tipoMoradia: '',
@@ -106,32 +104,53 @@ export default function AnimalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasPendingAdoption, setHasPendingAdoption] = useState(false);
 
   const id = params.id as string;
 
   useEffect(() => {
     if (id) {
-      const fetchAnimal = async () => {
+      const fetchAnimalData = async () => {
         setLoading(true);
+        setError(null);
         try {
-          const response = await api.get<Animal>(`/animais/${id}`);
-          setAnimal(response.data);
+          // 1. Buscar os dados principais do animal
+          const animalResponse = await api.get<Animal>(`/animais/${id}`);
+          setAnimal(animalResponse.data);
+
+          // 2. Se o utilizador estiver autenticado, verificar o status da adoção
+          // Esta chamada é feita em separado para não impedir a exibição do animal em caso de falha
+          if (isAuthenticated) {
+            try {
+              const adoptionCheckResponse = await api.get<{ hasPending: boolean }>(`/adocoes/verificar/${id}`);
+              if (adoptionCheckResponse.data.hasPending) {
+                setHasPendingAdoption(true);
+              }
+            } catch (adoptionError) {
+              console.error("Falha ao verificar adoção pendente:", adoptionError);
+              // Não definimos um erro principal aqui para não bloquear a UI
+            }
+          }
         } catch (err) {
-          setError('Não foi possível encontrar este animal.');
+          setError('Não foi possível carregar os dados deste animal.');
           console.error(err);
         } finally {
           setLoading(false);
         }
       };
-      fetchAnimal();
+      fetchAnimalData();
     }
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const handleOpenAdoptionModal = () => {
     if (!isAuthenticated) {
       toast.error('Você precisa estar logado para solicitar uma adoção.');
       router.push('/login');
       return;
+    }
+    if (hasPendingAdoption) {
+        toast.error('Você já possui um pedido de adoção em andamento para este animal.');
+        return;
     }
     setIsModalOpen(true);
   };
@@ -141,6 +160,7 @@ export default function AnimalDetailPage() {
       await api.post('/adocoes', formData);
       toast.success('Pedido de adoção enviado com sucesso! Entraremos em contacto.');
       setIsModalOpen(false);
+      setHasPendingAdoption(true);
       if (animal) {
         setAnimal({ ...animal, status: StatusAnimal.EM_PROCESSO_ADOCAO });
       }
@@ -162,6 +182,18 @@ export default function AnimalDetailPage() {
     EM_PROCESSO_ADOCAO: { text: 'Em Processo de Adoção', color: 'bg-yellow-100 text-yellow-800' },
     ADOTADO: { text: 'Já encontrou um lar!', color: 'bg-blue-100 text-blue-800' },
   };
+  
+  const getButtonState = () => {
+      if(hasPendingAdoption) {
+          return { text: 'Pedido já enviado', disabled: true };
+      }
+      if(animal.status !== 'DISPONIVEL') {
+          return { text: 'Adoção em Processo', disabled: true };
+      }
+      return { text: `Quero Adotar o ${animal.nome}`, disabled: false };
+  }
+  
+  const buttonState = getButtonState();
 
   return (
     <>
@@ -172,7 +204,6 @@ export default function AnimalDetailPage() {
           onSubmit={handleAdoptionSubmit}
         />
       )}
-      {/* ATUALIZADO: Padding superior reduzido e inferior aumentado */}
       <main className="bg-gray-50 pt-8 pb-16 sm:pt-12 sm:pb-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
@@ -183,14 +214,12 @@ export default function AnimalDetailPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-            {/* Coluna da Imagem */}
             <div className="lg:col-span-3">
               <div className="aspect-square rounded-2xl overflow-hidden shadow-lg sticky top-8">
                 <img src={imageUrl} alt={`Foto de ${animal.nome}`} className="w-full h-full object-cover" />
               </div>
             </div>
 
-            {/* Coluna de Informações */}
             <div className="lg:col-span-2">
               <div className="flex flex-col space-y-6">
                 <div>
@@ -232,9 +261,9 @@ export default function AnimalDetailPage() {
                     <Button 
                         onClick={handleOpenAdoptionModal}
                         className="w-full text-lg py-3 bg-amber-800 hover:bg-amber-900 focus:ring-amber-500"
-                        disabled={animal.status !== 'DISPONIVEL'}
+                        disabled={buttonState.disabled}
                     >
-                        {animal.status === 'DISPONIVEL' ? `Quero Adotar o ${animal.nome}` : 'Adoção em Processo'}
+                        {buttonState.text}
                     </Button>
                 </div>
               </div>

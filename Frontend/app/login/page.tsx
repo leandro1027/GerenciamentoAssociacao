@@ -22,7 +22,9 @@ export default function LoginPage() {
       await login(email, password);
       // O redirecionamento em caso de sucesso é tratado pelo AuthContext
     } catch (err: any) {
-      toast.error(err.message || 'Falha no login. Verifique as suas credenciais.');
+      // ATUALIZADO: Lógica para extrair a mensagem de erro específica da API
+      const errorMessage = err.response?.data?.message || 'Falha no login. Verifique as suas credenciais.';
+      toast.error(errorMessage);
       setIsLoading(false); // Reativa o botão apenas em caso de erro
     }
   };

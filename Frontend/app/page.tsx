@@ -148,7 +148,7 @@ const ParallaxCtaSection = () => (
       <p className="mt-4 text-lg leading-6 text-amber-100">
         A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
       </p>
-      <Link href="/quero-ajudar" className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-amber-800 bg-white hover:bg-amber-50 sm:w-auto">
+      <Link href="/voluntario" className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-amber-800 bg-white hover:bg-amber-50 sm:w-auto">
         Quero Ajudar
       </Link>
     </div>
