@@ -1,8 +1,6 @@
-// app/divulgar-animal/page.tsx
-
 'use client';
 
-import { useState, FormEvent, ChangeEvent, DragEvent } from 'react';
+import { useState, FormEvent, ChangeEvent, DragEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -16,6 +14,21 @@ const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: strin
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
   </svg>
+);
+
+// Componente de Botão de Rádio com novo estilo
+const RadioPill = ({ label, name, value, checked, onChange }: { label: string, name: string, value: string, checked: boolean, onChange: (value: string) => void }) => (
+  <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-semibold border transition-all duration-200 w-full text-center ${checked ? 'bg-amber-800 text-white border-amber-800 shadow-sm' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-700'}`}>
+    <input
+      type="radio"
+      name={name}
+      value={value}
+      checked={checked}
+      onChange={(e) => onChange(e.target.value)}
+      className="sr-only"
+    />
+    {label}
+  </label>
 );
 
 export default function DivulgarAnimalPage() {
@@ -33,6 +46,16 @@ export default function DivulgarAnimalPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Efeito para verificar autenticação e redirecionar se necessário
+  useEffect(() => {
+    // O hook useAuth pode levar um momento para determinar o status.
+    // Verificamos explicitamente por `false` para agir apenas quando a verificação terminar e o utilizador não estiver logado.
+    if (isAuthenticated === false) {
+        toast.error("Você precisa estar logado para divulgar um animal.");
+        router.push('/login');
+    }
+  }, [isAuthenticated, router]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -106,91 +129,110 @@ export default function DivulgarAnimalPage() {
     }
   };
 
+  // Enquanto o status de autenticação é verificado, ou durante o redirecionamento,
+  // exibimos um loader para evitar que o formulário apareça rapidamente.
   if (!isAuthenticated) {
     return (
-        <main className="flex-grow flex items-center justify-center bg-gray-50 p-4">
-            <div className="w-full max-w-md p-8 text-center bg-white rounded-2xl shadow-xl space-y-6">
-                <Icon path="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" className="mx-auto h-12 w-12 text-amber-700" />
-                <h1 className="text-2xl font-bold text-gray-800">Acesso Negado</h1>
-                <p className="text-gray-600">Você precisa de estar logado para divulgar um animal.</p>
-                <Link href="/login" className="inline-block mt-4 w-full bg-amber-800 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:bg-amber-900 transition-colors">
-                    Ir para o Login
-                </Link>
+        <main className="flex-grow flex items-center justify-center bg-gray-50 p-4 min-h-screen">
+            <div className="text-center text-gray-600">
+                <p>A verificar autenticação...</p>
             </div>
         </main>
     );
   }
 
   return (
-    <main className="flex-grow bg-gray-50 py-16 px-4">
-      <div className="max-w-4xl mx-auto bg-white p-8 sm:p-10 rounded-2xl shadow-xl">
-        <header className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Divulgar um Animal Encontrado</h1>
-          <p className="mt-3 text-gray-600">Preencha os detalhes abaixo. A sua ajuda é fundamental!</p>
+    <main className="flex-grow bg-gray-50 py-12 sm:py-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">Ajude um Animal a Encontrar um Lar</h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">Cada divulgação é um passo crucial para mudar uma vida. Preencha o formulário abaixo com o máximo de detalhes possível.</p>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="localizacao" className="block text-sm font-medium text-gray-800 mb-1">Cidade e Bairro</label>
-                <Input name="localizacao" value={formData.localizacao} onChange={handleInputChange} placeholder="Ex: Porto União, Centro" required />
-              </div>
-              <div>
-                <label htmlFor="raca" className="block text-sm font-medium text-gray-800 mb-1">Raça do Animal</label>
-                <Input name="raca" value={formData.raca} onChange={handleInputChange} placeholder="Ex: Sem Raça Definida (SRD)" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">O animal é castrado?</label>
-                <div className="mt-2 flex space-x-3">
-                  <RadioPill label="Sim" name="castrado" value="true" checked={castrado === 'true'} onChange={setCastrado} />
-                  <RadioPill label="Não / Não sei" name="castrado" value="false" checked={castrado === 'false'} onChange={setCastrado} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Este animal foi resgatado da rua?</label>
-                <div className="mt-2 flex space-x-3">
-                  <RadioPill label="Sim, foi resgatado" name="resgate" value="true" checked={resgate === 'true'} onChange={setResgate} />
-                  <RadioPill label="Não" name="resgate" value="false" checked={resgate === 'false'} onChange={setResgate} />
-                </div>
-              </div>
+        <form onSubmit={handleSubmit} className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl space-y-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            
+            {/* Coluna da Esquerda: Detalhes */}
+            <div className="space-y-8">
+                <fieldset>
+                    <legend className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">1. Detalhes do Animal</legend>
+                    <div className="space-y-6">
+                        <div>
+                            <label htmlFor="localizacao" className="block text-sm font-medium text-gray-800 mb-1">Cidade e Bairro onde foi encontrado</label>
+                            <Input name="localizacao" value={formData.localizacao} onChange={handleInputChange} placeholder="Ex: Porto União, Centro" required />
+                        </div>
+                        <div>
+                            <label htmlFor="raca" className="block text-sm font-medium text-gray-800 mb-1">Raça (ou similar)</label>
+                            <Input name="raca" value={formData.raca} onChange={handleInputChange} placeholder="Ex: Sem Raça Definida (SRD)" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-800 mb-2">O animal é castrado?</label>
+                            <div className="flex gap-4">
+                                <RadioPill label="Sim" name="castrado" value="true" checked={castrado === 'true'} onChange={setCastrado} />
+                                <RadioPill label="Não / Não sei" name="castrado" value="false" checked={castrado === 'false'} onChange={setCastrado} />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-800 mb-2">Este animal foi resgatado da rua?</label>
+                            <div className="flex gap-4">
+                                <RadioPill label="Sim, foi resgatado" name="resgate" value="true" checked={resgate === 'true'} onChange={setResgate} />
+                                <RadioPill label="Não, é particular" name="resgate" value="false" checked={resgate === 'false'} onChange={setResgate} />
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
             </div>
 
-            <div 
-              className={`flex flex-col justify-center items-center p-6 border-2 border-dashed rounded-md transition-colors ${isDragging ? 'border-amber-600 bg-amber-50' : 'border-gray-300'}`}
-              onDragEnter={(e) => handleDragEvents(e, 'enter')}
-              onDragLeave={(e) => handleDragEvents(e, 'leave')}
-              onDragOver={(e) => handleDragEvents(e, 'over')}
-              onDrop={handleDrop}
-            >
-              <div className="space-y-1 text-center">
-                {previewImage ? (
-                  <img src={previewImage} alt="Pré-visualização" className="mx-auto h-48 w-auto rounded-md object-cover" />
-                ) : (
-                  <>
-                    <Icon path="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="text-sm text-gray-600">Arraste e solte ou</p>
-                  </>
-                )}
-                <div className="text-sm text-gray-600">
-                  <label htmlFor="file" className="relative cursor-pointer bg-white rounded-md font-medium text-amber-700 hover:text-amber-600 focus-within:outline-none">
-                    <span>{previewImage ? 'Trocar imagem' : 'Escolher arquivo'}</span>
-                    <input id="file" name="file" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" required/>
-                  </label>
-                </div>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF até 10MB</p>
-              </div>
+            {/* Coluna da Direita: Upload de Imagem */}
+            <div className="space-y-8">
+                <fieldset>
+                    <legend className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">2. Foto</legend>
+                    <div 
+                      className={`relative flex flex-col justify-center items-center p-6 border-2 border-dashed rounded-xl transition-colors h-full min-h-[300px] ${isDragging ? 'border-amber-600 bg-amber-50' : 'border-gray-300'}`}
+                      onDragEnter={(e) => handleDragEvents(e, 'enter')}
+                      onDragLeave={(e) => handleDragEvents(e, 'leave')}
+                      onDragOver={(e) => handleDragEvents(e, 'over')}
+                      onDrop={handleDrop}
+                    >
+                      {previewImage ? (
+                        <>
+                          <img src={previewImage} alt="Pré-visualização" className="absolute inset-0 w-full h-full rounded-xl object-cover" />
+                          <div className="relative z-10 p-2 bg-white/80 backdrop-blur-sm rounded-lg">
+                            <label htmlFor="file" className="cursor-pointer font-semibold text-amber-700 hover:text-amber-600">
+                                Trocar imagem
+                                <input id="file" name="file" type="file" className="sr-only" onChange={handleFileChange} accept="image/*"/>
+                            </label>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center">
+                          <Icon path="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2 text-sm text-gray-600">
+                            <label htmlFor="file-upload" className="font-semibold text-amber-700 hover:text-amber-600 cursor-pointer">
+                                Clique para escolher
+                                <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" required/>
+                            </label>
+                            <span> ou arraste e solte</span>
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF até 10MB</p>
+                        </div>
+                      )}
+                    </div>
+                </fieldset>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="descricao" className="block text-sm font-medium text-gray-800 mb-1">Descreva o animal e a sua história</label>
-            <textarea name="descricao" value={formData.descricao} onChange={handleInputChange} rows={4} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos sobre o temperamento, a história, se é dócil, se convive bem com outros animais, etc."></textarea>
-          </div>
+          <fieldset>
+            <legend className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">3. História e Comportamento</legend>
+            <div>
+                <label htmlFor="descricao" className="sr-only">Descreva o animal e a sua história</label>
+                <textarea name="descricao" value={formData.descricao} onChange={handleInputChange} rows={5} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-800 focus:ring-amber-800 placeholder:text-gray-400 text-gray-900" placeholder="Conte-nos sobre o temperamento, a história, se é dócil, se convive bem com outros animais, etc."></textarea>
+            </div>
+          </fieldset>
 
-          <div className="pt-4 flex justify-end">
-            <Button type="submit" isLoading={isLoading} className="bg-amber-800 hover:bg-amber-900 focus:ring-amber-500">
-              Enviar Divulgação
+          <div className="pt-6 flex justify-end border-t">
+            <Button type="submit" isLoading={isLoading} className="bg-amber-800 hover:bg-amber-900 focus:ring-amber-500 text-lg px-8 py-3">
+              Enviar Divulgação para Análise
             </Button>
           </div>
         </form>
@@ -198,17 +240,3 @@ export default function DivulgarAnimalPage() {
     </main>
   );
 }
-
-const RadioPill = ({ label, name, value, checked, onChange }: { label: string, name: string, value: string, checked: boolean, onChange: (value: string) => void }) => (
-  <label className={`cursor-pointer px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${checked ? 'bg-amber-800 text-white border-amber-800' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
-    <input
-      type="radio"
-      name={name}
-      value={value}
-      checked={checked}
-      onChange={(e) => onChange(e.target.value)}
-      className="sr-only"
-    />
-    {label}
-  </label>
-);
