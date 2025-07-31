@@ -2,21 +2,162 @@
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal } from '../../types';
 import Link from 'next/link';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 import Textarea from '../components/common/textarea';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+// Para o gráfico funcionar, certifique-se de que a biblioteca está instalada:
+// npm install recharts
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-// TIPO PARA CONTROLAR A VISTA ATIVA (OPÇÃO 'parceiros' REMOVIDA)
-type AdminView = 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
+
+// TIPO PARA CONTROLAR A VISTA ATIVA (ADICIONADO 'dashboard')
+type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
 
 // --- COMPONENTES FILHOS ---
 
-// 1. COMPONENTE PARA GERIR SLIDES
+// 1. COMPONENTE: Dashboard (VERSÃO MELHORADA)
+const Dashboard = ({
+  user,
+  stats,
+  recentActivities,
+  setActiveView,
+}: {
+  user: Usuario | null;
+  stats: {
+    pedidosPendentes: number;
+    divulgacoesPendentes: number;
+    animaisDisponiveis: number;
+    totalMembros: number;
+  };
+  recentActivities: {
+      adocoes: Adocao[];
+      voluntarios: Voluntario[];
+  };
+  setActiveView: (view: AdminView) => void;
+}) => {
+
+  // Dados de exemplo para o gráfico. O ideal é buscar estes dados da sua API.
+  const weeklyActivityData = [
+    { name: 'Seg', NovasAdoções: 2, NovasDivulgações: 3 },
+    { name: 'Ter', NovasAdoções: 1, NovasDivulgações: 5 },
+    { name: 'Qua', NovasAdoções: 4, NovasDivulgações: 2 },
+    { name: 'Qui', NovasAdoções: 3, NovasDivulgações: 6 },
+    { name: 'Sex', NovasAdoções: 5, NovasDivulgações: 4 },
+    { name: 'Sáb', NovasAdoções: 2, NovasDivulgações: 8 },
+    { name: 'Dom', NovasAdoções: 1, NovasDivulgações: 5 },
+  ];
+
+  const StatCard = ({ title, value, icon, description }: { title: string; value: number; icon: React.ReactNode; description: string }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col">
+          <p className="text-sm font-semibold text-gray-500">{title}</p>
+          <p className="text-4xl font-bold text-gray-800 mt-2">{value}</p>
+        </div>
+        <div className="p-3 bg-amber-100 rounded-full">
+          {icon}
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mt-4">{description}</p>
+    </div>
+  );
+
+  return (
+    <section className="space-y-8">
+      {/* Cabeçalho de Boas-Vindas */}
+      <div className="relative p-8 bg-stone-900 rounded-2xl shadow-lg overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-900 to-transparent z-10"></div>
+        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-30" alt="Cão feliz"/>
+        <div className="relative z-20">
+            <h1 className="text-3xl font-bold text-white">Bem-vindo, {user?.nome?.split(' ')[0]}!</h1>
+            <p className="text-stone-300 mt-1">O seu trabalho faz toda a diferença. Vamos ver as novidades.</p>
+        </div>
+      </div>
+      
+      {/* Cards de Estatísticas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Adoções Pendentes"
+          value={stats.pedidosPendentes}
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>}
+          description="Pedidos aguardando a sua análise."
+        />
+        <StatCard
+          title="Divulgações Pendentes"
+          value={stats.divulgacoesPendentes}
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.236 9.168-5.514M15 11L11 17l4 6" /></svg>}
+          description="Novos casos da comunidade para revisar."
+        />
+        <StatCard
+          title="Animais Disponíveis"
+          value={stats.animaisDisponiveis}
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>}
+          description="Animais aguardando um novo lar."
+        />
+        <StatCard
+          title="Total de Membros"
+          value={stats.totalMembros}
+          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+          description="Utilizadores registados na plataforma."
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Gráfico de Atividade */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Atividade na Última Semana</h2>
+            <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer>
+                    <BarChart data={weeklyActivityData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ borderRadius: '12px', borderColor: '#f1f5f9' }}/>
+                        <Legend iconSize={10} wrapperStyle={{ fontSize: '14px' }} />
+                        <Bar dataKey="NovasAdoções" fill="#c2410c" name="Adoções" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="NovasDivulgações" fill="#f59e0b" name="Divulgações" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+
+        {/* Atividades Recentes */}
+        <div className="bg-white p-6 rounded-2xl shadow-lg">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Atividades Recentes</h2>
+            <div className="space-y-4">
+                {recentActivities.adocoes.length === 0 && recentActivities.voluntarios.length === 0 && (
+                    <p className="text-sm text-gray-500">Nenhuma atividade recente.</p>
+                )}
+                {recentActivities.adocoes.map(adocao => (
+                    <div key={adocao.id} className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></div>
+                        {/* CORRIGIDO: Adicionado optional chaining para evitar erros */}
+                        <p className="text-sm text-gray-700"><span className="font-semibold">{adocao.usuario?.nome || 'Utilizador'}</span> quer adotar <span className="font-semibold">{adocao.animal?.nome || 'um animal'}</span>.</p>
+                    </div>
+                ))}
+                {recentActivities.voluntarios.map(voluntario => (
+                    <div key={voluntario.id} className="flex items-center gap-3">
+                         <div className="p-2 bg-green-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-2a4 4 0 00-4-4H9M15 21a2 2 0 002-2v-3.354" /></svg></div>
+                        {/* CORRIGIDO: Adicionado optional chaining para evitar erros */}
+                        <p className="text-sm text-gray-700"><span className="font-semibold">{voluntario.usuario?.nome || 'Alguém'}</span> candidatou-se como voluntário.</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ... (O restante dos seus componentes: SlideManager, VolunteerManager, etc. permanecem aqui)
+// ... (Colei o restante do código abaixo para garantir que o ficheiro está completo)
+
+// 2. COMPONENTE PARA GERIR SLIDES
 const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   const [slides, setSlides] = useState(initialSlides);
   const [title, setTitle] = useState('');
@@ -93,7 +234,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   );
 };
 
-// 2. COMPONENTE PARA GERIR VOLUNTÁRIOS
+// 3. COMPONENTE PARA GERIR VOLUNTÁRIOS
 const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario[] }) => {
     const [voluntarios, setVoluntarios] = useState(initialVolunteers);
 
@@ -163,7 +304,7 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
     );
 };
 
-// 3. COMPONENTE PARA GERIR MEMBROS
+// 4. COMPONENTE PARA GERIR MEMBROS
 const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
     const [usuarios, setUsuarios] = useState(initialUsers);
     const [editingUser, setEditingUser] = useState<Usuario | null>(null);
@@ -245,7 +386,7 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
     );
 };
 
-// 4. COMPONENTE PARA LISTAR DOAÇÕES
+// 5. COMPONENTE PARA LISTAR DOAÇÕES
 const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) => {
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -286,7 +427,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
     );
 };
 
-// 5. COMPONENTE PARA GERIR ANIMAIS
+// 6. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
   const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
   const [especie, setEspecie] = useState<Especie>(Especie.CAO);
@@ -473,7 +614,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   );
 };
 
-// 6. COMPONENTE PARA GERIR ADOÇÕES
+// 7. COMPONENTE PARA GERIR ADOÇÕES
 const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
     const [selectedAdoption, setSelectedAdoption] = useState<Adocao | null>(null);
     const [activeTab, setActiveTab] = useState<'pendentes' | 'finalizadas'>('pendentes');
@@ -641,7 +782,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     );
 };
 
-// 7. COMPONENTE PARA GERIR DIVULGAÇÕES
+// 8. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -820,17 +961,13 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   );
 };
 
-// 8. COMPONENTE PARA GERIR CONTEÚDO E PARCEIROS (ATUALIZADO)
+// 9. COMPONENTE PARA GERIR CONTEÚDO E PARCEIROS
 const ConteudoManager = () => {
   const [activeTab, setActiveTab] = useState<'sobre' | 'parceiros'>('sobre');
-
-  // Estados para a secção "Sobre"
   const [conteudo, setConteudo] = useState({ titulo: '', subtitulo: '', itens: '[]', imagemUrl: '' });
   const [itensList, setItensList] = useState<string[]>(['']);
   const [fileSobre, setFileSobre] = useState<File | null>(null);
   const [isLoadingSobre, setIsLoadingSobre] = useState(false);
-
-  // Estados para a secção "Parceiros"
   const [parceiros, setParceiros] = useState<Parceiro[]>([]);
   const [nomeParceiro, setNomeParceiro] = useState('');
   const [fileParceiro, setFileParceiro] = useState<File | null>(null);
@@ -856,7 +993,6 @@ const ConteudoManager = () => {
     fetchData();
   }, [fetchData]);
 
-  // Funções para "Sobre"
   const handleItemChange = (index: number, value: string) => {
     const newItens = [...itensList];
     newItens[index] = value;
@@ -877,7 +1013,7 @@ const ConteudoManager = () => {
     try {
       await api.patch('/conteudo-home', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success('Conteúdo da página inicial atualizado com sucesso!');
-      fetchData(); // Recarrega os dados
+      fetchData();
     } catch (error) {
       toast.error('Erro ao atualizar o conteúdo.');
     } finally {
@@ -885,7 +1021,6 @@ const ConteudoManager = () => {
     }
   };
 
-  // Funções para "Parceiros"
   const handleCreateParceiro = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fileParceiro) {
@@ -902,7 +1037,7 @@ const ConteudoManager = () => {
       setFileParceiro(null);
       (document.getElementById('partner-file-input') as HTMLInputElement).value = '';
       toast.success('Parceiro criado com sucesso!');
-      fetchData(); // Recarrega os dados
+      fetchData();
     } catch (error) {
       toast.error('Erro ao criar o parceiro.');
     } finally {
@@ -915,7 +1050,7 @@ const ConteudoManager = () => {
       try {
         await api.delete(`/parceiros/${id}`);
         toast.success('Parceiro apagado com sucesso!');
-        fetchData(); // Recarrega os dados
+        fetchData();
       } catch (error) {
         toast.error('Erro ao apagar o parceiro.');
       }
@@ -1011,7 +1146,7 @@ const ConteudoManager = () => {
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<AdminView>('slides');
+  const [activeView, setActiveView] = useState<AdminView>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -1075,8 +1210,9 @@ export default function AdminPanelPage() {
 
   const Sidebar = () => (
     <aside className={`bg-stone-900 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
-        <div className="mb-8"><h2 className="text-2xl font-bold">Cadastro</h2></div>
+        <div className="mb-8"><h2 className="text-2xl font-bold">Painel Admin</h2></div>
         <nav className="flex flex-col space-y-2">
+            <button onClick={() => setActiveView('dashboard')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📊 Dashboard</button>
             <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Slides</button>
             <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
             <button onClick={() => setActiveView('adocoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>❤️ Gerir Adoções</button>
@@ -1084,7 +1220,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
-            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Conteúdos</button>
+            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📄 Gerir Conteúdo</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -1092,6 +1228,7 @@ export default function AdminPanelPage() {
 
   const MainContent = () => {
     const viewTitles: Record<AdminView, string> = {
+      dashboard: 'Dashboard',
       slides: 'Gestão do Carrossel',
       animais: 'Gestão de Animais para Adoção',
       adocoes: 'Gestão de Pedidos de Adoção',
@@ -1101,6 +1238,19 @@ export default function AdminPanelPage() {
       divulgacoes: 'Gestão de Divulgações da Comunidade',
       conteudo: 'Gestão de Conteúdo e Parceiros'
     };
+    
+    const dashboardStats = {
+        pedidosPendentes: adocoes.filter(a => a.status === StatusAdocao.SOLICITADA).length,
+        divulgacoesPendentes: divulgacoes.filter(d => d.status === DivulgacaoStatus.PENDENTE).length,
+        animaisDisponiveis: animais.filter(a => a.status === StatusAnimal.DISPONIVEL).length,
+        totalMembros: usuarios.length,
+    }
+
+    const recentActivities = {
+        adocoes: adocoes.filter(a => a.status === StatusAdocao.SOLICITADA).slice(0, 2),
+        // CORRIGIDO: Comparação com o valor string 'pendente'
+        voluntarios: voluntarios.filter(v => v.status === 'pendente').slice(0, 2),
+    }
 
     return (
     <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
@@ -1116,6 +1266,7 @@ export default function AdminPanelPage() {
             
             {!loading && !error && (
                 <>
+                    {activeView === 'dashboard' && <Dashboard user={user} stats={dashboardStats} recentActivities={recentActivities} setActiveView={setActiveView} />}
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                     {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
