@@ -57,7 +57,10 @@ export class AuthService {
       },
     });
 
-    const resetURL = `http://localhost:3000/redefinir-senha/${resetToken}`;
+    // CORRIGIDO: A URL do frontend agora é lida a partir das variáveis de ambiente.
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const resetURL = `${frontendUrl}/redefinir-senha/${resetToken}`;
+    
     const mailOptions = {
       to: user.email,
       from: 'Associação <leandrobalaban78@gmail.com>',
@@ -79,7 +82,6 @@ export class AuthService {
     const user = await this.prisma.usuario.findFirst({
       where: {
         passwordResetToken: hashedToken,
-        // CORRIGIDO: Usamos toISOString() para garantir a comparação em UTC.
         passwordResetExpires: { gt: new Date().toISOString() },
       },
     });
