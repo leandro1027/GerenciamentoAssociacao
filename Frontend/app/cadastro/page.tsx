@@ -8,6 +8,38 @@ import Button from '../components/common/button';
 import { Usuario } from '../../types';
 import toast from 'react-hot-toast'; 
 
+// --- NOVO COMPONENTE: Indicador de Força da Senha ---
+const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
+    const checks = [
+        { label: 'Pelo menos 8 caracteres', regex: /.{8,}/ },
+        { label: 'Pelo menos uma letra maiúscula', regex: /(?=.*[A-Z])/ },
+        { label: 'Pelo menos uma letra minúscula', regex: /(?=.*[a-z])/ },
+        { label: 'Pelo menos um número', regex: /(?=.*\d)/ },
+        { label: 'Pelo menos um caractere especial', regex: /(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/ },
+    ];
+
+    return (
+        <div className="mt-2 space-y-1">
+            {checks.map((check, index) => {
+                const isValid = check.regex.test(password);
+                return (
+                    <div key={index} className={`flex items-center text-sm transition-colors ${isValid ? 'text-green-600' : 'text-gray-500'}`}>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            {isValid ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            )}
+                        </svg>
+                        <span>{check.label}</span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+
 export default function CadastroPage() {
   const router = useRouter();
 
@@ -17,6 +49,7 @@ export default function CadastroPage() {
   const [senha, setSenha] = useState('');
   const [telefone, setTelefone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -37,10 +70,16 @@ export default function CadastroPage() {
       }, 2000);
 
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao registar.';
-      // Exibe uma notificação de erro
-      toast.error(errorMessage);
-      setIsLoading(false);
+        // Trata múltiplos erros se a API retornar um array
+        if (Array.isArray(err.response?.data?.message)) {
+            err.response.data.message.forEach((message: string) => {
+                toast.error(message);
+            });
+        } else {
+            const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao registar.';
+            toast.error(errorMessage);
+        }
+        setIsLoading(false);
     }
   };
 
@@ -82,13 +121,16 @@ export default function CadastroPage() {
             </label>
             <Input
               id="senha"
-              type="password"
-              placeholder="******"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Crie uma senha forte"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
-              minLength={6}
+              icon={showPassword ? '👁️' : '👁️‍🗨️'}
+              onIconClick={() => setShowPassword(!showPassword)}
             />
+            {/* O indicador de senha só aparece quando o utilizador começa a digitar */}
+            {senha.length > 0 && <PasswordStrengthIndicator password={senha} />}
           </div>
           <div>
             <label htmlFor="telefone" className="block mb-2 text-sm font-medium text-gray-700">
@@ -97,6 +139,7 @@ export default function CadastroPage() {
             <Input
               id="telefone"
               type="tel"
+              placeholder="(XX) XXXXX-XXXX"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
             />
