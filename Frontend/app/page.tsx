@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Carousel from './components/layout/carousel';
 import api from './services/api';
-import { Animal, Parceiro } from '../types';
+import { Animal, Parceiro, Sexo } from '../types';
 
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
@@ -22,7 +22,15 @@ const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: str
   </svg>
 );
 
-// Componente para o Card do Animal
+// NOVO Componente para as Tags de características do animal
+const AnimalFeatureTag = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
+    <div className="flex items-center gap-1.5 bg-amber-50 text-amber-800 text-xs font-medium px-2.5 py-1 rounded-full">
+        {icon}
+        <span>{text}</span>
+    </div>
+);
+
+// ATUALIZADO Componente para o Card do Animal
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal || !animal.animalImageUrl) {
     return null; 
@@ -34,8 +42,18 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
 
+  const genderIcon = animal.sexo === Sexo.MACHO ? (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.034a5.95 5.95 0 013.377 1.35l.866-.5a1 1 0 111 1.732l-.866.5A5.95 5.95 0 0117 10h1.034a1 1 0 110 2H17a5.95 5.95 0 01-1.35 3.377l.5.866a1 1 0 11-1.732 1l-.5-.866A5.95 5.95 0 0110 17v1.034a1 1 0 11-2 0V17a5.95 5.95 0 01-3.377-1.35l-.866.5a1 1 0 11-1-1.732l.866-.5A5.95 5.95 0 013 12H1.966a1 1 0 110-2H3a5.95 5.95 0 011.35-3.377l-.5-.866a1 1 0 111.732-1l.5.866A5.95 5.95 0 018 3.034V2a1 1 0 012 0zm0 4a4 4 0 100 8 4 4 0 000-8z" clipRule="evenodd" />
+    </svg>
+  ) : (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clipRule="evenodd" />
+    </svg>
+  );
+
   return (
-    <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
+    <div className="group flex flex-col bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="relative overflow-hidden h-56">
         <img 
           src={imageUrl} 
@@ -43,20 +61,32 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
           onError={handleImageError}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        <div className="absolute bottom-4 left-4">
-          <h3 className="text-xl font-bold text-white">{animal.nome}</h3>
-          <p className="text-sm text-gray-200">{animal.raca}</p>
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="text-xl font-bold text-gray-800">{animal.nome}</h3>
+        <div className="flex flex-wrap gap-2 my-3">
+            <AnimalFeatureTag icon={genderIcon} text={animal.sexo} />
+            <AnimalFeatureTag icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+            } text={animal.porte} />
+             <AnimalFeatureTag icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M11.3,2.05C10.52,2.4,9.53,3.33,9.13,4.23c-0.23,0.52-0.23,1.1,0,1.62c0.4,0.9,1.39,1.83,2.17,2.17c0.52,0.23,1.1,0.23,1.62,0c0.9-0.4,1.83-1.39,2.17-2.17c0.23-0.52,0.23-1.1,0-1.62C16.67,3.33,15.7,2.4,14.8,2.05C14.28,1.82,13.7,1.7,13.11,1.7C12.52,1.7,11.82,1.82,11.3,2.05z M4.23,9.13C3.33,9.53,2.4,10.52,2.05,11.3c-0.23,0.52-0.35,1.1-0.35,1.69c0,0.59,0.12,1.17,0.35,1.69c0.35,0.78,1.28,1.77,2.18,2.17c0.52,0.23,1.1,0.35,1.69,0.35s1.17-0.12,1.69-0.35c0.9-0.4,1.83-1.39,2.17-2.17c0.23-0.52,0.35-1.1,0.35-1.69c0-0.59-0.12-1.17-0.35-1.69C9.53,9.93,8.6,9,7.7,8.65C7.18,8.42,6.6,8.3,6.01,8.3C5.42,8.3,4.75,8.42,4.23,9.13z M9.13,14.8c-0.4-0.9-1.39-1.83-2.17-2.17c-0.52-0.23-1.1-0.23-1.62,0c-0.9,0.4-1.83,1.39-2.17,2.17c-0.23,0.52-0.23,1.1,0,1.62c0.4,0.9,1.39,1.83,2.17,2.17c0.52,0.23,1.1,0.23,1.62,0c0.9-0.4,1.83-1.39,2.17-2.17C9.36,15.9,9.36,15.32,9.13,14.8z" clipRule="evenodd" />
+                </svg>
+            } text={animal.raca} />
+        </div>
+        <div className="mt-auto pt-4">
+            <Link href={`/adote/${animal.id}`} className="block w-full text-center bg-amber-800 text-white font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:bg-amber-900 transition-colors duration-300">
+                Quero Adotar
+            </Link>
         </div>
       </div>
-      <div className="p-4 bg-white">
-        <span className="inline-block w-full bg-amber-800 text-white text-center font-semibold px-4 py-2 rounded-lg group-hover:bg-amber-900 transition-colors">
-          Quero Adotar
-        </span>
-      </div>
-    </Link>
+    </div>
   );
 };
+
 
 // --- COMPONENTE: SEÇÃO SOBRE NÓS (DINÂMICO) ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
