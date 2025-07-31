@@ -36,12 +36,13 @@ export class AuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
+      // Retornamos silenciosamente para não revelar se um e-mail existe no sistema.
       return;
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
 
     await this.prisma.usuario.update({
       where: { id: user.id },
@@ -68,6 +69,7 @@ export class AuthService {
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição:", error);
+      // Mesmo com erro no envio, o token foi gerado. O utilizador pode tentar novamente.
     }
   }
 
@@ -77,7 +79,8 @@ export class AuthService {
     const user = await this.prisma.usuario.findFirst({
       where: {
         passwordResetToken: hashedToken,
-        passwordResetExpires: { gt: new Date() },
+        // CORRIGIDO: Usamos toISOString() para garantir a comparação em UTC.
+        passwordResetExpires: { gt: new Date().toISOString() },
       },
     });
 
