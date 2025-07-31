@@ -1,8 +1,0 @@
--- CreateTable
-CREATE TABLE "Slide" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "imageUrl" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "subtitle" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
