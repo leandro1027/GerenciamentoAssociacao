@@ -23,7 +23,6 @@ export class DivulgacaoService {
         castrado: createDivulgacaoDto.castrado === true || (createDivulgacaoDto.castrado as any) === 'true',
         resgate: createDivulgacaoDto.resgate === true || (createDivulgacaoDto.resgate as any) === 'true',
         imageUrl: imageUrl,
-        // CORREÇÃO: Usar 'connect' para associar ao utilizador
         usuario: {
           connect: {
             id: userId,

@@ -13,6 +13,7 @@ import { AdocoesModule } from './adocoes/adocoes.module';
 import { DivulgacaoModule } from './divulgacao/divulgacao.module';
 import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
 import { ParceirosModule } from './parceiros/parceiros.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ParceirosModule } from './parceiros/parceiros.module';
     DivulgacaoModule,
     ConteudoHomeModule,
     ParceirosModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
