@@ -6,6 +6,7 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types';
 
+console.log("URL da API lida pela Vercel:", process.env.NEXT_PUBLIC_API_URL);
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
   titulo: string;
