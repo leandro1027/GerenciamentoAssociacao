@@ -18,7 +18,6 @@ export class AuthController {
     return this.authService.login(user);
   }
 
-  // ESTE É O ENDPOINT QUE FALTAVA
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {

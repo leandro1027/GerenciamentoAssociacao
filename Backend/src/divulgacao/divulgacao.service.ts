@@ -35,12 +35,12 @@ export class DivulgacaoService {
   // Para o painel admin
   findAll() {
     return this.prisma.divulgacao.findMany({
-      include: { usuario: true }, // Agora isto vai funcionar
+      include: { usuario: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  // NOVO MÉTODO: Atualiza o status de uma divulgação
+  //Atualiza o status de uma divulgação
   async updateStatus(id: string, status: DivulgacaoStatus) {
     await this.prisma.divulgacao.findUniqueOrThrow({ where: { id } });
     return this.prisma.divulgacao.update({

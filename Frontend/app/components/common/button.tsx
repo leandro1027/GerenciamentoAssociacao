@@ -1,11 +1,7 @@
-// Em: src/app/components/common/button.tsx
-
 import React from 'react';
 
-// 1. Definimos os nomes das variantes que o botão pode ter
 type ButtonVariant = 'primary' | 'success' | 'danger' | 'outline';
 
-// 2. Adicionamos a prop 'variant' como opcional à interface
 type ButtonProps = React.ComponentProps<'button'> & {
   isLoading?: boolean;
   variant?: ButtonVariant;
@@ -14,7 +10,7 @@ type ButtonProps = React.ComponentProps<'button'> & {
 const Button = ({
   children,
   isLoading,
-  variant = 'primary', // 3. Definimos 'primary' como o valor padrão
+  variant = 'primary', // 'primary' como o valor padrão
   className,
   ...props
 }: ButtonProps) => {
@@ -34,7 +30,7 @@ const Button = ({
     <button
       {...props}
       disabled={isLoading}
-      // 4. Juntamos as classes: base + a variante escolhida + qualquer outra classe passada via props
+      // junta as classes: base + a variante escolhida + qualquer outra classe passada via props
       className={`${baseClasses} ${variantClasses[variant]} ${className || ''}`}
     >
       {isLoading ? (

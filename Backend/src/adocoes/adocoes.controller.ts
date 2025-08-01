@@ -10,7 +10,7 @@ import { UpdateAdocaoStatusDto } from './dto/update-adocao-status.dto';
 export class AdocoesController {
   constructor(private readonly adocoesService: AdocoesService) {}
 
-  // Rota para um utilizador criar um pedido de adoção
+  // Rota para um usuario criar um pedido de adoção
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createAdocaoDto: CreateAdocoeDto, @Request() req) {
@@ -18,7 +18,7 @@ export class AdocoesController {
     return this.adocoesService.create(createAdocaoDto, userId);
   }
 
-  // Rota para o utilizador ver os seus próprios pedidos
+  // Rota para o usuario ver os seus próprios pedidos
   @UseGuards(JwtAuthGuard)
   @Get('meus-pedidos')
   findMyAdoptions(@Request() req) {

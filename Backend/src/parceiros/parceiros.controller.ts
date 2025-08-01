@@ -42,6 +42,3 @@ export class ParceirosController {
     return this.parceirosService.remove(id);
   }
 }
-
-// Crie uma pasta 'dto' dentro de 'parceiros' e adicione o ficheiro create-parceiro.dto.ts
-// Em: Backend/src/parceiros/dto/create-parceiro.dto.ts

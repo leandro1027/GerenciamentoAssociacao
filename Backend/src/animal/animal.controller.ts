@@ -42,7 +42,7 @@ export class AnimalController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  // AQUI ESTÁ A CORREÇÃO PRINCIPAL: A configuração completa do FileInterceptor
+  //FileInterceptor
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -68,7 +68,6 @@ export class AnimalController {
     if (!file) {
       throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
-    // Agora 'file.filename' terá o nome gerado pelo diskStorage
     return this.animalService.create(createAnimalDto, file);
   }
 

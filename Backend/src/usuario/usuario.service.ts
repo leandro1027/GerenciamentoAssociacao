@@ -66,7 +66,7 @@ export class UsuarioService {
     return this.prisma.usuario.delete({ where: { id } });
   }
 
-  // --- NOVOS MÉTODOS PARA O PERFIL DO UTILIZADOR ---
+  // --- MÉTODOS PARA O PERFIL DO UTILIZADOR ---
 
   async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     const user = await this.prisma.usuario.update({
@@ -80,7 +80,6 @@ export class UsuarioService {
   async changePassword(id: number, changePasswordDto: ChangePasswordDto) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
     
-    // A CORREÇÃO ESTÁ AQUI: Verificamos se o utilizador existe antes de o usar.
     if (!user) {
       throw new NotFoundException('Utilizador não encontrado.');
     }

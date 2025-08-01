@@ -68,7 +68,6 @@ export class AdocoesService {
     }
 
     // Se a adoção for aprovada, atualiza o status do animal também.
-    // Usamos uma transação para garantir que ambas as operações ocorram com sucesso.
     if (status === StatusAdocao.APROVADA) {
       return this.prisma.$transaction(async (prisma) => {
         // 1. Atualiza o pedido de adoção
@@ -87,7 +86,7 @@ export class AdocoesService {
       });
     }
 
-    // Para outros status (RECUSADA, etc.), apenas atualiza o pedido
+    // atualiza o pedido
     return this.prisma.adocao.update({
       where: { id },
       data: { status },

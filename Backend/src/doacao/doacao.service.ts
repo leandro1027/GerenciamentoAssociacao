@@ -13,10 +13,9 @@ export class DoacaoService {
   }
 
   findAll() {
-    // A CORREÇÃO ESTÁ AQUI: Adicionamos o 'include'
     return this.prisma.doacao.findMany({
       include: {
-        usuario: true, // Isto diz ao Prisma para incluir o objeto do utilizador relacionado
+        usuario: true, //diz ao Prisma para incluir o objeto do utilizador relacionado
       },
       orderBy: {
         data: 'desc', // Ordena as doações da mais recente para a mais antiga

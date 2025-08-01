@@ -102,15 +102,14 @@ model Adocao {
   dataFinalizacao   DateTime?
   status            StatusAdocao @default(SOLICITADA)
   observacoesAdmin  String?
-  tipoMoradia      String?  // Ex: "Casa com pátio", "Apartamento"
-  outrosAnimais    String?  // Ex: "Sim, um cão", "Não"
-  tempoDisponivel  String?  // Ex: "Manhãs e noites", "Integral"
+  tipoMoradia      String? 
+  outrosAnimais    String? 
+  tempoDisponivel  String?
   motivoAdocao     String?
   usuario           Usuario      @relation(fields: [usuarioId], references: [id])
   usuarioId         Int
   animal            Animal       @relation(fields: [animalId], references: [id])
   animalId          String
-
   @@unique([usuarioId, animalId])
 }
 
@@ -130,17 +129,15 @@ model Divulgacao {
   descricao       String?
   status          DivulgacaoStatus @default(PENDENTE)
   createdAt       DateTime @default(now())
-
-  // Relação com o utilizador que fez a divulgação
   usuario         Usuario  @relation(fields: [usuarioId], references: [id])
   usuarioId       Int
 }
 
 model ConteudoHome {
-  id        Int      @id @default(1) // Usaremos sempre o ID 1 para ter uma única entrada
+  id        Int      @id @default(1) //sempre o ID 1 para ter uma única entrada
   titulo    String
   subtitulo String
-  itens     String   // Guardaremos a lista de tópicos como uma string JSON
+  itens     String  
   imagemUrl String
   updatedAt DateTime @updatedAt
 }

@@ -31,7 +31,6 @@ export class ConteudoHomeController {
     }),
   }))
   update(@Body() dto: UpdateConteudoHomeDto, @UploadedFile() file: Express.Multer.File) {
-    // O DTO virá como string do FormData, então precisamos fazer o parse
     const parsedDto = {
         titulo: dto.titulo,
         subtitulo: dto.subtitulo,

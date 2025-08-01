@@ -1,8 +1,7 @@
-// components/layout/Footer.tsx
-'use client'; // Necessário para usar o hook usePathname
+'use client'; 
 
 import React from 'react';
-import { usePathname } from 'next/navigation'; // Importa o hook para ler o URL
+import { usePathname } from 'next/navigation'; 
 
 const Footer = () => {
   const pathname = usePathname();
@@ -65,5 +64,4 @@ const Footer = () => {
     </footer>
   );
 };
-
 export default Footer;

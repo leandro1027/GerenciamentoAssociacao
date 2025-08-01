@@ -23,13 +23,11 @@ export class AnimalService {
         // Converte a string 'castrado' para um booleano real
         castrado: String(castrado) === 'true',
         
-        // Adiciona a URL da imagem
         animalImageUrl: animalImageUrl,
       },
     });
   }
 
-  // MÉTODO ATUALIZADO PARA ACEITAR FILTROS
   findAll(filters: { especie?: Especie; sexo?: Sexo; porte?: Porte; nome?: string }) {
     const where: Prisma.AnimalWhereInput = {
       status: StatusAnimal.DISPONIVEL, // Sempre retorna apenas os disponíveis
@@ -45,7 +43,6 @@ export class AnimalService {
       where.porte = filters.porte;
     }
     if (filters.nome) {
-      // Usando 'contains' para busca de texto parcial, compatível com SQLite
       where.nome = {
         contains: filters.nome,
       };

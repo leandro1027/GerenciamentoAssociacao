@@ -36,7 +36,7 @@ export class AuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
-      // Retornamos silenciosamente para não revelar se um e-mail existe no sistema.
+      // Retorna mas não revela se um e-mail existe no sistema.
       return;
     }
 
@@ -57,7 +57,6 @@ export class AuthService {
       },
     });
 
-    // CORRIGIDO: A URL do frontend agora é lida a partir das variáveis de ambiente.
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const resetURL = `${frontendUrl}/redefinir-senha/${resetToken}`;
     

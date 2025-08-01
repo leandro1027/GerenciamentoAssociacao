@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException('Utilizador não encontrado.');
     }
-    // Retornamos o utilizador completo (incluindo o cargo)
+    // Retorna o utilizador completo (incluindo o cargo)
     return user;
   }
 }

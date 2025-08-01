@@ -29,7 +29,6 @@ export class ParceirosService {
     if (!parceiro) {
       throw new NotFoundException(`Parceiro com ID ${id} não encontrado.`);
     }
-    // Aqui também pode adicionar a lógica para apagar o ficheiro da imagem do servidor
     return this.prisma.parceiro.delete({ where: { id } });
   }
 }

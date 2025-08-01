@@ -22,7 +22,6 @@ export class UsuarioController {
   }
 
   // --- ROTAS DE GESTÃO DE PERFIL PARA UTILIZADOR LOGADO ---
-
   @Patch('me/profile')
   @UseGuards(JwtAuthGuard)
   updateMyProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
