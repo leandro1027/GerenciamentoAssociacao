@@ -154,9 +154,6 @@ const Dashboard = ({
   );
 };
 
-// ... (O restante dos seus componentes: SlideManager, VolunteerManager, etc. permanecem aqui)
-// ... (Colei o restante do código abaixo para garantir que o ficheiro está completo)
-
 // 2. COMPONENTE PARA GERIR SLIDES
 const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   const [slides, setSlides] = useState(initialSlides);

@@ -14,6 +14,7 @@ import { DivulgacaoModule } from './divulgacao/divulgacao.module';
 import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
 import { ParceirosModule } from './parceiros/parceiros.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     ConteudoHomeModule,
     ParceirosModule,
     CloudinaryModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
