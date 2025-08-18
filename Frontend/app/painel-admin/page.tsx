@@ -1069,7 +1069,7 @@ const ConteudoManager = () => {
 
         {activeTab === 'sobre' && (
             <div>
-                <h2 className="text-xl font-bold text-slate-800 mb-6">Editar Secção "Sobre" da Página Inicial</h2>
+                <h2 className="text-xl font-bold text-slate-800 mb-6">Editar Seção "Sobre" da Página Inicial</h2>
                 <form onSubmit={handleSubmitSobre} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Título da Secção</label>
