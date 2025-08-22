@@ -89,7 +89,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 };
 
 
-// --- COMPONENTE: SEÇÃO SOBRE NÓS (DINÂMICO) ---
+// --- COMPONENTE: SEÇÃO SOBRE NÓS
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
   if (!conteudo) return null;
 
@@ -156,11 +156,12 @@ const ParallaxCtaSection = () => (
   </section>
 );
 
-// --- COMPONENTE: Secção de Parceiros com Carrossel Infinito (ATUALIZADO) ---
+
 const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
     if (partners.length === 0) return null;
 
-    // Duplica a lista para o efeito de scroll contínuo
+    // Duplicamos a lista de parceiros para criar o efeito de loop contínuo na animação CSS.
+    
     const extendedPartners = [...partners, ...partners];
 
     return (
@@ -195,7 +196,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
                                 <img 
                                     src={`${api.defaults.baseURL}${partner.logoUrl}`} 
                                     alt={partner.nome}
-                                    // Classes atualizadas para arredondar a logo
+                                    // arredondar a logo
                                     className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md"
                                 />
                             </div>
