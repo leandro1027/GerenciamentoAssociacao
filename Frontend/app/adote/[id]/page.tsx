@@ -190,7 +190,7 @@ export default function AnimalDetailPage() {
       if(animal.status !== 'DISPONIVEL') {
           return { text: 'Adoção em Processo', disabled: true };
       }
-      return { text: `Quero Adotar o ${animal.nome}`, disabled: false };
+      return { text: `Quero Adotar o (a) ${animal.nome}`, disabled: false };
   }
   
   const buttonState = getButtonState();
