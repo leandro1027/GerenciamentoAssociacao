@@ -34,7 +34,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { is
 
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
+type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios';
 
 // --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
 type WeeklyActivity = {
@@ -889,6 +889,83 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     );
 };
 
+// --- NOVO COMPONENTE PARA GERIR RELATÓRIOS (COM CORREÇÃO DE TIPOS) ---
+const ReportsManager = () => {
+
+  // Função genérica para lidar com o download de qualquer relatório
+  const handleExport = async (format: 'csv' | 'pdf', reportType: string, fileName: string) => {
+    const endpoint = `/reports/${reportType}/${format}`;
+    const toastId = toast.loading(`A gerar o seu relatório ${format.toUpperCase()}...`);
+
+    try {
+      const response = await api.get(endpoint, {
+        responseType: 'blob',
+      });
+      
+      const mimeType = format === 'pdf' ? 'application/pdf' : 'text/csv';
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
+      
+      toast.dismiss(toastId);
+      toast.success('Download do relatório iniciado.');
+
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(`Ocorreu um erro ao gerar o relatório ${format.toUpperCase()}.`);
+      console.error(`Erro na exportação de ${format.toUpperCase()}:`, error);
+    }
+  };
+
+  // CORREÇÃO: Definindo os tipos para as propriedades do ReportCard
+  type ReportCardProps = {
+    title: string;
+    description: string;
+    reportType: string;
+    csvFileName: string;
+    pdfFileName: string;
+  };
+
+  // Componente para o cartão de cada relatório
+  const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName }: ReportCardProps) => (
+    <div className="bg-white p-6 rounded-2xl shadow-lg">
+      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+      <p className="text-sm text-gray-600 mt-1 mb-4">{description}</p>
+      <div className="flex items-center space-x-3">
+        <Button onClick={() => handleExport('csv', reportType, csvFileName)}>
+          Exportar CSV
+        </Button>
+        <Button onClick={() => handleExport('pdf', reportType, pdfFileName)} className="bg-red-700 hover:bg-red-800">
+          Exportar PDF
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">Central de Relatórios</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ReportCard 
+          title="Relatório de Doações"
+          description="Exporte uma lista completa de todas as doações recebidas."
+          reportType="donations"
+          csvFileName="relatorio_doacoes.csv"
+          pdfFileName="relatorio_doacoes.pdf"
+        />
+        {/* Adicione mais cartões de relatório aqui conforme necessário */}
+      </div>
+    </section>
+  );
+};
+
 // 8. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
@@ -1334,6 +1411,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
             <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📄 Gerir Conteúdo</button>
+             <button onClick={() => setActiveView('relatórios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'relatórios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📈 Gerar Relatórios</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -1349,7 +1427,8 @@ export default function AdminPanelPage() {
       membros: 'Membros Registados',
       doacoes: 'Histórico de Doações',
       divulgacoes: 'Gestão de Divulgações da Comunidade',
-      conteudo: 'Gestão de Conteúdo e Parceiros'
+      conteudo: 'Gestão de Conteúdo e Parceiros',
+      relatórios: 'Relatórios'
     };
     
     return (
@@ -1375,6 +1454,7 @@ export default function AdminPanelPage() {
                     {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
                     {activeView === 'conteudo' && <ConteudoManager />}
+                    {activeView === 'relatórios' && <ReportsManager />}
                 </>
             )}
         </div>

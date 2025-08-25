@@ -1,34 +1,30 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
+import { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { ReportsService } from './reports.service';
-import { CreateReportDto } from './dto/create-report.dto';
-import { UpdateReportDto } from './dto/update-report.dto';
+import { DonationsReportService } from './donations-report.service';
 
 @Controller('reports')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(
+    private reportsService: ReportsService,
+    private donationsReportService: DonationsReportService,
+  ) {}
 
-  @Post()
-  create(@Body() createReportDto: CreateReportDto) {
-    return this.reportsService.create(createReportDto);
+  @Get('donations/csv')
+  async exportDonationsCsv(@Res() res: Response) {
+    const data = await this.donationsReportService.getData();
+    this.reportsService.generateCsv(res, 'relatorio_doacoes.csv', data);
   }
 
-  @Get()
-  findAll() {
-    return this.reportsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
-    return this.reportsService.update(+id, updateReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reportsService.remove(+id);
+  @Get('donations/pdf')
+  async exportDonationsPdf(@Res() res: Response) {
+    const columns = this.donationsReportService.getColumns();
+    const data = await this.donationsReportService.getData();
+    this.reportsService.generatePdf(res, 'relatorio_doacoes.pdf', 'Relatório de Doações', columns, data);
   }
 }
