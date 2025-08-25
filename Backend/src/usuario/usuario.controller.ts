@@ -10,6 +10,7 @@ import { Roles } from '../auth/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from 'src/utils/file-upload.utils';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Controller('usuario')
 export class UsuarioController {
@@ -72,6 +73,17 @@ export class UsuarioController {
   update(@Param('id', ParseIntPipe) id: number, @Body() updateUsuarioDto: UpdateUsuarioDto) {
     return this.usuarioService.update(id, updateUsuarioDto);
   }
+
+  @Patch(':id/role')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+updateUserRole(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() updateUserRoleDto: UpdateUserRoleDto,
+) {
+  return this.usuarioService.updateRole(id, updateUserRoleDto.role);
+}
+
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -14,7 +14,26 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 
-// TIPO PARA CONTROLAR A VISTA ATIVA (ADICIONADO 'dashboard')
+// --- COMPONENTE REUTILIZÁVEL DE MODAL ---
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; children: React.ReactNode }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+        <p className="text-gray-600 mt-2 mb-6">{children}</p>
+        <div className="flex justify-end space-x-3">
+          <Button onClick={onClose} variant="outline" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Cancelar</Button>
+          <Button onClick={onConfirm} className="bg-amber-600 hover:bg-amber-700">Confirmar</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// TIPO PARA CONTROLAR A VISTA ATIVA
 type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
 
 // --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
@@ -38,7 +57,7 @@ type RecentActivities = {
 
 // --- COMPONENTES FILHOS ---
 
-// 1. COMPONENTE: Dashboard (VERSÃO ATUALIZADA COM FETCH DE DADOS DA API)
+// 1. COMPONENTE: Dashboard
 const Dashboard = ({
   user,
   setActiveView,
@@ -46,7 +65,6 @@ const Dashboard = ({
   user: Usuario | null;
   setActiveView: (view: AdminView) => void;
 }) => {
-  // Estados para armazenar os dados do dashboard vindos da API
   const [stats, setStats] = useState<DashboardStats>({
     pedidosPendentes: 0,
     divulgacoesPendentes: 0,
@@ -58,18 +76,14 @@ const Dashboard = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect para buscar os dados do dashboard na API quando o componente é montado
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // SUGESTÃO: Crie um endpoint único na sua API para otimizar o carregamento.
-        // Este endpoint deve retornar um objeto contendo as estatísticas, dados do gráfico e atividades recentes.
         const response = await api.get('/dashboard/summary'); 
         const data = response.data;
 
-        // Atualiza os estados do componente com os dados recebidos da API
         setStats(data.stats);
         setWeeklyActivityData(data.weeklyActivity);
         setRecentActivities(data.recentActivities);
@@ -84,7 +98,7 @@ const Dashboard = ({
     };
 
     fetchDashboardData();
-  }, []); // O array vazio [] garante que esta função execute apenas uma vez
+  }, []);
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: number; icon: React.ReactNode; description: string }) => (
     <div className="bg-white p-6 rounded-2xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
@@ -101,7 +115,6 @@ const Dashboard = ({
     </div>
   );
   
-  // Renderização de estado de carregamento
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-full">
@@ -110,14 +123,12 @@ const Dashboard = ({
     );
   }
 
-  // Renderização em caso de erro na busca de dados
   if (error) {
     return <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>;
   }
 
   return (
     <section className="space-y-8">
-      {/* Cabeçalho de Boas-Vindas */}
       <div className="relative p-8 bg-stone-900 rounded-2xl shadow-lg overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-stone-900 to-transparent z-10"></div>
         <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-30" alt="Cão feliz"/>
@@ -127,7 +138,6 @@ const Dashboard = ({
         </div>
       </div>
       
-      {/* Cards de Estatísticas (agora com dados da API) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Adoções Pendentes"
@@ -156,7 +166,6 @@ const Dashboard = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Gráfico de Atividade (agora com dados da API) */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividade na Última Semana</h2>
             <div style={{ width: '100%', height: 300 }}>
@@ -174,7 +183,6 @@ const Dashboard = ({
             </div>
         </div>
 
-        {/* Atividades Recentes (agora com dados da API) */}
         <div className="bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividades Recentes</h2>
             <div className="space-y-4">
@@ -348,15 +356,23 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
 };
 
 // 4. COMPONENTE PARA GERIR MEMBROS
-const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
+const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[], onUserUpdate: (user: Usuario) => void }) => {
+    const { user: currentUser } = useAuth();
     const [usuarios, setUsuarios] = useState(initialUsers);
     const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+    
+    const [modalState, setModalState] = useState<{ isOpen: boolean; userToUpdate: Usuario | null; newRole: string | null }>({
+        isOpen: false,
+        userToUpdate: null,
+        newRole: null,
+    });
 
     const handleDelete = async (userId: number) => {
         if (confirm('Tem a certeza de que deseja apagar este membro?')) {
             try {
                 await api.delete(`/usuario/${userId}`);
-                setUsuarios(usuarios.filter(u => u.id !== userId));
+                const updatedUsers = usuarios.filter(u => u.id !== userId);
+                setUsuarios(updatedUsers);
                 toast.success('Membro apagado com sucesso!');
             } catch (error) {
                 toast.error('Erro ao apagar o membro.');
@@ -374,7 +390,9 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
         try {
             const { id, nome, email, telefone } = editingUser;
             const response = await api.patch(`/usuario/${id}`, { nome, email, telefone });
-            setUsuarios(usuarios.map(u => u.id === id ? response.data : u));
+            const updatedUser = response.data;
+            setUsuarios(usuarios.map(u => u.id === id ? updatedUser : u));
+            onUserUpdate(updatedUser);
             setEditingUser(null);
             toast.success('Membro atualizado com sucesso!');
         } catch (error) {
@@ -382,8 +400,43 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
         }
     };
 
+    const handleRoleChange = (user: Usuario) => {
+        const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+        setModalState({
+            isOpen: true,
+            userToUpdate: user,
+            newRole: newRole,
+        });
+    };
+
+    const confirmRoleChange = async () => {
+        const { userToUpdate, newRole } = modalState;
+        if (!userToUpdate || !newRole) return;
+
+        try {
+            const response = await api.patch(`/usuario/${userToUpdate.id}/role`, { role: newRole });
+            const updatedUser = response.data;
+            setUsuarios(usuarios.map(u => u.id === userToUpdate.id ? updatedUser : u));
+            onUserUpdate(updatedUser);
+            toast.success(`'${userToUpdate.nome}' agora é um ${newRole === 'ADMIN' ? 'Administrador' : 'Utilizador'}.`);
+        } catch (error) {
+            toast.error('Erro ao alterar a permissão do utilizador.');
+        } finally {
+            setModalState({ isOpen: false, userToUpdate: null, newRole: null });
+        }
+    };
+
     return (
         <section>
+            <ConfirmationModal
+                isOpen={modalState.isOpen}
+                onClose={() => setModalState({ isOpen: false, userToUpdate: null, newRole: null })}
+                onConfirm={confirmRoleChange}
+                title="Confirmar Alteração de Permissão"
+            >
+                Deseja mesmo tornar '{modalState.userToUpdate?.nome}' um {modalState.newRole === 'ADMIN' ? 'Administrador' : 'Utilizador'}?
+            </ConfirmationModal>
+
             <div className="bg-white rounded-xl shadow p-6">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -392,6 +445,7 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Admin</th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
@@ -403,6 +457,7 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
                                             <td className="px-6 py-4"><Input value={editingUser.nome} onChange={e => setEditingUser({...editingUser, nome: e.target.value})} /></td>
                                             <td className="px-6 py-4"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
                                             <td className="px-6 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
+                                            <td className="px-6 py-4"></td>
                                             <td className="px-6 py-4 text-center space-x-2">
                                                 <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Guardar</button>
                                                 <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
@@ -413,6 +468,15 @@ const MemberManager = ({ initialUsers }: { initialUsers: Usuario[] }) => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-5 w-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
+                                                    checked={user.role === 'ADMIN'}
+                                                    onChange={() => handleRoleChange(user)}
+                                                    disabled={user.id === currentUser?.id}
+                                                />
+                                            </td>
                                             <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
                                                 <button onClick={() => handleEdit(user)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
                                                 <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900">Apagar</button>
@@ -1201,8 +1265,8 @@ export default function AdminPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Esta função agora carrega os dados para todas as seções, EXCETO o dashboard.
   const fetchData = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes, divulgacoesRes] = await Promise.all([
@@ -1231,13 +1295,18 @@ export default function AdminPanelPage() {
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'ADMIN') {
-      setLoading(true);
       fetchData();
     } else {
       setLoading(false);
     }
   }, [isAuthenticated, user, fetchData]);
   
+  const handleUserUpdate = (updatedUser: Usuario) => {
+    setUsuarios(currentUsers => 
+        currentUsers.map(u => u.id === updatedUser.id ? updatedUser : u)
+    );
+  };
+
   if (!isAuthenticated || user?.role !== 'ADMIN') {
     return (
       <main className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -1283,10 +1352,6 @@ export default function AdminPanelPage() {
       conteudo: 'Gestão de Conteúdo e Parceiros'
     };
     
-    // REMOVIDO: A lógica para dashboardStats e recentActivities foi movida para dentro do componente Dashboard
-    // const dashboardStats = { ... }
-    // const recentActivities = { ... }
-
     return (
     <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
         <header className="bg-white shadow-sm p-4 flex-shrink-0 flex items-center">
@@ -1301,14 +1366,13 @@ export default function AdminPanelPage() {
             
             {!loading && !error && (
                 <>
-                    {/* ALTERADO: O Dashboard não recebe mais props de dados, pois ele busca os seus próprios. */}
                     {activeView === 'dashboard' && <Dashboard user={user} setActiveView={setActiveView} />}
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                     {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
                     {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
                     {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
-                    {activeView === 'membros' && <MemberManager initialUsers={usuarios} />}
+                    {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
                     {activeView === 'conteudo' && <ConteudoManager />}
                 </>

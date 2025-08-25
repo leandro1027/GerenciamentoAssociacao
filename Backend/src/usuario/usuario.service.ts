@@ -60,6 +60,21 @@ export class UsuarioService {
     return result;
   }
 
+  // Rota de Admin para alterar a role
+  async updateRole(id: number, newRole: string) {
+    // findOne já lança NotFoundException se o utilizador não existir.
+    await this.findOne(id);
+  
+    const user = await this.prisma.usuario.update({
+      where: { id: id },
+      data: { role: newRole },
+    });
+
+    // Remove a senha do objeto de retorno para manter o padrão.
+    const { senha, ...result } = user;
+    return result;
+  }
+
   // Rota de Admin
   async remove(id: number) {
     await this.findOne(id);
@@ -109,5 +124,5 @@ export class UsuarioService {
     });
     const { senha, ...result } = user;
     return result;
-}
+  }
 }
