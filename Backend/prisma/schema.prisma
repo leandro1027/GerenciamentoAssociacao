@@ -29,6 +29,7 @@ model Voluntario {
   usuarioId Int      @unique
   motivo    String
   status    String   @default("pendente")
+  createdAt DateTime @default(now()) 
   usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }
 

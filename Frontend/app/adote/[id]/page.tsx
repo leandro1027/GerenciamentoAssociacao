@@ -9,7 +9,6 @@ import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
-// --- Componentes Auxiliares ---
 
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -114,11 +113,11 @@ export default function AnimalDetailPage() {
         setLoading(true);
         setError(null);
         try {
-          // 1. Buscar os dados principais do animal
+          //Buscar os dados principais do animal
           const animalResponse = await api.get<Animal>(`/animais/${id}`);
           setAnimal(animalResponse.data);
 
-          // 2. Se o utilizador estiver autenticado, verificar o status da adoção
+          // Se o utilizador estiver autenticado, verificar o status da adoção
           // Esta chamada é feita em separado para não impedir a exibição do animal em caso de falha
           if (isAuthenticated) {
             try {

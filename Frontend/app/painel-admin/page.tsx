@@ -10,47 +10,81 @@ import Button from '../components/common/button';
 import Textarea from '../components/common/textarea';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-// Para o gráfico funcionar, certifique-se de que a biblioteca está instalada:
 // npm install recharts
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 
 // TIPO PARA CONTROLAR A VISTA ATIVA (ADICIONADO 'dashboard')
 type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo';
 
+// --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
+type WeeklyActivity = {
+  name: string;
+  NovasAdoções: number;
+  NovasDivulgações: number;
+};
+
+type DashboardStats = {
+  pedidosPendentes: number;
+  divulgacoesPendentes: number;
+  animaisDisponiveis: number;
+  totalMembros: number;
+};
+
+type RecentActivities = {
+  adocoes: Adocao[];
+  voluntarios: Voluntario[];
+};
+
 // --- COMPONENTES FILHOS ---
 
-// 1. COMPONENTE: Dashboard (VERSÃO MELHORADA)
+// 1. COMPONENTE: Dashboard (VERSÃO ATUALIZADA COM FETCH DE DADOS DA API)
 const Dashboard = ({
   user,
-  stats,
-  recentActivities,
   setActiveView,
 }: {
   user: Usuario | null;
-  stats: {
-    pedidosPendentes: number;
-    divulgacoesPendentes: number;
-    animaisDisponiveis: number;
-    totalMembros: number;
-  };
-  recentActivities: {
-      adocoes: Adocao[];
-      voluntarios: Voluntario[];
-  };
   setActiveView: (view: AdminView) => void;
 }) => {
+  // Estados para armazenar os dados do dashboard vindos da API
+  const [stats, setStats] = useState<DashboardStats>({
+    pedidosPendentes: 0,
+    divulgacoesPendentes: 0,
+    animaisDisponiveis: 0,
+    totalMembros: 0,
+  });
+  const [weeklyActivityData, setWeeklyActivityData] = useState<WeeklyActivity[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivities>({ adocoes: [], voluntarios: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dados de exemplo para o gráfico. O ideal é buscar estes dados da sua API.
-  const weeklyActivityData = [
-    { name: 'Seg', NovasAdoções: 2, NovasDivulgações: 3 },
-    { name: 'Ter', NovasAdoções: 1, NovasDivulgações: 5 },
-    { name: 'Qua', NovasAdoções: 4, NovasDivulgações: 2 },
-    { name: 'Qui', NovasAdoções: 3, NovasDivulgações: 6 },
-    { name: 'Sex', NovasAdoções: 5, NovasDivulgações: 4 },
-    { name: 'Sáb', NovasAdoções: 2, NovasDivulgações: 8 },
-    { name: 'Dom', NovasAdoções: 1, NovasDivulgações: 5 },
-  ];
+  // useEffect para buscar os dados do dashboard na API quando o componente é montado
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // SUGESTÃO: Crie um endpoint único na sua API para otimizar o carregamento.
+        // Este endpoint deve retornar um objeto contendo as estatísticas, dados do gráfico e atividades recentes.
+        const response = await api.get('/dashboard/summary'); 
+        const data = response.data;
+
+        // Atualiza os estados do componente com os dados recebidos da API
+        setStats(data.stats);
+        setWeeklyActivityData(data.weeklyActivity);
+        setRecentActivities(data.recentActivities);
+
+      } catch (err) {
+        setError('Não foi possível carregar os dados do dashboard.');
+        toast.error('Erro ao buscar dados do dashboard.');
+        console.error("API Error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []); // O array vazio [] garante que esta função execute apenas uma vez
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: number; icon: React.ReactNode; description: string }) => (
     <div className="bg-white p-6 rounded-2xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
@@ -66,6 +100,20 @@ const Dashboard = ({
       <p className="text-xs text-gray-500 mt-4">{description}</p>
     </div>
   );
+  
+  // Renderização de estado de carregamento
+  if (isLoading) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <p className="text-gray-600 text-lg">A carregar dados do dashboard...</p>
+        </div>
+    );
+  }
+
+  // Renderização em caso de erro na busca de dados
+  if (error) {
+    return <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>;
+  }
 
   return (
     <section className="space-y-8">
@@ -79,7 +127,7 @@ const Dashboard = ({
         </div>
       </div>
       
-      {/* Cards de Estatísticas */}
+      {/* Cards de Estatísticas (agora com dados da API) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Adoções Pendentes"
@@ -108,7 +156,7 @@ const Dashboard = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Gráfico de Atividade */}
+        {/* Gráfico de Atividade (agora com dados da API) */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividade na Última Semana</h2>
             <div style={{ width: '100%', height: 300 }}>
@@ -126,7 +174,7 @@ const Dashboard = ({
             </div>
         </div>
 
-        {/* Atividades Recentes */}
+        {/* Atividades Recentes (agora com dados da API) */}
         <div className="bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividades Recentes</h2>
             <div className="space-y-4">
@@ -136,14 +184,12 @@ const Dashboard = ({
                 {recentActivities.adocoes.map(adocao => (
                     <div key={adocao.id} className="flex items-center gap-3">
                         <div className="p-2 bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></div>
-                        {/* CORRIGIDO: Adicionado optional chaining para evitar erros */}
                         <p className="text-sm text-gray-700"><span className="font-semibold">{adocao.usuario?.nome || 'Utilizador'}</span> quer adotar <span className="font-semibold">{adocao.animal?.nome || 'um animal'}</span>.</p>
                     </div>
                 ))}
                 {recentActivities.voluntarios.map(voluntario => (
                     <div key={voluntario.id} className="flex items-center gap-3">
                          <div className="p-2 bg-green-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-2a4 4 0 00-4-4H9M15 21a2 2 0 002-2v-3.354" /></svg></div>
-                        {/* CORRIGIDO: Adicionado optional chaining para evitar erros */}
                         <p className="text-sm text-gray-700"><span className="font-semibold">{voluntario.usuario?.nome || 'Alguém'}</span> candidatou-se como voluntário.</p>
                     </div>
                 ))}
@@ -1155,6 +1201,7 @@ export default function AdminPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Esta função agora carrega os dados para todas as seções, EXCETO o dashboard.
   const fetchData = useCallback(async () => {
     setError(null);
     try {
@@ -1236,18 +1283,9 @@ export default function AdminPanelPage() {
       conteudo: 'Gestão de Conteúdo e Parceiros'
     };
     
-    const dashboardStats = {
-        pedidosPendentes: adocoes.filter(a => a.status === StatusAdocao.SOLICITADA).length,
-        divulgacoesPendentes: divulgacoes.filter(d => d.status === DivulgacaoStatus.PENDENTE).length,
-        animaisDisponiveis: animais.filter(a => a.status === StatusAnimal.DISPONIVEL).length,
-        totalMembros: usuarios.length,
-    }
-
-    const recentActivities = {
-        adocoes: adocoes.filter(a => a.status === StatusAdocao.SOLICITADA).slice(0, 2),
-        // CORRIGIDO: Comparação com o valor string 'pendente'
-        voluntarios: voluntarios.filter(v => v.status === 'pendente').slice(0, 2),
-    }
+    // REMOVIDO: A lógica para dashboardStats e recentActivities foi movida para dentro do componente Dashboard
+    // const dashboardStats = { ... }
+    // const recentActivities = { ... }
 
     return (
     <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
@@ -1263,7 +1301,8 @@ export default function AdminPanelPage() {
             
             {!loading && !error && (
                 <>
-                    {activeView === 'dashboard' && <Dashboard user={user} stats={dashboardStats} recentActivities={recentActivities} setActiveView={setActiveView} />}
+                    {/* ALTERADO: O Dashboard não recebe mais props de dados, pois ele busca os seus próprios. */}
+                    {activeView === 'dashboard' && <Dashboard user={user} setActiveView={setActiveView} />}
                     {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                     {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                     {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}

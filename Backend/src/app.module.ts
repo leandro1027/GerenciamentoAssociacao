@@ -15,6 +15,8 @@ import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
 import { ParceirosModule } from './parceiros/parceiros.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { StatsModule } from './stats/stats.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { StatsModule } from './stats/stats.module';
     ParceirosModule,
     CloudinaryModule,
     StatsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
