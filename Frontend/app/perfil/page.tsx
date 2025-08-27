@@ -5,14 +5,11 @@
   import api from '../services/api';
   import toast from 'react-hot-toast';
   import Link from 'next/link';
-
-  // Seus componentes comuns
   import Input from '../components/common/input';
   import Button from '../components/common/button';
-
-  // Tipos
   import { Doacao, Voluntario, Usuario, Adocao } from '../../types';
   type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos';
+  import { Eye, EyeOff } from 'lucide-react';
 
   // --- ÍCONES DEFINIDOS LOCALMENTE ---
   const Icon = ({ path, className = "h-6 w-6" }: { path: string; className?: string }) => (
@@ -313,11 +310,11 @@
                   <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div>
                       <label htmlFor="senhaAtual" className="block mb-2 text-sm font-medium text-gray-700">Senha Atual</label>
-                      <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} icon={showCurrentPassword ? '👁️' : '👁️‍🗨️'} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
+                      <Input id="senhaAtual" type={showCurrentPassword ? 'text' : 'password'} value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)}  icon={showCurrentPassword ? <Eye/> : <EyeOff/>} onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} disabled={isPasswordLoading} />
                     </div>
                     <div>
                       <label htmlFor="novaSenha" className="block mb-2 text-sm font-medium text-gray-700">Nova Senha</label>
-                      <Input id="novaSenha" type={showNewPassword ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} icon={showNewPassword ? '👁️' : '👁️‍🗨️'} onIconClick={() => setShowNewPassword(!showNewPassword)} disabled={isPasswordLoading} />
+                      <Input id="novaSenha" type={showNewPassword ? 'text' : 'password'} value={novaSenha} onChange={e => setNovaSenha(e.target.value)} icon={showNewPassword ? <Eye/> : <EyeOff/>} onIconClick={() => setShowNewPassword(!showNewPassword)} disabled={isPasswordLoading} />
                     </div>
                     <div className="pt-4 flex justify-end space-x-3">
                       <Button type="button" onClick={() => setActiveView('overview')} className="bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold" disabled={isPasswordLoading}>Cancelar</Button>

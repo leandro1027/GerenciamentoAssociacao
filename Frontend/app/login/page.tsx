@@ -6,6 +6,7 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -50,7 +51,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              icon={showPassword ? '👁️' : '👁️‍🗨️'}
+             icon={showPassword ? <Eye/> : <EyeOff/>}
               onIconClick={() => setShowPassword(!showPassword)}
             />
           </div>

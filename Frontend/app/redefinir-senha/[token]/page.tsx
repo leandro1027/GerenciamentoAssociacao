@@ -7,8 +7,8 @@ import toast from 'react-hot-toast';
 import Input from '@/app/components/common/input';
 import Button from '@/app/components/common/button';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
-// --- COMPONENTE: Indicador de Força da Senha ---
 const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
     const checks = [
         { label: '8+ caracteres', regex: /.{8,}/ },
@@ -91,7 +91,7 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setSenha(e.target.value)} 
                   placeholder="Digite a nova senha" 
                   required 
-                  icon={showPassword ? '👁️' : '👁️‍🗨️'}
+                  icon={showPassword ? <Eye/> : <EyeOff/>}
                   onIconClick={() => setShowPassword(!showPassword)}
                 />
                 {senha.length > 0 && <PasswordStrengthIndicator password={senha} />}

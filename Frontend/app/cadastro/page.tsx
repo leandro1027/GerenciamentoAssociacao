@@ -7,8 +7,8 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 import { Usuario } from '../../types';
 import toast from 'react-hot-toast'; 
+import { Eye, EyeOff } from 'lucide-react';
 
-// --- NOVO COMPONENTE: Indicador de Força da Senha ---
 const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => {
     const checks = [
         { label: 'Pelo menos 8 caracteres', regex: /.{8,}/ },
@@ -126,7 +126,7 @@ export default function CadastroPage() {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
-              icon={showPassword ? '👁️' : '👁️‍🗨️'}
+              icon={showPassword ? <Eye/> : <EyeOff/>}
               onIconClick={() => setShowPassword(!showPassword)}
             />
             {/* O indicador de senha só aparece quando o utilizador começa a digitar */}
