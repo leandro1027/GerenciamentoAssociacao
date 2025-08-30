@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAnimalDto } from './dto/create-animal.dto';
 import { UpdateAnimalDto } from './dto/update-animal.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Animal, Especie, Sexo, Porte, StatusAnimal } from 'generated/prisma';
-import { Prisma } from 'generated/prisma';
+import { Animal, Especie, Sexo, Porte, StatusAnimal } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AnimalService {

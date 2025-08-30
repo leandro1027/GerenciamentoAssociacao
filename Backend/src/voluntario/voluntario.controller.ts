@@ -6,7 +6,7 @@ import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Request as ExpressRequest } from 'express';
-import { Usuario } from 'generated/prisma';
+import { Usuario } from '@prisma/client';
 
 export const GetUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {

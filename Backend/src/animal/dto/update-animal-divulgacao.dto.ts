@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { DivulgacaoStatus } from 'generated/prisma';
+import { DivulgacaoStatus } from '@prisma/client';
 
 export class UpdateAnimalDivulgacaoDto {
   @IsEnum(DivulgacaoStatus)

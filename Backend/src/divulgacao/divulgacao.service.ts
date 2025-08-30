@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
 import { AnimalService } from 'src/animal/animal.service';
-import { DivulgacaoStatus } from 'generated/prisma';
+import { DivulgacaoStatus } from '@prisma/client';
 
 @Injectable()
 export class DivulgacaoService {

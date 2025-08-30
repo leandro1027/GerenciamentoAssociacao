@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { StatusAdocao } from 'generated/prisma';
+import { StatusAdocao } from '@prisma/client';
 
 export class UpdateAdocaoStatusDto {
   @IsEnum(StatusAdocao)

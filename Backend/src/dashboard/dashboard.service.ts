@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { StatusAdocao, StatusAnimal, DivulgacaoStatus } from 'generated/prisma';
+import { StatusAdocao, StatusAnimal, DivulgacaoStatus } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {

@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAdocoeDto } from './dto/create-adocoe.dto';
-import { StatusAdocao, StatusAnimal } from 'generated/prisma';
+import { StatusAdocao, StatusAnimal } from '@prisma/client';
 
 @Injectable()
 export class AdocoesService {

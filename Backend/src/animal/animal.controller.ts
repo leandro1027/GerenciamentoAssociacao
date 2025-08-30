@@ -22,7 +22,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { Especie, Porte, Sexo } from 'generated/prisma';
+import { Especie, Porte, Sexo } from '@prisma/client';
 
 // Helper para gerar nomes de arquivo únicos
 const generateUniqueFilename = (file: Express.Multer.File) => {
