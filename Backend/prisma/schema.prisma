@@ -19,6 +19,7 @@ model Usuario {
   voluntario           Voluntario?
   doacoes              Doacao[]
   adocoes              Adocao[]
+  divulgacoes_aprovadas String?
   divulgacoes Divulgacao[]
   passwordResetToken   String?
   passwordResetExpires DateTime?
