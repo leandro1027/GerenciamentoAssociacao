@@ -9,7 +9,8 @@ import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto';
 export class DivulgacaoService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly animalService: AnimalService,) {}
+    private readonly animalService: AnimalService,
+  ) {}
 
   create(createDivulgacaoDto: CreateDivulgacaoDto, file: Express.Multer.File, userId: number) {
     const imageUrl = `/uploads/${file.filename}`;
@@ -50,12 +51,12 @@ export class DivulgacaoService {
     });
   }
 
-   async convertToAnimal(id: string, convertDto: ConvertDivulgacaoDto) {
+  async convertToAnimal(id: string, convertDto: ConvertDivulgacaoDto) {
     const divulgacao = await this.prisma.divulgacao.findUniqueOrThrow({
       where: { id },
     });
 
-    // 1. Cria um novo animal com os dados recebidos do formulário do admin
+    // 1. Cria um novo animal com os dados do formulário
     const novoAnimal = await this.prisma.animal.create({
       data: {
         nome: convertDto.nome,
@@ -65,14 +66,16 @@ export class DivulgacaoService {
         especie: convertDto.especie,
         sexo: convertDto.sexo,
         porte: convertDto.porte,
-        // Mantém os dados originais da divulgação
         animalImageUrl: divulgacao.imageUrl,
         castrado: divulgacao.castrado,
       },
     });
 
-    // 2. DELETA a divulgação original após a conversão
-    await this.prisma.divulgacao.delete({ where: { id } });
+    // 2. ATUALIZA o status da divulgação original em vez de apagar
+    await this.prisma.divulgacao.update({
+      where: { id },
+      data: { status: DivulgacaoStatus.REVISADO }, // <-- LÓGICA CORRIGIDA
+    });
 
     return novoAnimal;
   }
@@ -85,4 +88,3 @@ export class DivulgacaoService {
     return this.prisma.divulgacao.delete({ where: { id } });
   }
 }
-

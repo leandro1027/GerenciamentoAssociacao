@@ -1038,6 +1038,7 @@ const ReportsManager = () => {
   );
 };
 
+// --- COMPONENTE ATUALIZADO ---
 // 8. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
@@ -1156,12 +1157,12 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
             <form onSubmit={handleConvertToAnimal} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                      <label htmlFor="animal-nome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Animal</label>
-                      <Input id="animal-nome" value={animalFormData.nome} onChange={e => setAnimalFormData({...animalFormData, nome: e.target.value})} placeholder="Nome para o animal" required />
+                    <label htmlFor="animal-nome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Animal</label>
+                    <Input id="animal-nome" value={animalFormData.nome} onChange={e => setAnimalFormData({...animalFormData, nome: e.target.value})} placeholder="Nome para o animal" required />
                   </div>
                   <div>
-                      <label htmlFor="animal-raca" className="block text-sm font-medium text-gray-700 mb-1">Raça</label>
-                      <Input id="animal-raca" value={animalFormData.raca} onChange={e => setAnimalFormData({...animalFormData, raca: e.target.value})} required />
+                    <label htmlFor="animal-raca" className="block text-sm font-medium text-gray-700 mb-1">Raça</label>
+                    <Input id="animal-raca" value={animalFormData.raca} onChange={e => setAnimalFormData({...animalFormData, raca: e.target.value})} required />
                   </div>
               </div>
               <div>
@@ -1170,26 +1171,26 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                   <div>
-                      <label htmlFor="animal-idade" className="block text-sm font-medium text-gray-700 mb-1">Idade (texto)</label>
-                      <Input id="animal-idade" value={animalFormData.idade} onChange={e => setAnimalFormData({...animalFormData, idade: e.target.value})} placeholder="Ex: Aprox. 2 anos" required />
+                    <label htmlFor="animal-idade" className="block text-sm font-medium text-gray-700 mb-1">Idade (texto)</label>
+                    <Input id="animal-idade" value={animalFormData.idade} onChange={e => setAnimalFormData({...animalFormData, idade: e.target.value})} placeholder="Ex: Aprox. 2 anos" required />
                   </div>
                   <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Espécie</label>
-                      <select value={animalFormData.especie} onChange={e => setAnimalFormData({...animalFormData, especie: e.target.value as Especie})} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                      <select value={animalFormData.especie} onChange={e => setAnimalFormData({...animalFormData, especie: e.target.value as Especie})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
                           <option value={Especie.CAO}>Cão</option>
                           <option value={Especie.GATO}>Gato</option>
                       </select>
                   </div>
                   <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
-                      <select value={animalFormData.sexo} onChange={e => setAnimalFormData({...animalFormData, sexo: e.target.value as Sexo})} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                      <select value={animalFormData.sexo} onChange={e => setAnimalFormData({...animalFormData, sexo: e.target.value as Sexo})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
                           <option value={Sexo.MACHO}>Macho</option>
                           <option value={Sexo.FEMEA}>Fêmea</option>
                       </select>
                   </div>
                   <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Porte</label>
-                      <select value={animalFormData.porte} onChange={e => setAnimalFormData({...animalFormData, porte: e.target.value as Porte})} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                      <select value={animalFormData.porte} onChange={e => setAnimalFormData({...animalFormData, porte: e.target.value as Porte})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
                           <option value={Porte.PEQUENO}>Pequeno</option>
                           <option value={Porte.MEDIO}>Médio</option>
                           <option value={Porte.GRANDE}>Grande</option>

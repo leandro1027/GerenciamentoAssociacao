@@ -26,9 +26,23 @@ export class SlideService {
       return slide;
   }
 
-  async update(id: number, updateSlideDto: UpdateSlideDto) {
-    await this.findOne(id);
-    return this.prisma.slide.update({ where: { id }, data: updateSlideDto });
+  async update(id: number, updateSlideDto: UpdateSlideDto, file?: Express.Multer.File) {
+    const slide = await this.prisma.slide.findUnique({ where: { id } });
+    if (!slide) {
+      throw new NotFoundException(`Slide com ID ${id} não encontrado.`);
+    }
+
+    const data: any = { ...updateSlideDto };
+    
+    // Se um novo arquivo foi enviado, atualiza a imagem
+    if (file) {
+      data.imageUrl = `/uploads/${file.filename}`;
+    }
+
+    return this.prisma.slide.update({
+      where: { id },
+      data,
+    });
   }
 
   async remove(id: number) {
