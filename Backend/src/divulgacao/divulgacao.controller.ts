@@ -8,6 +8,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UpdateAnimalDivulgacaoDto } from 'src/animal/dto/update-animal-divulgacao.dto';
+import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto'; // <-- Importado o DTO que criamos
 
 @Controller('divulgacao')
 export class DivulgacaoController {
@@ -49,16 +50,21 @@ export class DivulgacaoController {
   @Roles('ADMIN')
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() UpdateAnimalDivulgacaoDto: UpdateAnimalDivulgacaoDto,
+    @Body() updateAnimalDivulgacaoDto: UpdateAnimalDivulgacaoDto,
   ) {
-    return this.divulgacaoService.updateStatus(id, UpdateAnimalDivulgacaoDto.status);
+    return this.divulgacaoService.updateStatus(id, updateAnimalDivulgacaoDto.status);
   }
 
+  // --- MÉTODO ATUALIZADO ---
   @Post(':id/convert-to-animal')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  convertToAnimal(@Param('id', ParseUUIDPipe) id: string) {
-    return this.divulgacaoService.convertToAnimal(id);
+  convertToAnimal(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() convertDto: ConvertDivulgacaoDto, // <-- 1. Recebe os dados do formulário
+  ) {
+    // 2. Passa os dados para o serviço
+    return this.divulgacaoService.convertToAnimal(id, convertDto);
   }
 
   @Delete(':id')
@@ -68,4 +74,3 @@ export class DivulgacaoController {
     return this.divulgacaoService.remove(id);
   }
 }
-

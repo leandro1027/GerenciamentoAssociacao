@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
 import { AnimalService } from 'src/animal/animal.service';
 import { DivulgacaoStatus } from '@prisma/client';
+import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto';
 
 @Injectable()
 export class DivulgacaoService {
@@ -49,24 +50,24 @@ export class DivulgacaoService {
     });
   }
 
-  async convertToAnimal(id: string) {
+   async convertToAnimal(id: string, convertDto: ConvertDivulgacaoDto) {
     const divulgacao = await this.prisma.divulgacao.findUniqueOrThrow({
       where: { id },
     });
 
-    // 1. Cria um novo animal com os dados da divulgação
+    // 1. Cria um novo animal com os dados recebidos do formulário do admin
     const novoAnimal = await this.prisma.animal.create({
       data: {
-        nome: `A Definir (${divulgacao.raca})`, // Nome provisório
-        raca: divulgacao.raca,
-        descricao: divulgacao.descricao || 'Sem descrição.',
+        nome: convertDto.nome,
+        raca: convertDto.raca,
+        descricao: convertDto.descricao,
+        idade: convertDto.idade,
+        especie: convertDto.especie,
+        sexo: convertDto.sexo,
+        porte: convertDto.porte,
+        // Mantém os dados originais da divulgação
         animalImageUrl: divulgacao.imageUrl,
         castrado: divulgacao.castrado,
-        // O admin precisará preencher o resto dos detalhes no painel "Gerir Animais"
-        especie: 'CAO', // Valor padrão
-        sexo: 'MACHO',    // Valor padrão
-        porte: 'MEDIO',   // Valor padrão
-        idade: 'A apurar', // Valor padrão
       },
     });
 
