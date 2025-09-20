@@ -214,9 +214,40 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [editingSlide, setEditingSlide] = useState<Slide | null>(null); // Estado para controlar a edição
 
-  const handleCreate = async (e: React.FormEvent) => {
+  // Função para limpar o formulário e sair do modo de edição
+  const resetForm = () => {
+    setTitle('');
+    setSubtitle('');
+    setFile(null);
+    setEditingSlide(null);
+    // Limpa o campo de input de arquivo visualmente
+    const fileInput = document.getElementById('slide-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+  
+  // Função para lidar com o clique no botão "Editar"
+  const handleEditClick = (slide: Slide) => {
+    setEditingSlide(slide);
+    setTitle(slide.title);
+    setSubtitle(slide.subtitle || '');
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    // Se estiver editando, chama a função de update
+    if (editingSlide) {
+      handleUpdate();
+    } else { // Senão, chama a função de criar
+      handleCreate();
+    }
+  };
+
+  const handleCreate = async () => {
     if (!file) {
       toast.error('Por favor, selecione uma imagem.');
       return;
@@ -230,16 +261,39 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
     try {
       const response = await api.post<Slide>('/slide', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSlides([response.data, ...slides]);
-      setTitle(''); setSubtitle(''); setFile(null);
-      (document.getElementById('slide-file-input') as HTMLInputElement).value = '';
       toast.success('Slide criado com sucesso!');
+      resetForm();
     } catch (error) {
       toast.error('Erro ao criar o slide.');
     }
   };
 
+  const handleUpdate = async () => {
+    if (!editingSlide) return;
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('subtitle', subtitle);
+    if (file) { // Só anexa o arquivo se um novo for selecionado
+      formData.append('file', file);
+    }
+
+    try {
+      // Assumindo que a rota de update é PATCH /slide/:id
+      const response = await api.patch<Slide>(`/slide/${editingSlide.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setSlides(slides.map(s => s.id === editingSlide.id ? response.data : s));
+      toast.success('Slide atualizado com sucesso!');
+      resetForm();
+    } catch (error) {
+      toast.error('Erro ao atualizar o slide.');
+    }
+  };
+
   const handleDelete = async (id: number) => {
-    if (confirm('Tem a certeza?')) {
+    // Usando o modal de confirmação do navegador
+    if (window.confirm('Tem a certeza que deseja apagar este slide?')) {
       try {
         await api.delete(`/slide/${id}`);
         setSlides(slides.filter(slide => slide.id !== id));
@@ -253,16 +307,30 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   return (
     <section>
       <div className="bg-white rounded-xl shadow p-6">
-        <form onSubmit={handleCreate} className="mb-6 p-4 border rounded-lg space-y-3 bg-gray-50">
-          <h3 className="font-semibold text-gray-800">Adicionar Novo Slide</h3>
+        <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg space-y-3 bg-gray-50">
+          <h3 className="font-semibold text-gray-800">{editingSlide ? 'Editar Slide' : 'Adicionar Novo Slide'}</h3>
           <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Título do Slide" required />
           <Input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="Subtítulo (opcional)" />
           <div>
             <label htmlFor="slide-file-input" className="block mb-2 text-sm font-medium text-gray-700">Imagem do Slide</label>
-            <input id="slide-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required />
+            <input 
+              id="slide-file-input" 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} 
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" 
+              required={!editingSlide} // A imagem só é obrigatória ao criar
+            />
+             {editingSlide && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a imagem atual.</p>}
           </div>
-          <Button type="submit">Adicionar Slide</Button>
+          <div className="flex items-center space-x-2">
+            <Button type="submit">{editingSlide ? 'Guardar Alterações' : 'Adicionar Slide'}</Button>
+            {editingSlide && (
+              <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
+            )}
+          </div>
         </form>
+        
         <div>
           <h3 className="font-semibold mb-2 text-gray-800">Slides Atuais</h3>
           <div className="space-y-2">
@@ -275,7 +343,10 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
                     <p className="text-sm text-gray-500">{slide.subtitle}</p>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(slide.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
+                <div className="flex items-center space-x-3">
+                    <button onClick={() => handleEditClick(slide)} className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Editar</button>
+                    <button onClick={() => handleDelete(slide.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
+                </div>
               </div>
             ))}
           </div>
@@ -284,6 +355,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
     </section>
   );
 };
+
 
 // 3. COMPONENTE PARA GERIR VOLUNTÁRIOS
 const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario[] }) => {
@@ -966,22 +1038,51 @@ const ReportsManager = () => {
   );
 };
 
+// --- COMPONENTE ATUALIZADO ---
 // 8. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pendentes' | 'historico'>('pendentes');
+  
+  // --- NOVOS ESTADOS PARA O MODAL ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDivulgacao, setSelectedDivulgacao] = useState<Divulgacao | null>(null);
+  const [animalFormData, setAnimalFormData] = useState({
+    nome: '',
+    raca: '',
+    descricao: '',
+    idade: '',
+    especie: Especie.CAO,
+    sexo: Sexo.MACHO,
+    porte: Porte.PEQUENO,
+  });
 
   const pendingDivulgacoes = initialDivulgacoes.filter(d => d.status === DivulgacaoStatus.PENDENTE);
   const processedDivulgacoes = initialDivulgacoes.filter(
     d => d.status === DivulgacaoStatus.REVISADO || d.status === DivulgacaoStatus.REJEITADO
   );
+  
+  // Função para abrir o modal e pré-popular os dados
+  const handleOpenApprovalModal = (divulgacao: Divulgacao) => {
+    setSelectedDivulgacao(divulgacao);
+    setAnimalFormData({
+      nome: '', // Começa vazio para o admin preencher
+      raca: divulgacao.raca,
+      descricao: divulgacao.descricao || '',
+      idade: '', // Começa vazio
+      especie: Especie.CAO, // Padrão
+      sexo: Sexo.MACHO,     // Padrão
+      porte: Porte.PEQUENO, // Padrão
+    });
+    setIsModalOpen(true);
+  };
 
   const handleAction = async (action: Promise<any>, successMessage: string) => {
     try {
       await action;
       toast.success(successMessage);
-      onUpdate(); 
+      onUpdate();
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Ocorreu um erro.";
       toast.error(errorMessage);
@@ -989,15 +1090,15 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   };
 
   const handleWhatsAppContact = (divulgacao: Divulgacao) => {
-      if (!divulgacao.usuario?.telefone) {
-          toast.error('Este utilizador não possui um número de telefone registado.');
-          return;
-      }
-      const numero = divulgacao.usuario.telefone.replace(/\D/g, '');
-      const nomeAnimal = divulgacao.raca;
-      const texto = encodeURIComponent(`Olá ${divulgacao.usuario.nome}! Somos da associação e vimos a sua divulgação sobre um animal (${nomeAnimal}) na localização "${divulgacao.localizacao}". Gostaríamos de conversar para saber mais detalhes!`);
-      
-      window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
+    if (!divulgacao.usuario?.telefone) {
+        toast.error('Este utilizador não possui um número de telefone registado.');
+        return;
+    }
+    const numero = divulgacao.usuario.telefone.replace(/\D/g, '');
+    const nomeAnimal = divulgacao.raca;
+    const texto = encodeURIComponent(`Olá ${divulgacao.usuario.nome}! Somos da associação e vimos a sua divulgação sobre um animal (${nomeAnimal}) na localização "${divulgacao.localizacao}". Gostaríamos de conversar para saber mais detalhes!`);
+    
+    window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
   };
 
   const handleStatusChange = async (id: string, status: DivulgacaoStatus) => {
@@ -1009,13 +1110,21 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
     setLoadingStates(prev => ({ ...prev, [`status-${id}`]: false }));
   };
   
-  const handleConvertToAnimal = async (id: string) => {
+  // --- FUNÇÃO DE CONVERSÃO MODIFICADA ---
+  const handleConvertToAnimal = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selectedDivulgacao) return;
+
+    const id = selectedDivulgacao.id;
     setLoadingStates(prev => ({ ...prev, [`convert-${id}`]: true }));
+    
     await handleAction(
-      api.post(`/divulgacao/${id}/convert-to-animal`),
+      api.post(`/divulgacao/${id}/convert-to-animal`, animalFormData),
       "Animal listado para adoção com sucesso!"
     );
+    
     setLoadingStates(prev => ({ ...prev, [`convert-${id}`]: false }));
+    setIsModalOpen(false); // Fecha o modal
   };
 
   const handleDelete = async (id: string) => {
@@ -1040,6 +1149,63 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
 
   return (
     <section>
+      {/* --- O CÓDIGO DO MODAL --- */}
+      {isModalOpen && selectedDivulgacao && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Aprovar e Listar Animal</h2>
+            <form onSubmit={handleConvertToAnimal} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="animal-nome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Animal</label>
+                    <Input id="animal-nome" value={animalFormData.nome} onChange={e => setAnimalFormData({...animalFormData, nome: e.target.value})} placeholder="Nome para o animal" required />
+                  </div>
+                  <div>
+                    <label htmlFor="animal-raca" className="block text-sm font-medium text-gray-700 mb-1">Raça</label>
+                    <Input id="animal-raca" value={animalFormData.raca} onChange={e => setAnimalFormData({...animalFormData, raca: e.target.value})} required />
+                  </div>
+              </div>
+              <div>
+                <label htmlFor="animal-descricao" className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <Textarea id="animal-descricao" value={animalFormData.descricao} onChange={e => setAnimalFormData({...animalFormData, descricao: e.target.value})} rows={3} required />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="animal-idade" className="block text-sm font-medium text-gray-700 mb-1">Idade (texto)</label>
+                    <Input id="animal-idade" value={animalFormData.idade} onChange={e => setAnimalFormData({...animalFormData, idade: e.target.value})} placeholder="Ex: Aprox. 2 anos" required />
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Espécie</label>
+                      <select value={animalFormData.especie} onChange={e => setAnimalFormData({...animalFormData, especie: e.target.value as Especie})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
+                          <option value={Especie.CAO}>Cão</option>
+                          <option value={Especie.GATO}>Gato</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                      <select value={animalFormData.sexo} onChange={e => setAnimalFormData({...animalFormData, sexo: e.target.value as Sexo})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
+                          <option value={Sexo.MACHO}>Macho</option>
+                          <option value={Sexo.FEMEA}>Fêmea</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Porte</label>
+                      <select value={animalFormData.porte} onChange={e => setAnimalFormData({...animalFormData, porte: e.target.value as Porte})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-amber-500 focus:border-amber-500">
+                          <option value={Porte.PEQUENO}>Pequeno</option>
+                          <option value={Porte.MEDIO}>Médio</option>
+                          <option value={Porte.GRANDE}>Grande</option>
+                      </select>
+                  </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button type="button" onClick={() => setIsModalOpen(false)} variant="outline" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Cancelar</Button>
+                <Button type="submit" isLoading={loadingStates[`convert-${selectedDivulgacao.id}`]} className="bg-amber-600 hover:bg-amber-700">Confirmar e Listar</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-white rounded-xl shadow p-6">
         <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-6" aria-label="Tabs">
@@ -1061,71 +1227,31 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
           {divulgacoesToShow.map((divulgacao) => (
             <div key={divulgacao.id} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-transform hover:scale-105 border">
               <div className="relative">
-                <img 
-                  src={`${api.defaults.baseURL}${divulgacao.imageUrl}`} 
-                  alt={divulgacao.raca} 
-                  className="w-full h-56 object-cover cursor-pointer"
-                  onClick={() => setSelectedImage(`${api.defaults.baseURL}${divulgacao.imageUrl}`)}
-                />
-                <div className="absolute top-2 right-2">
-                  <StatusBadge status={divulgacao.status} />
-                </div>
+                <img src={`${api.defaults.baseURL}${divulgacao.imageUrl}`} alt={divulgacao.raca} className="w-full h-56 object-cover cursor-pointer" onClick={() => setSelectedImage(`${api.defaults.baseURL}${divulgacao.imageUrl}`)} />
+                <div className="absolute top-2 right-2"><StatusBadge status={divulgacao.status} /></div>
               </div>
               
               <div className="p-4 flex flex-col flex-1">
                 <h3 className="text-lg font-bold text-gray-800">{divulgacao.raca}</h3>
                 <p className="text-sm text-gray-600">{divulgacao.localizacao}</p>
-                
                 <div className="my-3 text-sm space-y-1 text-gray-700">
                   <p><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
                   <p><strong>Data:</strong> {new Date(divulgacao.createdAt).toLocaleDateString()}</p>
                   <div className="flex items-center space-x-2 pt-1">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}`}>
-                      {divulgacao.castrado ? 'Castrado' : 'Não Castrado'}
-                    </span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.resgate ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>
-                      {divulgacao.resgate ? 'Resgate' : 'Particular'}
-                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}`}>{divulgacao.castrado ? 'Castrado' : 'Não Castrado'}</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.resgate ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>{divulgacao.resgate ? 'Resgate' : 'Particular'}</span>
                   </div>
                 </div>
-
                 {divulgacao.descricao && <p className="text-sm text-gray-600 mb-4 flex-1">"{divulgacao.descricao}"</p>}
-
                 <div className="mt-auto pt-4 border-t border-gray-200 space-y-2">
-                  <Button 
-                    variant="primary"
-                    onClick={() => handleWhatsAppContact(divulgacao)}
-                    className="w-full bg-green-500 hover:bg-green-600"
-                  >
-                    Contactar via WhatsApp
-                  </Button>
-
+                  <Button variant="primary" onClick={() => handleWhatsAppContact(divulgacao)} className="w-full bg-green-500 hover:bg-green-600">Contactar via WhatsApp</Button>
                   {divulgacao.status === 'PENDENTE' && (
                     <div className="flex flex-col space-y-2">
-                      <Button 
-                        variant="success" 
-                        onClick={() => handleConvertToAnimal(divulgacao.id)} 
-                        isLoading={loadingStates[`convert-${divulgacao.id}`]}
-                      >
-                        Aprovar e Listar
-                      </Button>
-                      <Button 
-                        variant="danger" 
-                        onClick={() => handleStatusChange(divulgacao.id, DivulgacaoStatus.REJEITADO)} 
-                        isLoading={loadingStates[`status-${divulgacao.id}`]}
-                      >
-                        Rejeitar
-                      </Button>
+                      <Button variant="success" onClick={() => handleOpenApprovalModal(divulgacao)} isLoading={loadingStates[`convert-${divulgacao.id}`]}>Aprovar e Listar</Button>
+                      <Button variant="danger" onClick={() => handleStatusChange(divulgacao.id, DivulgacaoStatus.REJEITADO)} isLoading={loadingStates[`status-${divulgacao.id}`]}>Rejeitar</Button>
                     </div>
                   )}
-                   <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => handleDelete(divulgacao.id)}
-                      isLoading={loadingStates[`delete-${divulgacao.id}`]}
-                   >
-                     Excluir Permanentemente
-                   </Button>
+                   <Button variant="outline" className="w-full" onClick={() => handleDelete(divulgacao.id)} isLoading={loadingStates[`delete-${divulgacao.id}`]}>Excluir Permanentemente</Button>
                 </div>
               </div>
             </div>
@@ -1134,16 +1260,14 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
       </div>
       
       {selectedImage && (
-        <div 
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedImage(null)}
-        >
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setSelectedImage(null)}>
           <img src={selectedImage} alt="Visualização ampliada" className="max-w-full max-h-full rounded-lg" />
         </div>
       )}
     </section>
   );
 };
+
 
 // 9. COMPONENTE PARA GERIR CONTEÚDO E PARCEIROS
 const ConteudoManager = () => {

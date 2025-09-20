@@ -36,23 +36,23 @@ export class AuthService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
-      // Retorna mas não revela se um e-mail existe no sistema.
       return;
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
+    const passwordResetExpires = new Date(Date.now() + 2 * 60 * 1000); // Expira em 2 minutos
 
     await this.prisma.usuario.update({
       where: { id: user.id },
       data: { passwordResetToken, passwordResetExpires },
     });
 
+    const emailUser = this.configService.get<string>('EMAIL_USER');
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: this.configService.get<string>('EMAIL_USER'),
+        user: emailUser,
         pass: this.configService.get<string>('EMAIL_PASS'),
       },
     });
@@ -62,31 +62,47 @@ export class AuthService {
     
     const mailOptions = {
       to: user.email,
-      from: 'Associação <leandrobalaban78@gmail.com>',
+      from: `Associação <${emailUser}>`,
       subject: 'Redefinição de Senha da Sua Conta',
-      text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 10 minutos.\n`,
+      text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 2 minutos.\n`,
     };
 
     try {
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição:", error);
-      // Mesmo com erro no envio, o token foi gerado. O utilizador pode tentar novamente.
     }
   }
 
-  async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
+  // --- NOVO MÉTODO ADICIONADO ---
+  async validateResetToken(token: string): Promise<void> {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await this.prisma.usuario.findFirst({
       where: {
         passwordResetToken: hashedToken,
-        passwordResetExpires: { gt: new Date().toISOString() },
+        passwordResetExpires: { gt: new Date() },
       },
     });
 
     if (!user) {
-      throw new BadRequestException('Token inválido ou expirado.');
+      throw new BadRequestException('Link inspirado, por favor solicite um novo.');
+    }
+  }
+
+  async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
+    // 1. Reutiliza a lógica de validação
+    await this.validateResetToken(token);
+
+    // 2. Busca o usuário novamente para obter o ID (a validação já garante que ele existe)
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await this.prisma.usuario.findFirst({
+        where: { passwordResetToken: hashedToken }
+    });
+
+    // Esta verificação é uma segurança extra, mas a lógica principal está no validateResetToken
+    if (!user) {
+        throw new BadRequestException('Token inválido ou expirado.');
     }
 
     const salt = await bcrypt.genSalt();
@@ -101,4 +117,4 @@ export class AuthService {
       },
     });
   }
-}
+} 

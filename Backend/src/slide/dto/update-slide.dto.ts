@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSlideDto } from './create-slide.dto';
+import { IsString, IsOptional } from 'class-validator';
 
-export class UpdateSlideDto extends PartialType(CreateSlideDto) {}
+export class UpdateSlideDto {
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @IsString()
+  @IsOptional()
+  subtitle?: string;
+}

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, ParseIntPipe, UseInterceptors, UploadedFile, Patch } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { SlideService } from './slide.service';
@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { editFileName, imageFileFilter } from '../utils/file-upload.utils';
+import { UpdateSlideDto } from './dto/update-slide.dto';
 
 @Controller('slide')
 export class SlideController {
@@ -34,6 +35,22 @@ export class SlideController {
     return this.slideService.create(createSlideDto, imageUrl);
   }
   
+   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({ destination: './uploads', filename: editFileName }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSlideDto: UpdateSlideDto,
+    @UploadedFile() file?: Express.Multer.File, // O arquivo é opcional na atualização
+  ) {
+    return this.slideService.update(id, updateSlideDto, file);
+  }
+
+
   // Rota de ADMIN: Apenas administradores podem apagar slides.
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
