@@ -20,6 +20,7 @@ model Usuario {
   doacoes              Doacao[]
   adocoes              Adocao[]
   divulgacoes Divulgacao[]
+  divulgacoes_aprovadas Int      @default(0)
   passwordResetToken   String?
   passwordResetExpires DateTime?
 }
@@ -111,6 +112,8 @@ model Adocao {
   usuarioId         Int
   animal            Animal       @relation(fields: [animalId], references: [id])
   animalId          String
+  recompensa_concedida Boolean    @default(false) 
+  recompensa_detalhes    String?
   @@unique([usuarioId, animalId])
 }
 
