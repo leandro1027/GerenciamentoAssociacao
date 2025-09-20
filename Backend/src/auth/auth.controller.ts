@@ -1,5 +1,5 @@
 // backend/src/auth/auth.controller.ts
-import { Controller, Post, Body, UnauthorizedException, UseGuards, Get, Request, Param } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, UseGuards, Get, Request, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -26,14 +26,27 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body('email') email: string) {
     await this.authService.forgotPassword(email);
     return { message: 'Se um utilizador com esse e-mail existir, um link de redefinição foi enviado.' };
   }
 
+  // --- ROTA ADICIONADA ---
+  // Esta rota serve apenas para verificar se o token é válido, sem alterar a senha.
+  @Get('validate-reset-token/:token')
+  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 (Sucesso, sem conteúdo) se o token for válido
+  async validateResetToken(@Param('token') token: string) {
+    await this.authService.validateResetToken(token);
+  }
+
+
   @Post('reset-password/:token')
-  async resetPassword(@Param('token') token: string, @Body() resetPasswordDto: ResetPasswordDto) {
+  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 ao invés de uma mensagem, é uma prática comum.
+  async resetPassword(
+    @Param('token') token: string,
+    @Body() resetPasswordDto: ResetPasswordDto
+  ): Promise<void> {
     await this.authService.resetPassword(token, resetPasswordDto);
-    return { message: 'Senha redefinida com sucesso.' };
   }
 }
