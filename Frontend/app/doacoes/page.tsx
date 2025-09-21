@@ -42,10 +42,9 @@ export default function DoacoesPage() {
       return;
     }
 
-    // --- LÓGICA PIX ATUALIZADA COM SUA CHAVE ---
-    const pixKeyCpf = "14112379943"; // Sua chave PIX (CPF)
-    const merchantName = "LEANDRO BALABAN"; // IMPORTANTE: Altere para o seu nome completo ou da ONG
-    const merchantCity = "UNIAO DA VITORIA"; // IMPORTANTE: Altere para a sua cidade
+    const pixKeyCpf = "14112379943"; 
+    const merchantName = "LEANDRO BALABAN"; 
+    const merchantCity = "UNIAO DA VITORIA"; // 
     const txid = "***"; // ID da transação, pode ser estático para doações
 
     const formatField = (id: string, value: string) => {
