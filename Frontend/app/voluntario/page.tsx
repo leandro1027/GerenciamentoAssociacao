@@ -17,6 +17,15 @@ const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: str
   </svg>
 );
 
+// --- Componente de Loading ---
+const LoadingSpinner = () => (
+    <div className="flex flex-col items-center justify-center text-center">
+        <div className="w-10 h-10 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
+        <p className="mt-3 text-gray-600">A verificar o seu estado...</p>
+    </div>
+);
+
+
 // --- Componente Principal da Página ---
 export default function VoluntarioPage() {
   const { user, isAuthenticated } = useAuth();
@@ -27,15 +36,13 @@ export default function VoluntarioPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Se não estiver autenticado, mostra um aviso e redireciona
-    if (!isAuthenticated) {
+    if (isAuthenticated === false) {
       toast.error('Você precisa estar logado para se candidatar como voluntário.');
       router.push('/login');
       return;
     }
 
-    // Se estiver autenticado, verifica o status
-    if (user) {
+    if (isAuthenticated && user) {
       setIsCheckingStatus(true);
       const checkStatus = async () => {
         try {
@@ -52,6 +59,9 @@ export default function VoluntarioPage() {
         }
       };
       checkStatus();
+    } else if (isAuthenticated === true && !user) {
+        // Aguardando o objeto 'user' carregar
+        setIsCheckingStatus(true);
     } else {
         setIsCheckingStatus(false);
     }
@@ -83,15 +93,11 @@ export default function VoluntarioPage() {
     }
   };
   
-  if (isCheckingStatus || !isAuthenticated) {
-    return (
-      <main className="flex-grow flex items-center justify-center bg-gray-50">
-        <p>A carregar...</p>
-      </main>
-    );
-  }
-
   const renderContent = () => {
+    if (isCheckingStatus) {
+        return <LoadingSpinner />;
+    }
+
     if (voluntarioStatus) {
       const statusInfo = {
         pendente: {
@@ -117,11 +123,11 @@ export default function VoluntarioPage() {
 
       return (
         <div className="text-center">
-          <Icon path={currentStatus.icon} className={`mx-auto h-12 w-12 text-${currentStatus.color}-600`} />
+          <Icon path={currentStatus.icon} className={`mx-auto h-16 w-16 text-${currentStatus.color}-600`} />
           <h2 className="mt-4 text-2xl font-bold text-gray-800">{currentStatus.title}</h2>
-          <p className="mt-2 text-gray-600">{currentStatus.message}</p>
+          <p className="mt-2 text-gray-600 max-w-sm mx-auto">{currentStatus.message}</p>
           <div className="mt-8">
-            <Link href="/" className="text-sm font-medium text-amber-800 hover:text-amber-900">
+            <Link href="/" className="font-semibold text-amber-800 hover:underline">
               Voltar à Página Inicial
             </Link>
           </div>
@@ -162,12 +168,33 @@ export default function VoluntarioPage() {
   }
 
   return (
-    <main className="flex-grow flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-lg w-full">
-             <div className="bg-white p-8 rounded-2xl shadow-xl">
-                {renderContent()}
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        
+        {/* Coluna do Formulário */}
+        <div className="p-8 sm:p-12 flex flex-col justify-center">
+            {renderContent()}
+        </div>
+
+        {/* Coluna da Imagem e Informações */}
+        <div className="hidden md:block relative">
+            <img 
+                src="\NossaMissao.jpg"
+                alt="Seja voluntário"
+                className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex flex-col justify-end text-white">
+                <h2 className="text-3xl font-bold leading-tight">Como você pode ajudar?</h2>
+                <ul className="mt-4 space-y-2 list-disc list-inside text-amber-50">
+                    <li>Ajudar nos nossos eventos de adoção.</li>
+                    <li>Oferecer lar temporário para um animal.</li>
+                    <li>Auxiliar no transporte de animais para clínicas.</li>
+                    <li>Contribuir com as suas habilidades profissionais.</li>
+                </ul>
             </div>
         </div>
+      </div>
     </main>
   );
 }
+

@@ -42,8 +42,53 @@ export default function DoacoesPage() {
       return;
     }
 
-    // Lembre-se de substituir os dados por informações reais e válidas
-    const generatedPixKey = `00020126360014BR.GOV.BCB.PIX0114+5542999999999520400005303986540${numericValue.toFixed(2).replace('.', '')}5802BR5913NOME DA ONG AQUI6009CIDADE62070503***6304ABCD`;
+    // --- LÓGICA PIX ATUALIZADA COM SUA CHAVE ---
+    const pixKeyCpf = "14112379943"; // Sua chave PIX (CPF)
+    const merchantName = "LEANDRO BALABAN"; // IMPORTANTE: Altere para o seu nome completo ou da ONG
+    const merchantCity = "UNIAO DA VITORIA"; // IMPORTANTE: Altere para a sua cidade
+    const txid = "***"; // ID da transação, pode ser estático para doações
+
+    const formatField = (id: string, value: string) => {
+        const length = value.length.toString().padStart(2, '0');
+        return `${id}${length}${value}`;
+    };
+
+    // Montagem da chave PIX estática (BR Code)
+    let payload = '000201'; // Payload Format Indicator
+
+    // Merchant Account Information (ID 26) - Chave PIX
+    const merchantAccountGui = '0014BR.GOV.BCB.PIX';
+    const merchantAccountKey = formatField('01', pixKeyCpf);
+    payload += formatField('26', merchantAccountGui + merchantAccountKey);
+
+    payload += '52040000'; // Merchant Category Code
+    payload += '5303986'; // Transaction Currency (BRL)
+
+    // Transaction Amount (ID 54)
+    payload += formatField('54', numericValue.toFixed(2));
+
+    payload += '5802BR'; // Country Code
+    payload += formatField('59', merchantName.substring(0, 25)); // Merchant Name (limitado a 25 caracteres)
+    payload += formatField('60', merchantCity.substring(0, 15)); // Merchant City (limitado a 15 caracteres)
+
+    // Additional Data Field (TXID) (ID 62)
+    payload += formatField('62', formatField('05', txid));
+    
+    payload += '6304'; // CRC16 Prefix
+
+    // Lógica de cálculo do CRC16 (padrão do PIX)
+    const crc16 = (data: string) => {
+        let crc = 0xFFFF;
+        for (let i = 0; i < data.length; i++) {
+            crc ^= data.charCodeAt(i) << 8;
+            for (let j = 0; j < 8; j++) {
+                crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+            }
+        }
+        return ('0000' + (crc & 0xFFFF).toString(16).toUpperCase()).slice(-4);
+    };
+    
+    const generatedPixKey = payload + crc16(payload);
     setPixKey(generatedPixKey);
 
     QRCode.toDataURL(generatedPixKey, { width: 300, margin: 2 })
@@ -184,3 +229,4 @@ export default function DoacoesPage() {
     </main>
   );
 }
+
