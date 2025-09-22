@@ -35,12 +35,12 @@ model Voluntario {
 }
 
 model Doacao {
-  id        Int      @id @default(autoincrement())
-  usuarioId Int
+  id        Int       @id @default(autoincrement())
   valor     Float
   tipo      String
-  data      DateTime @default(now())
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  data      DateTime  @default(now())
+  usuarioId Int?      // Torna o campo de ID opcional
+  usuario   Usuario?  @relation(fields: [usuarioId], references: [id]) // Torna a relação opcional
 }
 
 model Slide {

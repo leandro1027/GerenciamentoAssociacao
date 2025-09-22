@@ -1,9 +1,9 @@
-import { IsIn, IsInt, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+import { IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from "class-validator";
 
 export class CreateDoacaoDto {
 
   @IsInt({ message: 'O ID do usuário deve ser um número inteiro.' })
-  @IsNotEmpty({ message: 'O ID do usuário não pode estar vazio.' })
+  @IsOptional()
   usuarioId: number;
 
   

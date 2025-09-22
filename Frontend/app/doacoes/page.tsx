@@ -9,30 +9,17 @@ import Link from 'next/link';
 import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Heart, ClipboardCopy, CheckCircle } from 'lucide-react'; // Biblioteca de ícones: npm install lucide-react
-
-// O componente de ícone que você já tinha. Ótimo para ícones personalizados!
-const Icon = ({ path, className = "w-6 h-6" }: { path: string, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d={path} />
-  </svg>
-);
-
+import { Heart, ClipboardCopy, CheckCircle } from 'lucide-react';
 
 export default function DoacoesPage() {
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth(); // Não precisamos mais do isAuthLoading
   const router = useRouter();
   const [valor, setValor] = useState<string>('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [pixKey, setPixKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      toast.error('Você precisa estar logado para fazer uma doação.');
-      router.push('/login');
-    }
-  }, [isAuthenticated, isAuthLoading, router]);
+  // O useEffect que forçava o login foi removido.
 
   const handleGenerateQRCode = (event: FormEvent) => {
     event.preventDefault();
@@ -42,40 +29,57 @@ export default function DoacoesPage() {
       return;
     }
 
-    const pixKeyCpf = "14112379943"; 
-    const merchantName = "LEANDRO BALABAN"; 
-    const merchantCity = "UNIAO DA VITORIA"; // 
-    const txid = "***"; // ID da transação, pode ser estático para doações
+    // Lógica para gerar o PIX (usando as variáveis de ambiente)
+    const pixKeyCpf = process.env.NEXT_PUBLIC_PIX_KEY;
+    const merchantName = process.env.NEXT_PUBLIC_PIX_MERCHANT_NAME;
+    const merchantCity = process.env.NEXT_PUBLIC_PIX_MERCHANT_CITY;
+
+    if (!pixKeyCpf || !merchantName || !merchantCity) {
+        toast.error('A configuração do PIX está incompleta. Por favor, contacte o suporte.');
+        console.error("Erro: Variáveis de ambiente do PIX não foram encontradas.");
+        return;
+    }
+
+    const txid = "***";
 
     const formatField = (id: string, value: string) => {
         const length = value.length.toString().padStart(2, '0');
         return `${id}${length}${value}`;
     };
 
-    // Montagem da chave PIX estática (BR Code)
-    let payload = '000201'; // Payload Format Indicator
+    const ID_PAYLOAD_FORMAT_INDICATOR = '00';
+    const ID_MERCHANT_ACCOUNT_INFORMATION = '26';
+    const ID_MERCHANT_ACCOUNT_INFORMATION_GUI = '00';
+    const ID_MERCHANT_ACCOUNT_INFORMATION_KEY = '01';
+    const ID_MERCHANT_CATEGORY_CODE = '52';
+    const ID_TRANSACTION_CURRENCY = '53';
+    const ID_TRANSACTION_AMOUNT = '54';
+    const ID_COUNTRY_CODE = '58';
+    const ID_MERCHANT_NAME = '59';
+    const ID_MERCHANT_CITY = '60';
+    const ID_ADDITIONAL_DATA_FIELD_TEMPLATE = '62';
+    const ID_ADDITIONAL_DATA_FIELD_TEMPLATE_TXID = '05';
+    const ID_CRC16 = '63';
 
-    // Merchant Account Information (ID 26) - Chave PIX
-    const merchantAccountGui = '0014BR.GOV.BCB.PIX';
-    const merchantAccountKey = formatField('01', pixKeyCpf);
-    payload += formatField('26', merchantAccountGui + merchantAccountKey);
+    const merchantAccountInfoValue = 
+        formatField(ID_MERCHANT_ACCOUNT_INFORMATION_GUI, 'BR.GOV.BCB.PIX') +
+        formatField(ID_MERCHANT_ACCOUNT_INFORMATION_KEY, pixKeyCpf);
 
-    payload += '52040000'; // Merchant Category Code
-    payload += '5303986'; // Transaction Currency (BRL)
+    const additionalDataValue = formatField(ID_ADDITIONAL_DATA_FIELD_TEMPLATE_TXID, txid);
 
-    // Transaction Amount (ID 54)
-    payload += formatField('54', numericValue.toFixed(2));
-
-    payload += '5802BR'; // Country Code
-    payload += formatField('59', merchantName.substring(0, 25)); // Merchant Name (limitado a 25 caracteres)
-    payload += formatField('60', merchantCity.substring(0, 15)); // Merchant City (limitado a 15 caracteres)
-
-    // Additional Data Field (TXID) (ID 62)
-    payload += formatField('62', formatField('05', txid));
+    let payload = [
+        formatField(ID_PAYLOAD_FORMAT_INDICATOR, '01'),
+        formatField(ID_MERCHANT_ACCOUNT_INFORMATION, merchantAccountInfoValue),
+        formatField(ID_MERCHANT_CATEGORY_CODE, '0000'),
+        formatField(ID_TRANSACTION_CURRENCY, '986'),
+        formatField(ID_TRANSACTION_AMOUNT, numericValue.toFixed(2)),
+        formatField(ID_COUNTRY_CODE, 'BR'),
+        formatField(ID_MERCHANT_NAME, merchantName),
+        formatField(ID_MERCHANT_CITY, merchantCity),
+        formatField(ID_ADDITIONAL_DATA_FIELD_TEMPLATE, additionalDataValue),
+        ID_CRC16 + '04'
+    ].join('');
     
-    payload += '6304'; // CRC16 Prefix
-
-    // Lógica de cálculo do CRC16 (padrão do PIX)
     const crc16 = (data: string) => {
         let crc = 0xFFFF;
         for (let i = 0; i < data.length; i++) {
@@ -101,17 +105,20 @@ export default function DoacoesPage() {
   };
 
   const handleConfirmDonation = async () => {
-    if (!user) {
-      toast.error('Usuário não autenticado.');
-      return;
-    }
     setIsLoading(true);
     try {
-      await api.post('/doacao', {
-        usuarioId: user.id,
+      // Cria o objeto de doação base
+      const donationData: { valor: number; tipo: string; usuarioId?: number } = {
         valor: parseFloat(valor),
         tipo: 'pix',
-      });
+      };
+
+      // Se o usuário estiver logado, adiciona o ID dele à doação
+      if (isAuthenticated && user) {
+        donationData.usuarioId = user.id;
+      }
+
+      await api.post('/doacao', donationData);
       toast.success('Doação registrada! Muito obrigado pelo seu apoio incondicional.');
       setValor('');
       setQrCodeDataURL(null);
@@ -128,23 +135,14 @@ export default function DoacoesPage() {
     toast.success('Chave PIX copiada para a área de transferência!');
   };
 
-  if (isAuthLoading || !isAuthenticated) {
-    return (
-      <main className="flex-grow flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600 animate-pulse">Carregando informações...</p>
-      </main>
-    );
-  }
-
   return (
     <main className="flex-grow bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         
-        {/* Coluna da Imagem e Impacto */}
         <div className="space-y-8">
           <div className="relative">
             <img 
-              src="\SobreNossaCausa.avif" 
+              src="/SobreNossaCausa.avif" 
               alt="Cachorro feliz sendo adotado" 
               className="rounded-3xl shadow-2xl w-full h-auto object-cover aspect-[4/3]"
             />
@@ -162,7 +160,6 @@ export default function DoacoesPage() {
           </div>
         </div>
 
-        {/* Coluna do Formulário de Doação */}
         <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold text-slate-800">Faça a diferença hoje</h1>
@@ -171,13 +168,16 @@ export default function DoacoesPage() {
 
           {!qrCodeDataURL ? (
             <form onSubmit={handleGenerateQRCode} className="space-y-6 pt-8">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Você está doando como:</label>
-                <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg">
-                  <p className="font-semibold text-slate-800">{user?.nome}</p>
-                  <p className="text-sm text-slate-500">{user?.email}</p>
+              {/* --- Seção de Identificação Condicional --- */}
+              {isAuthenticated && user && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Você está doando como:</label>
+                  <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg">
+                    <p className="font-semibold text-slate-800">{user.nome}</p>
+                    <p className="text-sm text-slate-500">{user.email}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <label htmlFor="valor" className="block text-sm font-medium text-slate-700 mb-2">Escolha ou digite o valor (R$)</label>
