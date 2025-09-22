@@ -8,14 +8,15 @@ export class DoacaoService {
   constructor (private readonly prisma:PrismaService){}
 
   create(createDoacaoDto: CreateDoacaoDto) {
-    return this.prisma.doacao.create({data: createDoacaoDto,
+    return this.prisma.doacao.create({
+      data: createDoacaoDto,
     });
   }
 
   findAll() {
     return this.prisma.doacao.findMany({
       include: {
-        usuario: true, //diz ao Prisma para incluir o objeto do utilizador relacionado
+        usuario: true, // diz ao Prisma para incluir o objeto do utilizador relacionado
       },
       orderBy: {
         data: 'desc', // Ordena as doações da mais recente para a mais antiga
@@ -35,7 +36,7 @@ export class DoacaoService {
     return doacao;
   }
 
- async update(id: number, updateDoacaoDto: UpdateDoacaoDto) {
+  async update(id: number, updateDoacaoDto: UpdateDoacaoDto) {
     await this.findOne(id);
 
     return this.prisma.doacao.update({
@@ -51,4 +52,5 @@ export class DoacaoService {
       where: {id},
     });
   }
-} 
+}
+
