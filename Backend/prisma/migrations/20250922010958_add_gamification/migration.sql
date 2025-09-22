@@ -16,6 +16,9 @@ CREATE TYPE "StatusAdocao" AS ENUM ('SOLICITADA', 'EM_ANALISE', 'APROVADA', 'REC
 -- CreateEnum
 CREATE TYPE "DivulgacaoStatus" AS ENUM ('PENDENTE', 'REVISADO', 'REJEITADO');
 
+-- CreateEnum
+CREATE TYPE "TipoRecompensa" AS ENUM ('CASTRACAO', 'VACINACAO');
+
 -- CreateTable
 CREATE TABLE "Usuario" (
     "id" SERIAL NOT NULL,
@@ -27,40 +30,10 @@ CREATE TABLE "Usuario" (
     "profileImageUrl" TEXT,
     "passwordResetToken" TEXT,
     "passwordResetExpires" TIMESTAMP(3),
+    "divulgacoes_aprovadas" INTEGER NOT NULL DEFAULT 0,
+    "pontos" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Voluntario" (
-    "id" SERIAL NOT NULL,
-    "usuarioId" INTEGER NOT NULL,
-    "motivo" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'pendente',
-
-    CONSTRAINT "Voluntario_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Doacao" (
-    "id" SERIAL NOT NULL,
-    "usuarioId" INTEGER NOT NULL,
-    "valor" DOUBLE PRECISION NOT NULL,
-    "tipo" TEXT NOT NULL,
-    "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Doacao_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Slide" (
-    "id" SERIAL NOT NULL,
-    "imageUrl" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "subtitle" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Slide_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -94,10 +67,23 @@ CREATE TABLE "Adocao" (
     "outrosAnimais" TEXT,
     "tempoDisponivel" TEXT,
     "motivoAdocao" TEXT,
+    "recompensa_concedida" BOOLEAN NOT NULL DEFAULT false,
+    "recompensa_detalhes" TEXT,
     "usuarioId" INTEGER NOT NULL,
     "animalId" TEXT NOT NULL,
 
     CONSTRAINT "Adocao_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Doacao" (
+    "id" SERIAL NOT NULL,
+    "valor" DOUBLE PRECISION NOT NULL,
+    "tipo" TEXT NOT NULL,
+    "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "usuarioId" INTEGER,
+
+    CONSTRAINT "Doacao_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -114,6 +100,28 @@ CREATE TABLE "Divulgacao" (
     "usuarioId" INTEGER NOT NULL,
 
     CONSTRAINT "Divulgacao_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Voluntario" (
+    "id" SERIAL NOT NULL,
+    "motivo" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pendente',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "usuarioId" INTEGER NOT NULL,
+
+    CONSTRAINT "Voluntario_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Slide" (
+    "id" SERIAL NOT NULL,
+    "imageUrl" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "subtitle" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Slide_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -138,17 +146,48 @@ CREATE TABLE "Parceiro" (
     CONSTRAINT "Parceiro_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Conquista" (
+    "id" SERIAL NOT NULL,
+    "nome" TEXT NOT NULL,
+    "descricao" TEXT NOT NULL,
+    "icone" TEXT NOT NULL,
+    "pontosBonus" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Conquista_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UsuarioConquista" (
+    "dataDeGanho" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "usuarioId" INTEGER NOT NULL,
+    "conquistaId" INTEGER NOT NULL,
+
+    CONSTRAINT "UsuarioConquista_pkey" PRIMARY KEY ("usuarioId","conquistaId")
+);
+
+-- CreateTable
+CREATE TABLE "Recompensa" (
+    "id" SERIAL NOT NULL,
+    "tipo" "TipoRecompensa" NOT NULL,
+    "dataConcessao" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "detalhes" TEXT,
+    "adocaoId" TEXT NOT NULL,
+
+    CONSTRAINT "Recompensa_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
-CREATE UNIQUE INDEX "Voluntario_usuarioId_key" ON "Voluntario"("usuarioId");
+CREATE UNIQUE INDEX "Usuario_email_key" ON "Usuario"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Adocao_usuarioId_animalId_key" ON "Adocao"("usuarioId", "animalId");
 
--- AddForeignKey
-ALTER TABLE "Voluntario" ADD CONSTRAINT "Voluntario_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "Voluntario_usuarioId_key" ON "Voluntario"("usuarioId");
 
--- AddForeignKey
-ALTER TABLE "Doacao" ADD CONSTRAINT "Doacao_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "Conquista_nome_key" ON "Conquista"("nome");
 
 -- AddForeignKey
 ALTER TABLE "Adocao" ADD CONSTRAINT "Adocao_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -157,4 +196,19 @@ ALTER TABLE "Adocao" ADD CONSTRAINT "Adocao_usuarioId_fkey" FOREIGN KEY ("usuari
 ALTER TABLE "Adocao" ADD CONSTRAINT "Adocao_animalId_fkey" FOREIGN KEY ("animalId") REFERENCES "Animal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Doacao" ADD CONSTRAINT "Doacao_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Divulgacao" ADD CONSTRAINT "Divulgacao_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Voluntario" ADD CONSTRAINT "Voluntario_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UsuarioConquista" ADD CONSTRAINT "UsuarioConquista_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UsuarioConquista" ADD CONSTRAINT "UsuarioConquista_conquistaId_fkey" FOREIGN KEY ("conquistaId") REFERENCES "Conquista"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Recompensa" ADD CONSTRAINT "Recompensa_adocaoId_fkey" FOREIGN KEY ("adocaoId") REFERENCES "Adocao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

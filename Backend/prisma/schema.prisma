@@ -8,40 +8,113 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- MODELOS PRINCIPAIS ---
+
 model Usuario {
-  id                   Int         @id @default(autoincrement())
-  nome                 String
-  email                String
-  senha                String
-  role                 String      @default("USER")
-  telefone             String?
-  profileImageUrl      String?
-  voluntario           Voluntario?
-  doacoes              Doacao[]
-  adocoes              Adocao[]
-  divulgacoes_aprovadas String?
-  divulgacoes Divulgacao[]
-  divulgacoes_aprovadas Int      @default(0)
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
+  id                    Int                @id @default(autoincrement())
+  nome                  String
+  email                 String             @unique
+  senha                 String
+  role                  String             @default("USER")
+  telefone              String?
+  profileImageUrl       String?
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+  divulgacoes_aprovadas Int                @default(0)
+
+  // Relações
+  voluntario            Voluntario?
+  doacoes               Doacao[]
+  adocoes               Adocao[]
+  divulgacoes           Divulgacao[]
+
+  // Gamificação
+  pontos                Int                @default(0)
+  conquistas            UsuarioConquista[]
 }
 
-model Voluntario {
-  id        Int      @id @default(autoincrement())
-  usuarioId Int      @unique
-  motivo    String
-  status    String   @default("pendente")
-  createdAt DateTime @default(now()) 
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+model Animal {
+  id               String       @id @default(uuid())
+  nome             String
+  animalImageUrl   String?
+  descricao        String
+  especie          Especie
+  sexo             Sexo
+  porte            Porte
+  raca             String
+  idade            String
+  castrado         Boolean
+  disponivel       Boolean      @default(true)
+  status           StatusAnimal @default(DISPONIVEL)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relações
+  pedidosAdocao    Adocao[]
+}
+
+model Adocao {
+  id                   String       @id @default(uuid())
+  dataSolicitacao      DateTime     @default(now())
+  dataFinalizacao      DateTime?
+  status               StatusAdocao @default(SOLICITADA)
+  observacoesAdmin     String?
+  tipoMoradia          String?
+  outrosAnimais        String?
+  tempoDisponivel      String?
+  motivoAdocao         String?
+  recompensa_concedida Boolean      @default(false)
+  recompensa_detalhes  String?
+
+  // Relações
+  usuarioId            Int
+  usuario              Usuario      @relation(fields: [usuarioId], references: [id])
+  animalId             String
+  animal               Animal       @relation(fields: [animalId], references: [id])
+  recompensas          Recompensa[] // Nova relação com as recompensas
+
+  @@unique([usuarioId, animalId])
 }
 
 model Doacao {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   valor     Float
   tipo      String
-  data      DateTime  @default(now())
-  usuarioId Int?      // Torna o campo de ID opcional
-  usuario   Usuario?  @relation(fields: [usuarioId], references: [id]) // Torna a relação opcional
+  data      DateTime @default(now())
+
+  // Relações (opcional para doações anônimas)
+  usuarioId Int?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+}
+
+model Divulgacao {
+  id          String           @id @default(uuid())
+  localizacao String
+  raca        String
+  castrado    Boolean
+  resgate     Boolean
+  imageUrl    String
+  descricao   String?
+  status      DivulgacaoStatus @default(PENDENTE)
+  createdAt   DateTime         @default(now())
+
+  // Relações
+  usuarioId   Int
+  usuario     Usuario          @relation(fields: [usuarioId], references: [id])
+}
+
+
+// --- MODELOS DE APOIO ---
+
+model Voluntario {
+  id        Int      @id @default(autoincrement())
+  motivo    String
+  status    String   @default("pendente")
+  createdAt DateTime @default(now())
+
+  // Relações
+  usuarioId Int      @unique
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 model Slide {
@@ -51,6 +124,61 @@ model Slide {
   subtitle  String?
   createdAt DateTime @default(now())
 }
+
+model ConteudoHome {
+  id        Int      @id @default(1)
+  titulo    String
+  subtitulo String
+  itens     String
+  imagemUrl String
+  updatedAt DateTime @updatedAt
+}
+
+model Parceiro {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  logoUrl   String
+  createdAt DateTime @default(now())
+}
+
+// --- MODELOS DE GAMIFICAÇÃO E RECOMPENSAS ---
+
+model Conquista {
+  id          Int                @id @default(autoincrement())
+  nome        String             @unique
+  descricao   String
+  icone       String
+  pontosBonus Int                @default(0)
+
+  // Relações
+  usuarios    UsuarioConquista[]
+}
+
+model UsuarioConquista {
+  dataDeGanho DateTime @default(now())
+
+  // Relações
+  usuarioId   Int
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  conquistaId Int
+  conquista   Conquista @relation(fields: [conquistaId], references: [id])
+
+  @@id([usuarioId, conquistaId])
+}
+
+model Recompensa {
+  id            Int            @id @default(autoincrement())
+  tipo          TipoRecompensa // Ex: CASTRACAO ou VACINACAO
+  dataConcessao DateTime       @default(now())
+  detalhes      String?        // Ex: "Vacina V10 aplicada na Clínica X"
+
+  // Relações
+  adocaoId      String
+  adocao        Adocao         @relation(fields: [adocaoId], references: [id])
+}
+
+
+// --- ENUMS ---
 
 enum Especie {
   CAO
@@ -74,48 +202,11 @@ enum StatusAnimal {
   ADOTADO
 }
 
-model Animal {
-  id               String       @id @default(uuid())
-  nome             String
-  animalImageUrl   String?
-  descricao        String      
-  especie          Especie
-  sexo             Sexo
-  porte            Porte
-  raca             String
-  idade            String
-  castrado         Boolean 
-  disponivel       Boolean      @default(true)
-  status           StatusAnimal @default(DISPONIVEL)
-  pedidosAdocao    Adocao[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-}
-
 enum StatusAdocao {
   SOLICITADA
   EM_ANALISE
   APROVADA
   RECUSADA
-}
-
-model Adocao {
-  id                String       @id @default(uuid())
-  dataSolicitacao   DateTime     @default(now())
-  dataFinalizacao   DateTime?
-  status            StatusAdocao @default(SOLICITADA)
-  observacoesAdmin  String?
-  tipoMoradia      String? 
-  outrosAnimais    String? 
-  tempoDisponivel  String?
-  motivoAdocao     String?
-  usuario           Usuario      @relation(fields: [usuarioId], references: [id])
-  usuarioId         Int
-  animal            Animal       @relation(fields: [animalId], references: [id])
-  animalId          String
-  recompensa_concedida Boolean    @default(false) 
-  recompensa_detalhes    String?
-  @@unique([usuarioId, animalId])
 }
 
 enum DivulgacaoStatus {
@@ -124,33 +215,7 @@ enum DivulgacaoStatus {
   REJEITADO
 }
 
-model Divulgacao {
-  id              String   @id @default(uuid())
-  localizacao     String
-  raca            String
-  castrado        Boolean
-  resgate         Boolean
-  imageUrl        String
-  descricao       String?
-  status          DivulgacaoStatus @default(PENDENTE)
-  createdAt       DateTime @default(now())
-  usuario         Usuario  @relation(fields: [usuarioId], references: [id])
-  usuarioId       Int
+enum TipoRecompensa {
+  CASTRACAO
+  VACINACAO
 }
-
-model ConteudoHome {
-  id        Int      @id @default(1) //sempre o ID 1 para ter uma única entrada
-  titulo    String
-  subtitulo String
-  itens     String  
-  imagemUrl String
-  updatedAt DateTime @updatedAt
-}
-model Parceiro {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  logoUrl   String
-  createdAt DateTime @default(now())
-}
-
-
