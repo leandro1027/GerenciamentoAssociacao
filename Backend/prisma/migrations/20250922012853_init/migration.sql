@@ -147,6 +147,14 @@ CREATE TABLE "Parceiro" (
 );
 
 -- CreateTable
+CREATE TABLE "Configuracao" (
+    "id" INTEGER NOT NULL DEFAULT 1,
+    "gamificacaoAtiva" BOOLEAN NOT NULL DEFAULT true,
+
+    CONSTRAINT "Configuracao_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Conquista" (
     "id" SERIAL NOT NULL,
     "nome" TEXT NOT NULL,

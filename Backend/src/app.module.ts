@@ -16,6 +16,7 @@ import { ParceirosModule } from './parceiros/parceiros.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
+import { GamificacaoModule } from './gamificacao/gamificacao.module';
 
 
 @Module({
@@ -35,6 +36,7 @@ import { ReportsModule } from './reports/reports.module';
     CloudinaryModule,
     DashboardModule,
     ReportsModule,
+    GamificacaoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

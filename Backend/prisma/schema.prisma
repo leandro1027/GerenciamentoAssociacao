@@ -28,7 +28,7 @@ model Usuario {
   adocoes               Adocao[]
   divulgacoes           Divulgacao[]
 
-  // Gamificação
+  // --- Funcionalidade de Gamificação ---
   pontos                Int                @default(0)
   conquistas            UsuarioConquista[]
 }
@@ -71,7 +71,8 @@ model Adocao {
   usuario              Usuario      @relation(fields: [usuarioId], references: [id])
   animalId             String
   animal               Animal       @relation(fields: [animalId], references: [id])
-  recompensas          Recompensa[] // Nova relação com as recompensas
+  // --- Funcionalidade de Recompensas ---
+  recompensas          Recompensa[]
 
   @@unique([usuarioId, animalId])
 }
@@ -82,7 +83,7 @@ model Doacao {
   tipo      String
   data      DateTime @default(now())
 
-  // Relações (opcional para doações anônimas)
+  // --- Relação opcional para permitir doações anónimas ---
   usuarioId Int?
   usuario   Usuario? @relation(fields: [usuarioId], references: [id])
 }
@@ -104,7 +105,7 @@ model Divulgacao {
 }
 
 
-// --- MODELOS DE APOIO ---
+// --- MODELOS DE APOIO E CONFIGURAÇÃO ---
 
 model Voluntario {
   id        Int      @id @default(autoincrement())
@@ -140,6 +141,13 @@ model Parceiro {
   logoUrl   String
   createdAt DateTime @default(now())
 }
+
+// --- MODELO DE CONFIGURAÇÕES GLOBAIS ---
+model Configuracao {
+  id               Int     @id @default(1) // Garante que haverá apenas uma linha de configuração
+  gamificacaoAtiva Boolean @default(true) // O "interruptor" global para a gamificação
+}
+
 
 // --- MODELOS DE GAMIFICAÇÃO E RECOMPENSAS ---
 
@@ -178,7 +186,7 @@ model Recompensa {
 }
 
 
-// --- ENUMS ---
+// --- ENUMS (CORRIGIDOS) ---
 
 enum Especie {
   CAO
@@ -219,3 +227,4 @@ enum TipoRecompensa {
   CASTRACAO
   VACINACAO
 }
+
