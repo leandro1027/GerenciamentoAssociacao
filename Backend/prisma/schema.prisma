@@ -71,21 +71,21 @@ model Adocao {
   usuario              Usuario      @relation(fields: [usuarioId], references: [id])
   animalId             String
   animal               Animal       @relation(fields: [animalId], references: [id])
-  // --- Funcionalidade de Recompensas ---
   recompensas          Recompensa[]
 
   @@unique([usuarioId, animalId])
 }
 
 model Doacao {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   valor     Float
   tipo      String
-  data      DateTime @default(now())
+  data      DateTime     @default(now())
+  status    StatusDoacao @default(PENDENTE)
 
-  // --- Relação opcional para permitir doações anónimas ---
+  // Relação opcional para permitir doações anónimas
   usuarioId Int?
-  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+  usuario   Usuario?     @relation(fields: [usuarioId], references: [id])
 }
 
 model Divulgacao {
@@ -142,10 +142,9 @@ model Parceiro {
   createdAt DateTime @default(now())
 }
 
-// --- MODELO DE CONFIGURAÇÕES GLOBAIS ---
 model Configuracao {
-  id               Int     @id @default(1) // Garante que haverá apenas uma linha de configuração
-  gamificacaoAtiva Boolean @default(true) // O "interruptor" global para a gamificação
+  id               Int     @id @default(1)
+  gamificacaoAtiva Boolean @default(true)
 }
 
 
@@ -176,9 +175,9 @@ model UsuarioConquista {
 
 model Recompensa {
   id            Int            @id @default(autoincrement())
-  tipo          TipoRecompensa // Ex: CASTRACAO ou VACINACAO
+  tipo          TipoRecompensa
   dataConcessao DateTime       @default(now())
-  detalhes      String?        // Ex: "Vacina V10 aplicada na Clínica X"
+  detalhes      String?
 
   // Relações
   adocaoId      String
@@ -186,7 +185,13 @@ model Recompensa {
 }
 
 
-// --- ENUMS (CORRIGIDOS) ---
+// --- ENUMS ---
+
+enum StatusDoacao {
+  PENDENTE
+  CONFIRMADA
+  REJEITADA
+}
 
 enum Especie {
   CAO
