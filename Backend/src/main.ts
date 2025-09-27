@@ -13,9 +13,12 @@ async function bootstrap() {
   // Habilita validações globais para todos os DTOs em toda a aplicação
   app.useGlobalPipes(new ValidationPipe());
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
+
+
+app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  prefix: '/uploads',
+});
+
 
   // Inicia a aplicação na porta definida no .env ou na porta 3001 por defeito
   await app.listen(process.env.PORT ?? 3001);
