@@ -34,7 +34,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { is
 
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios';
+type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes';
 
 // --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
 type WeeklyActivity = {
@@ -1268,6 +1268,76 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   );
 };
 
+// --- NOVO COMPONENTE PARA GERIR CONFIGURAÇÕES ---
+const ConfiguracaoManager = () => {
+  const [gamificacaoAtiva, setGamificacaoAtiva] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get('/configuracao');
+        setGamificacaoAtiva(response.data.gamificacaoAtiva);
+      } catch (error) {
+        toast.error("Erro ao carregar as configurações.");
+        console.error("Erro ao buscar configuração:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const handleToggleChange = async (novoStatus: boolean) => {
+    // Atualiza a UI imediatamente para uma resposta rápida
+    setGamificacaoAtiva(novoStatus);
+
+    try {
+      await api.patch('/configuracao', {
+        gamificacaoAtiva: novoStatus,
+      });
+      toast.success('Configuração guardada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao guardar a configuração.');
+      // Reverte a alteração na UI em caso de erro
+      setGamificacaoAtiva(!novoStatus);
+      console.error("Erro ao salvar configuração:", error);
+    }
+  };
+
+  return (
+    <section>
+      <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Configurações Gerais</h3>
+        
+        {isLoading ? (
+          <p className="text-gray-500">A carregar...</p>
+        ) : (
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <p className="font-medium text-gray-800">Sistema de Gamificação</p>
+              <p className="text-sm text-gray-500">
+                Ative ou desative a atribuição de pontos e conquistas em todo o site.
+              </p>
+            </div>
+            {/* Componente de Interruptor (Toggle Switch) */}
+            <label htmlFor="gamification-toggle" className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                id="gamification-toggle" 
+                className="sr-only peer"
+                checked={gamificacaoAtiva}
+                onChange={(e) => handleToggleChange(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
 
 // 9. COMPONENTE PARA GERIR CONTEÚDO E PARCEIROS
 const ConteudoManager = () => {
@@ -1536,6 +1606,7 @@ export default function AdminPanelPage() {
             <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
             <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📄 Gerir Conteúdo</button>
              <button onClick={() => setActiveView('relatórios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'relatórios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📈 Gerar Relatórios</button>
+             <button onClick={() => setActiveView('configuracoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'configuracoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>⚙️ Configurações</button>
         </nav>
         <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
     </aside>
@@ -1552,7 +1623,8 @@ export default function AdminPanelPage() {
       doacoes: 'Histórico de Doações',
       divulgacoes: 'Gestão de Divulgações da Comunidade',
       conteudo: 'Gestão de Conteúdo e Parceiros',
-      relatórios: 'Relatórios'
+      relatórios: 'Relatórios',
+      configuracoes: 'Configurações Gerais'
     };
     
     return (
@@ -1579,6 +1651,7 @@ export default function AdminPanelPage() {
                     {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
                     {activeView === 'conteudo' && <ConteudoManager />}
                     {activeView === 'relatórios' && <ReportsManager />}
+                    {activeView === 'configuracoes' && <ConfiguracaoManager />}
                 </>
             )}
         </div>

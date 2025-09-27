@@ -1,5 +1,5 @@
 import { IsIn, IsNotEmpty, IsString } from 'class-validator';
-import { StatusDoacao } from 'generated/prisma';
+import { StatusDoacao } from '@prisma/client';
 
 export class UpdateDoacaoStatusDto {
   @IsString({ message: 'O status deve ser um texto.' })

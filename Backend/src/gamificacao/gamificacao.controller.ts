@@ -1,34 +1,64 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { GamificacaoService } from './gamificacao.service';
-import { CreateGamificacaoDto } from './dto/create-gamificacao.dto';
-import { UpdateGamificacaoDto } from './dto/update-gamificacao.dto';
+import { CreateConquistaDto } from './dto/create-conquista.dto';
+import { UpdateConquistaDto } from './dto/update-conquista.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard'; // <-- Ajuste o caminho se necessário
+import { RolesGuard } from 'src/auth/roles.guard'; // <-- Ajuste o caminho se necessário
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('gamificacao')
+@UseGuards(JwtAuthGuard, RolesGuard) // Protege todas as rotas com autenticação e verificação de role
 export class GamificacaoController {
   constructor(private readonly gamificacaoService: GamificacaoService) {}
 
-  @Post()
-  create(@Body() createGamificacaoDto: CreateGamificacaoDto) {
-    return this.gamificacaoService.create(createGamificacaoDto);
+  // Rota para criar uma nova conquista (só para admins)
+  @Post('conquistas')
+  @Roles('ADMIN')
+  create(@Body() createConquistaDto: CreateConquistaDto) {
+    return this.gamificacaoService.create(createConquistaDto);
   }
 
-  @Get()
+  // Rota para listar todas as conquistas (só para admins)
+  @Get('conquistas')
+  @Roles('ADMIN')
   findAll() {
     return this.gamificacaoService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gamificacaoService.findOne(+id);
+  // Rota para obter detalhes de uma conquista (só para admins)
+  @Get('conquistas/:id')
+  @Roles('ADMIN')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.gamificacaoService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGamificacaoDto: UpdateGamificacaoDto) {
-    return this.gamificacaoService.update(+id, updateGamificacaoDto);
+  // Rota para atualizar uma conquista (só para admins)
+  @Patch('conquistas/:id')
+   @Roles('ADMIN')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateConquistaDto: UpdateConquistaDto,
+  ) {
+    return this.gamificacaoService.update(id, updateConquistaDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.gamificacaoService.remove(+id);
+  // Rota para remover uma conquista (só para admins)
+  @Delete('conquistas/:id')
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.gamificacaoService.remove(id);
   }
 }

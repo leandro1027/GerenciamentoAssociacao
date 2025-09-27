@@ -1,4 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateDoacaoDto } from './create-doacao.dto';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { StatusDoacao } from '@prisma/client';
 
-export class UpdateDoacaoDto extends PartialType(CreateDoacaoDto) {}
+export class UpdateDoacaoDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsIn([StatusDoacao.CONFIRMADA, StatusDoacao.REJEITADA])
+  status: StatusDoacao;
+}
