@@ -1592,72 +1592,132 @@ export default function AdminPanelPage() {
     );
   }
 
-  const Sidebar = () => (
-    <aside className={`bg-stone-900 text-white flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'}`}>
-        <div className="mb-8"><h2 className="text-2xl font-bold">Painel Admin</h2></div>
-        <nav className="flex flex-col space-y-2">
-            <button onClick={() => setActiveView('dashboard')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📊 Dashboard</button>
-            <button onClick={() => setActiveView('slides')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📝 Gerir Slides</button>
-            <button onClick={() => setActiveView('animais')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🐾 Gerir Animais</button>
-            <button onClick={() => setActiveView('adocoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>❤️ Gerir Adoções</button>
-            <button onClick={() => setActiveView('divulgacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-amber-700'}`}>📢 Gerir Divulgações</button>
-            <button onClick={() => setActiveView('voluntarios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>🤝 Gerir Voluntários</button>
-            <button onClick={() => setActiveView('membros')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>👥 Gerir Membros</button>
-            <button onClick={() => setActiveView('doacoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>💰 Histórico de Doações</button>
-            <button onClick={() => setActiveView('conteudo')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📄 Gerir Conteúdo</button>
-             <button onClick={() => setActiveView('relatórios')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'relatórios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>📈 Gerar Relatórios</button>
-             <button onClick={() => setActiveView('configuracoes')} className={`text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'configuracoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>⚙️ Configurações</button>
-        </nav>
-        <div className="mt-auto"><Link href="/" className="block text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">Sair do Painel</Link></div>
-    </aside>
-  );
+const Sidebar = () => (
 
-  const MainContent = () => {
-    const viewTitles: Record<AdminView, string> = {
-      dashboard: 'Dashboard',
-      slides: 'Gestão do Carrossel',
-      animais: 'Gestão de Animais para Adoção',
-      adocoes: 'Gestão de Pedidos de Adoção',
-      voluntarios: 'Gestão de Voluntários',
-      membros: 'Membros Registados',
-      doacoes: 'Histórico de Doações',
-      divulgacoes: 'Gestão de Divulgações da Comunidade',
-      conteudo: 'Gestão de Conteúdo e Parceiros',
-      relatórios: 'Relatórios',
-      configuracoes: 'Configurações Gerais'
-    };
+  
+  // O container principal ocupa a altura total da tela e é um flex container vertical.
+  // A largura é controlada pelo estado 'isSidebarOpen', como antes.
+  <aside className={`bg-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0'}`}>
     
-    return (
-    <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
-        <header className="bg-white shadow-sm p-4 flex-shrink-0 flex items-center">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-            <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
-        </header>
-        <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
-            {loading && <p className="text-center text-gray-600">A carregar dados...</p>}
-            {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
-            
-            {!loading && !error && (
-                <>
-                    {activeView === 'dashboard' && <Dashboard user={user} setActiveView={setActiveView} />}
-                    {activeView === 'slides' && <SlideManager initialSlides={slides} />}
-                    {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
-                    {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
-                    {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
-                    {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
-                    {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
-                    {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
-                    {activeView === 'conteudo' && <ConteudoManager />}
-                    {activeView === 'relatórios' && <ReportsManager />}
-                    {activeView === 'configuracoes' && <ConfiguracaoManager />}
-                </>
-            )}
-        </div>
+    {/* Este wrapper interno garante que o conteúdo (texto e ícones) desapareça ao colapsar */}
+    <div className="flex flex-col flex-1 overflow-hidden">
+
+      {/* 1. Cabeçalho da Sidebar (Fixo no topo) */}
+      <div className="p-4 flex-shrink-0">
+        <h2 className="text-2xl font-bold whitespace-nowrap">Painel Admin</h2>
+      </div>
+
+      {/* 2. Área de Navegação (Com rolagem) */}
+      {/* - 'flex-1' faz a navegação ocupar todo o espaço vertical disponível.
+        - 'overflow-y-auto' cria a barra de rolagem somente se os itens não couberem.
+      */}
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2">
+        <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button onClick={() => setActiveView('slides')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>📝</span>
+          <span>Gerir Slides</span>
+        </button>
+        <button onClick={() => setActiveView('animais')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>🐾</span>
+          <span>Gerir Animais</span>
+        </button>
+        <button onClick={() => setActiveView('adocoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>❤️</span>
+          <span>Gerir Adoções</span>
+        </button>
+        <button onClick={() => setActiveView('divulgacoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>📢</span>
+          <span>Gerir Divulgações</span>
+        </button>
+        <button onClick={() => setActiveView('voluntarios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>🤝</span>
+          <span>Gerir Voluntários</span>
+        </button>
+        <button onClick={() => setActiveView('membros')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>👥</span>
+          <span>Gerir Membros</span>
+        </button>
+        <button onClick={() => setActiveView('doacoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>💰</span>
+          <span>Histórico de Doações</span>
+        </button>
+        <button onClick={() => setActiveView('conteudo')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>📄</span>
+          <span>Gerir Conteúdo</span>
+        </button>
+        <button onClick={() => setActiveView('relatórios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'relatórios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>📈</span>
+          <span>Gerar Relatórios</span>
+        </button>
+        <button onClick={() => setActiveView('configuracoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'configuracoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>⚙️</span>
+          <span>Configurações</span>
+        </button>
+      </nav>
+
+      {/* 3. Rodapé da Sidebar (Fixo no fundo) */}
+      <div className="p-4 flex-shrink-0">
+        <Link href="/" className="flex items-center justify-center gap-3 text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+          </svg>
+          <span>Sair do Painel</span>
+        </Link>
+      </div>
+
     </div>
-    )
+  </aside>
+);
+
+const MainContent = () => {
+  const viewTitles: Record<AdminView, string> = {
+    dashboard: 'Dashboard',
+    slides: 'Gestão do Carrossel',
+    animais: 'Gestão de Animais para Adoção',
+    adocoes: 'Gestão de Pedidos de Adoção',
+    voluntarios: 'Gestão de Voluntários',
+    membros: 'Membros Registados',
+    doacoes: 'Histórico de Doações',
+    divulgacoes: 'Gestão de Divulgações da Comunidade',
+    conteudo: 'Gestão de Conteúdo e Parceiros',
+    relatórios: 'Relatórios',
+    configuracoes: 'Configurações Gerais'
   };
+  
+  return (
+  <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
+      <header className="bg-white shadow-sm p-4 flex-shrink-0 flex items-center">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
+      </header>
+      <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
+          {loading && <p className="text-center text-gray-600">A carregar dados...</p>}
+          {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
+          
+          {!loading && !error && (
+              <>
+                  {activeView === 'dashboard' && <Dashboard user={user} setActiveView={setActiveView} />}
+                  {activeView === 'slides' && <SlideManager initialSlides={slides} />}
+                  {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
+                  {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
+                  {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
+                  {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
+                  {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
+                  {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
+                  {activeView === 'conteudo' && <ConteudoManager />}
+                  {activeView === 'relatórios' && <ReportsManager />}
+                  {activeView === 'configuracoes' && <ConfiguracaoManager />}
+              </>
+          )}
+      </div>
+  </div>
+  )
+};
 
   return (
     <div className="flex h-screen bg-gray-100">
