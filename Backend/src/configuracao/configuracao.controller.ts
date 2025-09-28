@@ -6,9 +6,13 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('configuracao')
-@UseGuards(JwtAuthGuard, RolesGuard) // Protege todas as rotas
 export class ConfiguracaoController {
   constructor(private readonly configuracaoService: ConfiguracaoService) {}
+
+    @Get('teste')
+  rotaDeTeste() {
+    return { status: 'ok', message: 'A rota de teste do controller de configuração funciona!' };
+  }
 
   // Rota para o admin buscar a configuração atual
   @Get()

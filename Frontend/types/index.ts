@@ -123,3 +123,9 @@ export interface Parceiro {
   logoUrl: string;
   createdAt: string;
 }
+
+export interface Configuracao {
+  id: number;
+  gamificacaoAtiva: boolean;
+};
+
