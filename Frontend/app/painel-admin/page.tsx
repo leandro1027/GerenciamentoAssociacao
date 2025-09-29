@@ -1611,7 +1611,7 @@ const Sidebar = () => (
       {/* - 'flex-1' faz a navegação ocupar todo o espaço vertical disponível.
         - 'overflow-y-auto' cria a barra de rolagem somente se os itens não couberem.
       */}
-      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2">
+  <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 custom-scrollbar">
         <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
           <span>📊</span>
           <span>Dashboard</span>
