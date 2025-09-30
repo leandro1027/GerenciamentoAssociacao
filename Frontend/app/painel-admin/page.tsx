@@ -396,7 +396,7 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
                           {voluntarios.map(voluntario => (
                               <tr key={voluntario.id}>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                      <div className="text-sm font-medium text-gray-900">{voluntario.usuario?.nome || 'Utilizador não encontrado'}</div>
+                                      <div className="text-sm font-medium text-gray-900">{voluntario.usuario?.nome || 'Utilizador não identificado'}</div>
                                       <div className="text-sm text-gray-500">{voluntario.usuario?.email}</div>
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-600 max-w-sm whitespace-normal">{voluntario.motivo}</td>
