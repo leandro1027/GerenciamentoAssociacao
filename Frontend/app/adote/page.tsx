@@ -35,7 +35,8 @@ const FilterPill = ({ label, value, activeValue, onClick }: { label: string, val
 // --- Card de animal ---
 const AnimalCard = ({ animal }: { animal: Animal }) => (
   <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all">
-    <div className="relative">
+    {/* CORRIGIDO 2: Adicionado 'overflow-hidden' para conter a imagem no hover */}
+    <div className="relative overflow-hidden">
       <img
         src={`${api.defaults.baseURL}${animal.animalImageUrl}`}
         alt={`Foto de ${animal.nome}`}
@@ -110,7 +111,7 @@ export default function AdotePage() {
   return (
     <main className="bg-gray-50 min-h-screen">
       {/* --- HERO BANNER --- */}
-      <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/NossaMissao.jpg')" }}>
+      <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/Adote.png')" }}>
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
           <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
@@ -132,14 +133,15 @@ export default function AdotePage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Pesquisar</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                  <Icon path="M21 21l-5.197-5.197m0 0A7.5..." className="w-5 h-5" />
+                  {/* CORRIGIDO 1: Path completo do ícone */}
+                  <Icon path="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" className="w-5 h-5" />
                 </span>
                 <input
                   type="text"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
                   placeholder="Nome do animal..."
-                  className="w-full pl-10 rounded-md border-gray-300 focus:ring-amber-800 focus:border-amber-800"
+                  className="w-full pl-10 rounded-md border-gray-300 focus:ring-amber-800 focus:border-amber-800 text-gray-900 placeholder-gray-500"
                 />
               </div>
             </div>
@@ -186,7 +188,8 @@ export default function AdotePage() {
             </div>
           ) : (
             <div className="text-center py-16 bg-white rounded-lg shadow-md border border-gray-100">
-              <Icon path="M15.182 16.182A4.5..." className="mx-auto h-12 w-12 text-gray-400" />
+               {/* CORRIGIDO 1: Path completo do ícone */}
+              <Icon path="M15.182 16.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 9.75h.008v.008H9v-.008zm6 0h.008v.008H15v-.008z" className="mx-auto h-12 w-12 text-gray-400" />
               <p className="mt-4 text-gray-700 font-semibold">Nenhum animal encontrado.</p>
               <p className="text-gray-500">Tente ajustar sua pesquisa ou limpar os filtros.</p>
             </div>
