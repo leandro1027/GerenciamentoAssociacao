@@ -8,6 +8,8 @@ import { Animal, StatusAnimal } from '@/types'; // Adicione 'Especie', 'Sexo', '
 import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import PawPrintOverlay from '@/app/components/common/PawPrintOverlay';
+
 
 // --- Ícones (mantidos) ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -309,6 +311,9 @@ export default function AnimalDetailPage() {
                     onSubmit={handleAdoptionSubmit}
                 />
             )}
+
+            <PawPrintOverlay count={12} maxSize={70} minSize={40} opacity={0.08} />
+
             <main className="bg-gray-50 pt-8 pb-16 sm:pt-12 sm:pb-24">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Breadcrumbs */}
