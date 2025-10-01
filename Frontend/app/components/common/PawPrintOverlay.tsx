@@ -24,7 +24,7 @@ export default function PawPrintOverlay({
 
     for (let i = 0; i < count; i++) {
       const img = document.createElement("img");
-      img.src = "/patinhas.png"; // ✅ agora pega direto da pasta public
+      img.src = "/patinhas.png"; 
       img.alt = "Patinha";
       img.className = "absolute opacity-20 pointer-events-none select-none";
       img.style.width = `${Math.floor(Math.random() * (maxSize - minSize) + minSize)}px`;
