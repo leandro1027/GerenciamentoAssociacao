@@ -1,4 +1,4 @@
-import { PrismaClient } from "generated/prisma";
+import { PrismaClient } from '@prisma/client';
 
 // Inicializa o Prisma Client
 const prisma = new PrismaClient();
@@ -73,4 +73,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
+  

@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -21,6 +20,8 @@ model Usuario {
   passwordResetToken    String?
   passwordResetExpires  DateTime?
   divulgacoes_aprovadas Int                @default(0)
+  estado          String   @db.VarChar(2) @default("SC")
+  cidade          String   @default("Não informado")
 
   // Relações
   voluntario            Voluntario?

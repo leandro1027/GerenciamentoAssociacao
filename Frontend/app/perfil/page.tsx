@@ -8,7 +8,8 @@ import Link from 'next/link';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
 import { Doacao, Voluntario, Usuario, Adocao } from '../../types';
-// ATUALIZADO: Novo tipo de visualização para a gamificação
+
+
 type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos' | 'gamification';
 import { Eye, EyeOff } from 'lucide-react';
 

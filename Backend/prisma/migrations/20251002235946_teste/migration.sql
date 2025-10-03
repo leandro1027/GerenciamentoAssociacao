@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "StatusDoacao" AS ENUM ('PENDENTE', 'CONFIRMADA', 'REJEITADA');
+
+-- CreateEnum
 CREATE TYPE "Especie" AS ENUM ('CAO', 'GATO');
 
 -- CreateEnum
@@ -31,6 +34,8 @@ CREATE TABLE "Usuario" (
     "passwordResetToken" TEXT,
     "passwordResetExpires" TIMESTAMP(3),
     "divulgacoes_aprovadas" INTEGER NOT NULL DEFAULT 0,
+    "estado" VARCHAR(2) NOT NULL DEFAULT 'SC',
+    "cidade" TEXT NOT NULL DEFAULT 'Não informado',
     "pontos" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
@@ -81,6 +86,7 @@ CREATE TABLE "Doacao" (
     "valor" DOUBLE PRECISION NOT NULL,
     "tipo" TEXT NOT NULL,
     "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "status" "StatusDoacao" NOT NULL DEFAULT 'PENDENTE',
     "usuarioId" INTEGER,
 
     CONSTRAINT "Doacao_pkey" PRIMARY KEY ("id")

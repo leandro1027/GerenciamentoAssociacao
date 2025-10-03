@@ -81,10 +81,10 @@ const SlideGallery = () => {
                   {slide.subtitle}
                 </p>
                 <div className="mt-8 flex gap-4">
-                  <Link href="/quem-somos" className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+                  <Link href="/quem-somos" className="bg-amber-800 hover:bg-amber-900 text-white px-6 py-3 rounded-lg font-semibold transition">
                     NOS CONHEÇA
                   </Link>
-                  <Link href="/voluntario" className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 py-3 rounded-lg font-semibold transition">
+                  <Link href="/voluntario" className="border-2 border-amber-800 text-amber-700 hover:bg-amber-900 hover:text-white px-6 py-3 rounded-lg font-semibold transition">
                     AJUDE
                   </Link>
                 </div>
