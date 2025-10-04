@@ -72,6 +72,8 @@ export interface Animal {
   animalImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
+  comunitario: boolean;
+  localizacaoComunitaria: string;
 }
 
 export enum StatusAdocao {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
 import api from '../services/api';
 import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal } from '../../types';
 import Link from 'next/link';
@@ -608,19 +608,46 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
 
 // 6. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
-  const [formData, setFormData] = useState({ nome: '', raca: '', idade: '', descricao: '' });
+  // ATUALIZADO: Estado inicial do formulário com os novos campos
+  const initialState = {
+    nome: '',
+    raca: '',
+    idade: '',
+    descricao: '',
+    localizacaoComunitaria: '', // Novo campo
+  };
+
+  const [formData, setFormData] = useState(initialState);
   const [especie, setEspecie] = useState<Especie>(Especie.CAO);
   const [sexo, setSexo] = useState<Sexo>(Sexo.MACHO);
   const [porte, setPorte] = useState<Porte>(Porte.PEQUENO);
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
+  
+  // NOVO: Estados para controlar a opção de animal comunitário e o modo de edição
+  const [comunitario, setComunitario] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Função para limpar e resetar o formulário
+  const resetForm = () => {
+    setFormData(initialState);
+    setEspecie(Especie.CAO);
+    setSexo(Sexo.MACHO);
+    setPorte(Porte.PEQUENO);
+    setFile(null);
+    setComunitario(false);
+    setEditingId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleCreateSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!file) {
-        toast.error('Por favor, selecione uma imagem para o animal.');
-        return;
+      toast.error('Por favor, selecione uma imagem para o animal.');
+      return;
     }
     setIsLoading(true);
 
@@ -633,17 +660,17 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     data.append('sexo', sexo);
     data.append('porte', porte);
     data.append('file', file);
+    // ATUALIZADO: Envia os novos dados para a API
+    data.append('comunitario', String(comunitario));
+    if (comunitario) {
+      data.append('localizacaoComunitaria', formData.localizacaoComunitaria);
+    }
 
     try {
       const response = await api.post<Animal>('/animais', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       setAnimals(prev => [response.data, ...prev]);
       toast.success('Animal cadastrado com sucesso!');
-      setFormData({ nome: '', raca: '', idade: '', descricao: '' });
-      setEspecie(Especie.CAO);
-      setSexo(Sexo.MACHO);
-      setPorte(Porte.PEQUENO);
-      setFile(null);
-      (document.getElementById('animal-file-input') as HTMLInputElement).value = '';
+      resetForm();
     } catch (error) {
       console.error('Erro ao cadastrar animal:', error);
       toast.error('Não foi possível cadastrar o animal.');
@@ -653,7 +680,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   };
   
   const handleDelete = async (animalId: string) => {
-    if (confirm('Tem a certeza que deseja apagar este animal?')) {
+    if (window.confirm('Tem a certeza que deseja apagar este animal?')) {
       try {
         await api.delete(`/animais/${animalId}`);
         setAnimals(prev => prev.filter(a => a.id !== animalId));
@@ -664,21 +691,44 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     }
   };
 
+  // ATUALIZADO: A função de editar agora preenche o formulário principal
   const handleEdit = (animal: Animal) => {
-    setEditingAnimal({ ...animal });
+    setEditingId(animal.id);
+    setFormData({
+      nome: animal.nome,
+      raca: animal.raca,
+      idade: animal.idade,
+      descricao: animal.descricao,
+      localizacaoComunitaria: animal.localizacaoComunitaria || '',
+    });
+    setEspecie(animal.especie);
+    setSexo(animal.sexo);
+    setPorte(animal.porte);
+    setComunitario(animal.comunitario);
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola a página para o topo
   };
 
   const handleUpdate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!editingAnimal) return;
+    if (!editingId) return;
     setIsLoading(true);
 
+    // ATENÇÃO: A API de atualização (PATCH) precisa ser adaptada no backend
+    // para lidar com 'multipart/form-data' se você permitir a troca de imagem.
+    // Por simplicidade, este exemplo atualiza apenas os dados de texto.
+    const updatedData = {
+      ...formData,
+      especie,
+      sexo,
+      porte,
+      comunitario,
+    };
+
     try {
-      const { id, nome, raca, idade, descricao, especie, sexo, porte } = editingAnimal;
-      const response = await api.patch<Animal>(`/animais/${id}`, { nome, raca, idade, descricao, especie, sexo, porte });
-      setAnimals(prev => prev.map(a => a.id === id ? response.data : a));
-      setEditingAnimal(null);
+      const response = await api.patch<Animal>(`/animais/${editingId}`, updatedData);
+      setAnimals(prev => prev.map(a => a.id === editingId ? response.data : a));
       toast.success('Animal atualizado com sucesso!');
+      resetForm();
     } catch (error) {
       toast.error('Erro ao atualizar o animal.');
     } finally {
@@ -689,8 +739,11 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   return (
     <section className="space-y-8">
       <div className="bg-white rounded-xl shadow p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">Cadastrar Novo Animal</h3>
-        <form onSubmit={handleCreateSubmit} className="space-y-6">
+        {/* ATUALIZADO: Título e formulário dinâmicos para criar ou editar */}
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">
+          {editingId ? 'Editar Animal' : 'Cadastrar Novo Animal'}
+        </h3>
+        <form onSubmit={editingId ? handleUpdate : handleCreateSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
@@ -729,19 +782,60 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               </select>
             </div>
           </div>
-          <div>
-            <label htmlFor="animal-file-input" className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
-            <input id="animal-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required />
-          </div>
+          {/* ATUALIZADO: O campo de foto não é obrigatório na edição */}
+          {!editingId && (
+            <div>
+              <label htmlFor="animal-file-input" className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
+              <input ref={fileInputRef} id="animal-file-input" type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required={!editingId} />
+            </div>
+          )}
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
             <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
           </div>
-          <div className="flex justify-end">
-            <Button type="submit" isLoading={isLoading}>Cadastrar Animal</Button>
+
+          {/* NOVO: Campos para animal comunitário */}
+          <div className="space-y-4 rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <div className="flex items-center">
+              <input
+                id="comunitario"
+                type="checkbox"
+                checked={comunitario}
+                onChange={(e) => setComunitario(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+              />
+              <label htmlFor="comunitario" className="ml-3 block text-sm font-medium text-gray-800">
+                Este é um animal comunitário?
+              </label>
+            </div>
+            {/* Campo de localização que aparece condicionalmente */}
+            {comunitario && (
+              <div className="animate-fade-in-up">
+                 <label htmlFor="localizacaoComunitaria" className="block text-sm font-medium text-gray-700 mb-2">Localização (se comunitário)</label>
+                <Input
+                  id="localizacaoComunitaria"
+                  value={formData.localizacaoComunitaria}
+                  onChange={(e) => setFormData({...formData, localizacaoComunitaria: e.target.value})}
+                  placeholder="Ex: Praça Central, Rua das Flores"
+                  required={comunitario}
+                />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end items-center gap-4">
+            {editingId && (
+              <Button type="button" variant="outline" onClick={resetForm}>
+                Cancelar Edição
+              </Button>
+            )}
+            <Button type="submit" isLoading={isLoading}>
+              {editingId ? 'Atualizar Animal' : 'Cadastrar Animal'}
+            </Button>
           </div>
         </form>
       </div>
+
       <div className="bg-white rounded-xl shadow p-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Animais Cadastrados</h3>
         <div className="overflow-x-auto">
@@ -750,7 +844,8 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                {/* NOVO: Coluna para animal comunitário */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comunitário</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
               </tr>
@@ -758,31 +853,25 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
             <tbody className="bg-white divide-y divide-gray-200">
               {animals.map(animal => (
                 <tr key={animal.id}>
-                  {editingAnimal?.id === animal.id ? (
-                    <>
-                      <td className="px-6 py-4">-</td>
-                      <td className="px-6 py-4"><Input value={editingAnimal.nome} onChange={e => setEditingAnimal({...editingAnimal, nome: e.target.value})} /></td>
-                      <td className="px-6 py-4"><Input value={editingAnimal.descricao} onChange={e => setEditingAnimal({...editingAnimal, descricao: e.target.value})} /></td>
-                      <td className="px-6 py-4">-</td>
-                      <td className="px-6 py-4 text-center space-x-2">
-                          <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Guardar</button>
-                          <button onClick={() => setEditingAnimal(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-6 py-4">
-                        <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{animal.descricao}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
-                      <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
-                        <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
-                        <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
-                      </td>
-                    </>
-                  )}
+                  <td className="px-6 py-4">
+                    <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
+                  {/* NOVO: Exibição do status de comunitário */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {animal.comunitario ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        Sim
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Não</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
+                  <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
+                    <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
+                    <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -792,6 +881,9 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     </section>
   );
 };
+
+
+
 
 // 7. COMPONENTE PARA GERIR ADOÇÕES
 const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {

@@ -34,5 +34,12 @@ export class CreateAnimalDto {
   @IsOptional()
   animalImageUrl?: string;
 
+  @IsOptional() 
+  comunitario?: boolean;
+
+  @IsString()
+  @IsOptional()
+  localizacaoComunitaria?: string;
+
   castrado: boolean;
 }

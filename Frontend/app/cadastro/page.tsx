@@ -148,12 +148,12 @@ export default function CadastroPage() {
                     </div>
                     <div>
                         <label htmlFor="telefone" className="block mb-2 text-sm font-medium text-gray-700">
-                            Telefone (Opcional)
+                            Telefone
                         </label>
                         <Input
                             id="telefone"
                             type="tel"
-                            placeholder="(XX) XXXXX-XXXX"
+                            placeholder=""
                             value={formData.telefone}
                             onChange={handleChange}
                         />

@@ -12,25 +12,31 @@ export class AnimalService {
   create(createAnimalDto: CreateAnimalDto, file: Express.Multer.File) {
     const animalImageUrl = `/uploads/${file.filename}`;
     
-    // Extrai o campo 'castrado' e o resto dos dados do DTO
-    const { castrado, ...restOfDto } = createAnimalDto;
+    // Extrai os campos que precisam de conversão
+    const { castrado, comunitario, ...restOfDto } = createAnimalDto;
 
     return this.prisma.animal.create({
       data: {
-        // Usa o resto dos dados que já estão no formato correto
-        ...restOfDto, 
+        ...restOfDto,
         
-        // Converte a string 'castrado' para um booleano real
+        // Converte as strings 'true'/'false' para booleanos
         castrado: String(castrado) === 'true',
+        comunitario: String(comunitario) === 'true',
         
         animalImageUrl: animalImageUrl,
       },
     });
   }
 
-  findAll(filters: { especie?: Especie; sexo?: Sexo; porte?: Porte; nome?: string }) {
+  findAll(filters: { 
+    especie?: Especie; 
+    sexo?: Sexo; 
+    porte?: Porte; 
+    nome?: string;
+    comunitario?: boolean; 
+  }) {
     const where: Prisma.AnimalWhereInput = {
-      status: StatusAnimal.DISPONIVEL, // Sempre retorna apenas os disponíveis
+      status: StatusAnimal.DISPONIVEL,
     };
 
     if (filters.especie) {
@@ -45,7 +51,12 @@ export class AnimalService {
     if (filters.nome) {
       where.nome = {
         contains: filters.nome,
+        mode: 'insensitive', // Bônus: busca sem diferenciar maiúsculas/minúsculas
       };
+    }
+    // Adiciona o novo filtro
+    if (filters.comunitario !== undefined) {
+      where.comunitario = filters.comunitario;
     }
 
     return this.prisma.animal.findMany({
@@ -71,9 +82,14 @@ export class AnimalService {
   async update(id: string, updateAnimalDto: UpdateAnimalDto) {
     await this.findOne(id);
     
-    // Se o campo 'castrado' vier no DTO de atualização, também precisa ser convertido
+    // Converte 'castrado' se ele for enviado
     if (updateAnimalDto.castrado !== undefined) {
-        (updateAnimalDto as any).castrado = String(updateAnimalDto.castrado) === 'true';
+      (updateAnimalDto as any).castrado = String(updateAnimalDto.castrado) === 'true';
+    }
+
+    // Converte 'comunitario' se ele for enviado
+    if (updateAnimalDto.comunitario !== undefined) {
+      (updateAnimalDto as any).comunitario = String(updateAnimalDto.comunitario) === 'true';
     }
 
     return this.prisma.animal.update({

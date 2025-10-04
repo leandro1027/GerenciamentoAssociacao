@@ -49,6 +49,9 @@ model Animal {
   status           StatusAnimal @default(DISPONIVEL)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+  comunitario      Boolean      @default(false)
+  localizacaoComunitaria String?
+
 
   // Relações
   pedidosAdocao    Adocao[]
