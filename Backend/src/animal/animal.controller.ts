@@ -87,6 +87,13 @@ export class AnimalController {
     return this.animalService.findOne(id);
   }
 
+  // No ficheiro: animal.controller.ts
+
+@Get('comunitarios')
+findAllComunitarios(@Query() query: { localizacaoComunitaria?: string }) {
+  return this.animalService.findAllComunitarios(query);
+}
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')

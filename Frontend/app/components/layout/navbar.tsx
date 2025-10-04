@@ -19,6 +19,7 @@ const Navbar = () => {
     { href: "/doacoes", label: "Quero Doar" },
     { href: "/adote", label: "Quero Adotar" },
     { href: "/quem-somos", label: "Quem Somos" },
+    { href: "/comunitarios", label: "Animais comunitários" },
   ];
 
   useEffect(() => {
