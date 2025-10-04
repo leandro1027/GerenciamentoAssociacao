@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import Link from 'next/link';
 import Carousel from './components/layout/carousel';
 import api from './services/api';
