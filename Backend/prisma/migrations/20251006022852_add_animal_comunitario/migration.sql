@@ -57,8 +57,23 @@ CREATE TABLE "Animal" (
     "status" "StatusAnimal" NOT NULL DEFAULT 'DISPONIVEL',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "comunitario" BOOLEAN NOT NULL DEFAULT false,
+    "localizacaoComunitaria" TEXT,
 
     CONSTRAINT "Animal_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AnimalComunitario" (
+    "id" TEXT NOT NULL,
+    "nomeTemporario" TEXT NOT NULL,
+    "cidade" TEXT NOT NULL,
+    "rua" TEXT NOT NULL,
+    "imageUrl" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AnimalComunitario_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable

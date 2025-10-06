@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useRef, useMemo } from 'react';
 import api from '../services/api';
 import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal } from '../../types';
 import Link from 'next/link';
@@ -608,13 +608,11 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
 
 // 6. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
-  // ATUALIZADO: Estado inicial do formulário com os novos campos
   const initialState = {
     nome: '',
     raca: '',
     idade: '',
     descricao: '',
-    localizacaoComunitaria: '', // Novo campo
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -623,20 +621,15 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   const [porte, setPorte] = useState<Porte>(Porte.PEQUENO);
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // NOVO: Estados para controlar a opção de animal comunitário e o modo de edição
-  const [comunitario, setComunitario] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Função para limpar e resetar o formulário
   const resetForm = () => {
     setFormData(initialState);
     setEspecie(Especie.CAO);
     setSexo(Sexo.MACHO);
     setPorte(Porte.PEQUENO);
     setFile(null);
-    setComunitario(false);
     setEditingId(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -660,11 +653,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     data.append('sexo', sexo);
     data.append('porte', porte);
     data.append('file', file);
-    // ATUALIZADO: Envia os novos dados para a API
-    data.append('comunitario', String(comunitario));
-    if (comunitario) {
-      data.append('localizacaoComunitaria', formData.localizacaoComunitaria);
-    }
 
     try {
       const response = await api.post<Animal>('/animais', data, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -678,9 +666,9 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
       setIsLoading(false);
     }
   };
-  
+
   const handleDelete = async (animalId: string) => {
-    if (window.confirm('Tem a certeza que deseja apagar este animal?')) {
+    if (window.confirm('Tem certeza que deseja apagar este animal?')) {
       try {
         await api.delete(`/animais/${animalId}`);
         setAnimals(prev => prev.filter(a => a.id !== animalId));
@@ -691,7 +679,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     }
   };
 
-  // ATUALIZADO: A função de editar agora preenche o formulário principal
   const handleEdit = (animal: Animal) => {
     setEditingId(animal.id);
     setFormData({
@@ -699,13 +686,11 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
       raca: animal.raca,
       idade: animal.idade,
       descricao: animal.descricao,
-      localizacaoComunitaria: animal.localizacaoComunitaria || '',
     });
     setEspecie(animal.especie);
     setSexo(animal.sexo);
     setPorte(animal.porte);
-    setComunitario(animal.comunitario);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola a página para o topo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUpdate = async (event: FormEvent) => {
@@ -713,15 +698,11 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     if (!editingId) return;
     setIsLoading(true);
 
-    // ATENÇÃO: A API de atualização (PATCH) precisa ser adaptada no backend
-    // para lidar com 'multipart/form-data' se você permitir a troca de imagem.
-    // Por simplicidade, este exemplo atualiza apenas os dados de texto.
     const updatedData = {
       ...formData,
       especie,
       sexo,
       porte,
-      comunitario,
     };
 
     try {
@@ -738,8 +719,8 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
 
   return (
     <section className="space-y-8">
+      {/* Formulário de Cadastro/Edição */}
       <div className="bg-white rounded-xl shadow p-6">
-        {/* ATUALIZADO: Título e formulário dinâmicos para criar ou editar */}
         <h3 className="text-xl font-semibold text-gray-800 mb-6">
           {editingId ? 'Editar Animal' : 'Cadastrar Novo Animal'}
         </h3>
@@ -747,15 +728,15 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
-              <Input id="nome" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Bob" required />
+              <Input id="nome" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: Bob" required />
             </div>
             <div>
               <label htmlFor="raca" className="block text-sm font-medium text-gray-700 mb-2">Raça</label>
-              <Input id="raca" value={formData.raca} onChange={(e) => setFormData({...formData, raca: e.target.value})} placeholder="Ex: Sem Raça Definida (SRD)" required />
+              <Input id="raca" value={formData.raca} onChange={(e) => setFormData({ ...formData, raca: e.target.value })} placeholder="Ex: Sem Raça Definida (SRD)" required />
             </div>
             <div>
               <label htmlFor="idade" className="block text-sm font-medium text-gray-700 mb-2">Idade</label>
-              <Input id="idade" value={formData.idade} onChange={(e) => setFormData({...formData, idade: e.target.value})} placeholder="Ex: Aprox. 2 anos" required />
+              <Input id="idade" value={formData.idade} onChange={(e) => setFormData({ ...formData, idade: e.target.value })} placeholder="Ex: Aprox. 2 anos" required />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -782,7 +763,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               </select>
             </div>
           </div>
-          {/* ATUALIZADO: O campo de foto não é obrigatório na edição */}
           {!editingId && (
             <div>
               <label htmlFor="animal-file-input" className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
@@ -791,38 +771,8 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           )}
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
-            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({...formData, descricao: e.target.value})} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
+            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
           </div>
-
-          {/* NOVO: Campos para animal comunitário */}
-          <div className="space-y-4 rounded-lg border border-gray-200 p-4 bg-gray-50">
-            <div className="flex items-center">
-              <input
-                id="comunitario"
-                type="checkbox"
-                checked={comunitario}
-                onChange={(e) => setComunitario(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-              />
-              <label htmlFor="comunitario" className="ml-3 block text-sm font-medium text-gray-800">
-                Este é um animal comunitário?
-              </label>
-            </div>
-            {/* Campo de localização que aparece condicionalmente */}
-            {comunitario && (
-              <div className="animate-fade-in-up">
-                 <label htmlFor="localizacaoComunitaria" className="block text-sm font-medium text-gray-700 mb-2">Localização (se comunitário)</label>
-                <Input
-                  id="localizacaoComunitaria"
-                  value={formData.localizacaoComunitaria}
-                  onChange={(e) => setFormData({...formData, localizacaoComunitaria: e.target.value})}
-                  placeholder="Ex: Praça Central, Rua das Flores"
-                  required={comunitario}
-                />
-              </div>
-            )}
-          </div>
-          
           <div className="flex justify-end items-center gap-4">
             {editingId && (
               <Button type="button" variant="outline" onClick={resetForm}>
@@ -836,44 +786,44 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
         </form>
       </div>
 
+      {/* Tabela de Animais Cadastrados */}
       <div className="bg-white rounded-xl shadow p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">Animais Cadastrados</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Animais Cadastrados</h3>
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                {/* NOVO: Coluna para animal comunitário */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comunitário</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Porte</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {animals.map(animal => (
-                <tr key={animal.id}>
-                  <td className="px-6 py-4">
-                    <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
-                  {/* NOVO: Exibição do status de comunitário */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {animal.comunitario ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        Sim
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">Não</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
-                  <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
-                    <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
-                    <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+              {animals.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-10 text-gray-500">
+                    Nenhum animal encontrado.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                animals.map(animal => (
+                  <tr key={animal.id}>
+                    <td className="px-6 py-4">
+                      <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.porte}</td>
+                    <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
+                      <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
+                      <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -881,6 +831,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     </section>
   );
 };
+
 
 
 
@@ -1637,7 +1588,7 @@ export default function AdminPanelPage() {
         api.get<Usuario[]>('/usuario'),
         api.get<Slide[]>('/slide'),
         api.get<Doacao[]>('/doacao'),
-        api.get<Animal[]>('/animais'),
+        api.get<Animal[]>('/animais?context=admin'),
         api.get<Adocao[]>('/adocoes'),
         api.get<Divulgacao[]>('/divulgacao'), 
       ]);

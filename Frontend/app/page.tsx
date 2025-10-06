@@ -10,7 +10,7 @@ import { Animal, Parceiro, Sexo } from '../types';
 interface ConteudoHome {
   titulo: string;
   subtitulo: string;
-  itens: string; // Virá como string JSON
+  itens: string; 
   imagemUrl: string;
 }
 
@@ -202,7 +202,9 @@ export default function HomePage() {
     const fetchAllData = async () => {
       try {
         const [animaisRes, conteudoRes, parceirosRes] = await Promise.all([
-          api.get<Animal[]>('/animais?disponivel=true'),
+          // ATUALIZADO: A chamada agora é mais limpa. O backend já sabe que /animais deve retornar 
+          // apenas os animais para adoção padrão (não comunitários e disponíveis).
+          api.get<Animal[]>('/animais'),
           api.get<ConteudoHome>('/conteudo-home'),
           api.get<Parceiro[]>('/parceiros'),
         ]);

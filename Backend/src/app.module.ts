@@ -18,6 +18,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { GamificacaoModule } from './gamificacao/gamificacao.module';
 import { ConfiguracaoModule } from './configuracao/configuracao.module';
+import { AnimaisComunitariosModule } from './animais-comunitarios/animais-comunitarios.module';
 
 
 @Module({
@@ -39,6 +40,7 @@ import { ConfiguracaoModule } from './configuracao/configuracao.module';
     ReportsModule,
     GamificacaoModule,
     ConfiguracaoModule,
+    AnimaisComunitariosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

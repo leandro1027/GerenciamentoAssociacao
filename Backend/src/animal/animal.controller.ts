@@ -23,6 +23,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Especie, Porte, Sexo } from '@prisma/client';
+import { FindComunitariosDto } from './dto/find-comunitarios.dto';
 
 // Helper para gerar nomes de arquivo únicos
 const generateUniqueFilename = (file: Express.Multer.File) => {
@@ -42,20 +43,20 @@ export class AnimalController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  //FileInterceptor
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads', // Pasta onde os arquivos serão salvos
+        destination: './uploads',
         filename: (req, file, callback) => {
-          // Gera um nome de arquivo único para o arquivo
           callback(null, generateUniqueFilename(file));
         },
       }),
       fileFilter: (req, file, callback) => {
-        // Validação simples para aceitar apenas imagens
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return callback(new Error('Apenas ficheiros de imagem são permitidos!'), false);
+          return callback(
+            new Error('Apenas ficheiros de imagem são permitidos!'),
+            false,
+          );
         }
         callback(null, true);
       },
@@ -66,11 +67,14 @@ export class AnimalController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
+      throw new BadRequestException(
+        'O ficheiro da imagem do animal é obrigatório.',
+      );
     }
     return this.animalService.create(createAnimalDto, file);
   }
 
+  // Rota pública para a página de adoção
   @Get()
   findAll(
     @Query('especie') especie?: Especie,
@@ -82,17 +86,15 @@ export class AnimalController {
     return this.animalService.findAll(filters);
   }
 
+  @Get('comunitarios')
+  findAllComunitarios(@Query() query: FindComunitariosDto) {
+    return this.animalService.findAllComunitarios(query);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.animalService.findOne(id);
   }
-
-  // No ficheiro: animal.controller.ts
-
-@Get('comunitarios')
-findAllComunitarios(@Query() query: { localizacaoComunitaria?: string }) {
-  return this.animalService.findAllComunitarios(query);
-}
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
