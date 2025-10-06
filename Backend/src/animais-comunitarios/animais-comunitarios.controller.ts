@@ -44,7 +44,7 @@ export class AnimaisComunitariosController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads', // ALTERADO AQUI
+        destination: './uploads', 
         filename: (req, file, callback) => {
           callback(null, generateUniqueFilename(file));
         },
@@ -75,6 +75,12 @@ export class AnimaisComunitariosController {
     return this.animaisComunitariosService.findAll();
   }
 
+  @Get('mapa/localizacoes') 
+  findAllForMap() {
+    return this.animaisComunitariosService.findAllForMap();
+  }
+
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.animaisComunitariosService.findOne(id);
@@ -85,7 +91,7 @@ export class AnimaisComunitariosController {
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: './uploads', // ALTERADO AQUI TAMBÉM
+      destination: './uploads',
       filename: (req, file, callback) => {
         callback(null, generateUniqueFilename(file));
       },

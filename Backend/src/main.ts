@@ -8,7 +8,13 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors();
-  app.useGlobalPipes(new ValidationPipe());
+
+  // --- CORRIGIDO AQUI ---
+  // Adiciona as opções ao ValidationPipe
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true, // Ativa a transformação automática de tipos
+    whitelist: true, // Remove campos que não estão no DTO
+  }));
 
   // Serve a pasta uploads direto da raiz do projeto
   app.useStaticAssets(join(process.cwd(), 'uploads'), {

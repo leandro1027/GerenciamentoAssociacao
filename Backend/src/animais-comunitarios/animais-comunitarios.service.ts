@@ -4,17 +4,27 @@ import { CreateAnimalComunitarioDto } from './dto/create-animais-comunitario.dto
 import { UpdateAnimalComunitarioDto } from './dto/update-animais-comunitario.dto';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
+import { Prisma } from '@prisma/client'; // Importação necessária para o método 'update'
 
 @Injectable()
 export class AnimaisComunitariosService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Cria um novo registro de animal comunitário.
+   */
   create(createDto: CreateAnimalComunitarioDto, file: Express.Multer.File) {
-    const imageUrl = `/uploads/${file.filename}`; // ALTERADO AQUI
+    const imageUrl = `/uploads/${file.filename}`;
+
+    // Desestrutura o DTO para criar um objeto limpo para o Prisma
+    const { nomeTemporario, enderecoCompleto, latitude, longitude } = createDto;
 
     return this.prisma.animalComunitario.create({
       data: {
-        ...createDto,
+        nomeTemporario,
+        enderecoCompleto,
+        latitude,
+        longitude,
         imageUrl: imageUrl,
       },
     });
@@ -26,28 +36,58 @@ export class AnimaisComunitariosService {
     });
   }
 
+  /**
+   * Retorna apenas os dados necessários para o mapa.
+   */
+  findAllForMap() {
+    return this.prisma.animalComunitario.findMany({
+      select: {
+        id: true,
+        nomeTemporario: true,
+        imageUrl: true,
+        latitude: true,
+        longitude: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+
   async findOne(id: string) {
-    const animal = await this.prisma.animalComunitario.findUnique({ where: { id } });
+    const animal = await this.prisma.animalComunitario.findUnique({
+      where: { id },
+    });
     if (!animal) {
-      throw new NotFoundException(`Registo de animal comunitário com ID "${id}" não encontrado.`);
+      throw new NotFoundException(
+        `Registo de animal comunitário com ID "${id}" não encontrado.`,
+      );
     }
     return animal;
   }
 
-  async update(id: string, updateDto: UpdateAnimalComunitarioDto, file?: Express.Multer.File) {
+  async update(
+    id: string,
+    updateDto: UpdateAnimalComunitarioDto,
+    file?: Express.Multer.File,
+  ) {
     const animalAtual = await this.findOne(id);
-    
-    const data: any = { ...updateDto };
+
+    const data: Prisma.AnimalComunitarioUpdateInput = { ...updateDto };
 
     if (file) {
-      data.imageUrl = `/uploads/${file.filename}`; // ALTERADO AQUI TAMBÉM
+      data.imageUrl = `/uploads/${file.filename}`;
 
       if (animalAtual.imageUrl) {
-        const oldImagePath = join(process.cwd(), animalAtual.imageUrl);
+        const oldImagePath = join(process.cwd(), 'public', animalAtual.imageUrl);
         try {
           await unlink(oldImagePath);
         } catch (error) {
-          console.error(`Falha ao apagar imagem antiga: ${oldImagePath}`, error);
+          console.error(
+            `Falha ao apagar imagem antiga: ${oldImagePath}`,
+            error,
+          );
         }
       }
     }
@@ -61,17 +101,19 @@ export class AnimaisComunitariosService {
   async remove(id: string) {
     const animal = await this.findOne(id);
 
-    const deletedRecord = await this.prisma.animalComunitario.delete({ where: { id } });
+    const deletedRecord = await this.prisma.animalComunitario.delete({
+      where: { id },
+    });
 
     if (animal.imageUrl) {
-      const imagePath = join(process.cwd(), animal.imageUrl);
+      const imagePath = join(process.cwd(), 'public', animal.imageUrl);
       try {
         await unlink(imagePath);
       } catch (error) {
         console.error(`Falha ao apagar imagem: ${imagePath}`, error);
       }
     }
-    
+
     return deletedRecord;
   }
 }

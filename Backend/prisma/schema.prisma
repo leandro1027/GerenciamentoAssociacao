@@ -59,10 +59,11 @@ model Animal {
 
 model AnimalComunitario {
   id              String   @id @default(uuid())
-  nomeTemporario  String   // Ex: "Gato cinza da praça"
-  cidade          String
-  rua             String   // Endereço ou ponto de referência
+  nomeTemporario  String    
   imageUrl        String
+  latitude        Float   
+  longitude       Float   
+  enderecoCompleto String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

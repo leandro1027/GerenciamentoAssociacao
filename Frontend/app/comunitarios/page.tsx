@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-import { AnimalComunitario } from '../../types'; // ATUALIZADO para o tipo correto
+import { AnimalComunitario } from '../../types';
 import { useDebounce } from 'use-debounce';
-import Link from 'next/link';
 
 // --- Ícone (sem alterações) ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -25,22 +24,23 @@ const AnimalCardComunitario = ({ animal }: { animal: AnimalComunitario }) => (
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
       <div className="absolute bottom-4 left-4">
-        {/* CORRIGIDO: usa 'nomeTemporario' */}
         <h3 className="text-xl font-bold text-white drop-shadow">{animal.nomeTemporario}</h3>
       </div>
     </div>
     <div className="p-4">
       <div className="bg-gray-50 p-3 rounded-lg border">
           <p className="text-xs font-bold text-gray-600 uppercase mb-1">Localização</p>
-          {/* CORRIGIDO: usa 'rua' e 'cidade' */}
-          <p className="text-sm font-semibold text-gray-800">{animal.rua}, {animal.cidade}</p>
+          {/* ATUALIZADO: Usa o novo campo 'enderecoCompleto' */}
+          <p className="text-sm font-semibold text-gray-800 truncate">
+            {animal.enderecoCompleto || 'Localização não informada'}
+          </p>
       </div>
     </div>
   </div>
 );
 
 export default function ComunitariosPage() {
-  const [animais, setAnimais] = useState<AnimalComunitario[]>([]); // ATUALIZADO
+  const [animais, setAnimais] = useState<AnimalComunitario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,13 +53,11 @@ export default function ComunitariosPage() {
     try {
       const params = new URLSearchParams();
       
-      // ATUALIZADO: o filtro agora deve procurar em 'cidade' ou 'rua'
-      // O backend precisará ser ajustado para suportar essa busca
+      // ATUALIZADO: O filtro 'search' agora busca no campo 'enderecoCompleto' no backend
       if (debouncedLocalizacao) {
         params.append('search', debouncedLocalizacao);
       }
 
-      // CORRIGIDO: Chama a rota correta que criamos no backend
       const res = await api.get<AnimalComunitario[]>(`/animais-comunitarios?${params.toString()}`);
       setAnimais(res.data);
     } catch (err) {
@@ -80,7 +78,7 @@ export default function ComunitariosPage() {
 
   return (
     <main className="bg-gray-50 min-h-screen">
-      {/* --- HERO BANNER --- */}
+      {/* --- HERO BANNER (sem alterações) --- */}
       <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/FacaParte.avif')" }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
@@ -93,7 +91,7 @@ export default function ComunitariosPage() {
         </div>
       </section>
 
-      {/* --- CONTEÚDO --- */}
+      {/* --- CONTEÚDO (sem alterações) --- */}
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {/* Barra de filtros simplificada */}
         <div className="bg-white p-5 rounded-lg shadow-md mb-8 border border-gray-100">
@@ -111,7 +109,7 @@ export default function ComunitariosPage() {
                   type="text"
                   value={localizacao}
                   onChange={e => setLocalizacao(e.target.value)}
-                  placeholder="Digite uma cidade, rua ou bairro..."
+                  placeholder="Digite um endereço ou ponto de referência..."
                   className="w-full pl-10 pr-4 py-2 rounded-md border-gray-300 focus:ring-blue-800 focus:border-blue-800 text-gray-900 placeholder-gray-500"
                 />
               </div>

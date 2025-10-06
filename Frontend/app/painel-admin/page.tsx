@@ -11,6 +11,8 @@ import Textarea from '../components/common/textarea';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
+
 
 // --- COMPONENTE REUTILIZÁVEL DE MODAL ---
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; children: React.ReactNode }) => {
@@ -1541,11 +1543,14 @@ const ConfiguracaoManager = () => {
 
 // 11. COMPONENTE PARA GERIR ANIMAIS COMUNITÁRIOS
 const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComunitario[], onUpdate: () => void }) => {
+    // --- : Estado inicial para usar 'enderecoCompleto' ---
     const initialState = {
         nomeTemporario: '',
-        cidade: '',
-        rua: '',
+        enderecoCompleto: '',
     };
+    
+    // --- NOVO: Posição inicial do mapa ---
+    const initialPosition = { lat: -26.24, lng: -50.28 };
 
     const [formData, setFormData] = useState(initialState);
     const [file, setFile] = useState<File | null>(null);
@@ -1553,23 +1558,45 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Estado para as coordenadas do mapa ---
+    const [coordinates, setCoordinates] = useState(initialPosition);
+
+    // Importação dinâmica do mapa ---
+    const MapaDeSelecao = useMemo(() => dynamic(
+        () => import('../components/common/MapaDeSelecao'),
+        {
+            ssr: false,
+            loading: () => <p className="text-center text-gray-500">Carregando mapa...</p>
+        }
+    ), []);
+    
+    // -- Adicionado reset das coordenadas ---
     const resetForm = () => {
         setFormData(initialState);
         setFile(null);
         setEditingId(null);
+        setCoordinates(initialPosition); // Reseta o mapa
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
+    
+    // --- NOVO: Função de callback para o mapa ---
+    const handlePositionChange = (position: { lat: number; lng: number }) => {
+        setCoordinates(position);
+    };
 
+    // --- ALTERADO: Lógica de envio com os novos campos ---
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
 
         const data = new FormData();
         data.append('nomeTemporario', formData.nomeTemporario);
-        data.append('cidade', formData.cidade);
-        data.append('rua', formData.rua);
+        data.append('enderecoCompleto', formData.enderecoCompleto);
+        // Adiciona as coordenadas
+        data.append('latitude', String(coordinates.lat));
+        data.append('longitude', String(coordinates.lng));
         
         if (file) {
             data.append('file', file);
@@ -1600,13 +1627,17 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     };
     
+    // --- ALTERADO: Setup dos dados de localização ao editar ---
     const handleEdit = (animal: AnimalComunitario) => {
         setEditingId(animal.id);
         setFormData({
             nomeTemporario: animal.nomeTemporario,
-            cidade: animal.cidade,
-            rua: animal.rua,
+            enderecoCompleto: animal.enderecoCompleto || '', // Usa o novo campo
         });
+        // Atualiza o mapa com a localização salva
+        if (animal.latitude && animal.longitude) {
+            setCoordinates({ lat: animal.latitude, lng: animal.longitude });
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -1629,16 +1660,32 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                     {editingId ? 'Editar Animal Comunitário' : 'Registar Novo Animal Comunitário'}
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-1">
-                          <Input label="Nome / Identificação" value={formData.nomeTemporario} onChange={(e) => setFormData({ ...formData, nomeTemporario: e.target.value })} placeholder="Ex: Gato Frajola do Bairro" required />
-                        </div>
-                        <div className="md:col-span-1">
-                          <Input label="Cidade" value={formData.cidade} onChange={(e) => setFormData({ ...formData, cidade: e.target.value })} placeholder="Ex: São Paulo" required />
-                        </div>
-                        <div className="md:col-span-1">
-                          <Input label="Rua e Número (ou Ponto de Referência)" value={formData.rua} onChange={(e) => setFormData({ ...formData, rua: e.target.value })} placeholder="Ex: Rua das Flores, 123" required />
-                        </div>
+                    {/* --- ALTERADO: Campos do formulário --- */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input 
+                            label="Nome / Identificação" 
+                            value={formData.nomeTemporario} 
+                            onChange={(e) => setFormData({ ...formData, nomeTemporario: e.target.value })} 
+                            placeholder="Ex: Gato Frajola do Bairro" 
+                            required 
+                        />
+                        <Input 
+                            label="Endereço Completo (ou Ponto de Referência)" 
+                            value={formData.enderecoCompleto} 
+                            onChange={(e) => setFormData({ ...formData, enderecoCompleto: e.target.value })} 
+                            placeholder="Ex: Rua das Flores, 123, Centro" 
+                        />
+                    </div>
+                    
+                    {/* --- NOVO: Seção do Mapa --- */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Localização no Mapa (arraste o pino para ajustar)
+                        </label>
+                        <MapaDeSelecao 
+                          position={[coordinates.lat, coordinates.lng]}
+                          onPositionChange={handlePositionChange}
+                        />
                     </div>
                     
                     <div>
@@ -1662,7 +1709,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome / ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização (Texto)</th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
@@ -1680,7 +1727,8 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                                             <img src={`${api.defaults.baseURL}${animal.imageUrl}`} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.rua}, {animal.cidade}</td>
+                                        {/* --- ALTERADO: Exibição do endereço --- */}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.enderecoCompleto || 'Não informado'}</td>
                                         <td className="px-6 py-4 text-center text-sm font-medium space-x-4">
                                             <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
                                             <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
@@ -1695,7 +1743,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         </section>
     );
 };
-
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
