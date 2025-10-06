@@ -6,55 +6,68 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  ParseUUIDPipe,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+  BadRequestException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 import { AnimaisComunitariosService } from './animais-comunitarios.service';
 import { CreateAnimalComunitarioDto } from './dto/create-animais-comunitario.dto';
 import { UpdateAnimalComunitarioDto } from './dto/update-animais-comunitario.dto';
 
+const generateUniqueFilename = (file: Express.Multer.File) => {
+  const name = file.originalname.split('.')[0].replace(/\s/g, '-');
+  const fileExtName = extname(file.originalname);
+  const randomName = Array(4)
+    .fill(null)
+    .map(() => Math.round(Math.random() * 16).toString(16))
+    .join('');
+  return `${name}-${randomName}${fileExtName}`;
+};
+
 @Controller('animais-comunitarios')
 export class AnimaisComunitariosController {
-  constructor(
-    private readonly animaisComunitariosService: AnimaisComunitariosService,
-  ) {}
+  constructor(private readonly animaisComunitariosService: AnimaisComunitariosService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/animais-comunitarios',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
+        destination: './uploads', // ALTERADO AQUI
+        filename: (req, file, callback) => {
+          callback(null, generateUniqueFilename(file));
         },
       }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+          return callback(
+            new BadRequestException('Apenas ficheiros de imagem são permitidos!'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
     }),
   )
   create(
-    @Body() createAnimalComunitarioDto: CreateAnimalComunitarioDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 5 }), // 5 MB
-          new FileTypeValidator({ fileType: 'image/' }),
-        ],
-      }),
-    )
-    file: Express.Multer.File,
+    @Body() createDto: CreateAnimalComunitarioDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.animaisComunitariosService.create(createAnimalComunitarioDto, file);
+    if (!file) {
+      throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
+    }
+    return this.animaisComunitariosService.create(createDto, file);
   }
 
   @Get()
@@ -63,40 +76,43 @@ export class AnimaisComunitariosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.animaisComunitariosService.findOne(id);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: './uploads/animais-comunitarios',
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => Math.round(Math.random() * 16).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
+      destination: './uploads', // ALTERADO AQUI TAMBÉM
+      filename: (req, file, callback) => {
+        callback(null, generateUniqueFilename(file));
       },
     }),
+    fileFilter: (req, file, callback) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+        return callback(
+          new BadRequestException('Apenas ficheiros de imagem são permitidos!'),
+          false,
+        );
+      }
+      callback(null, true);
+    },
   }))
   update(
-    @Param('id') id: string,
-    @Body() updateAnimalComunitarioDto: UpdateAnimalComunitarioDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 5 }), // 5 MB
-          new FileTypeValidator({ fileType: 'image/' }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    file?: Express.Multer.File,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateDto: UpdateAnimalComunitarioDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.animaisComunitariosService.update(id, updateAnimalComunitarioDto, file);
+    return this.animaisComunitariosService.update(id, updateDto, file);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.animaisComunitariosService.remove(id);
   }
 }

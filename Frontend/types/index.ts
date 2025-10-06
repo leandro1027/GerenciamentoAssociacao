@@ -132,3 +132,15 @@ export interface Configuracao {
   gamificacaoAtiva: boolean;
 };
 
+// Adicione este tipo junto com os outros que você já tem
+
+export type AnimalComunitario = {
+  id: string;
+  nomeTemporario: string;
+  cidade: string;
+  rua: string;
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+

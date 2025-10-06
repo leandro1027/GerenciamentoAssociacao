@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-import { Animal } from '../../types';
+import { AnimalComunitario } from '../../types'; // ATUALIZADO para o tipo correto
 import { useDebounce } from 'use-debounce';
 import Link from 'next/link';
 
-// --- Ícone ---
+// --- Ícone (sem alterações) ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
     strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -14,40 +14,33 @@ const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: strin
   </svg>
 );
 
-// --- Card de Animal Comunitário ---
-const AnimalCardComunitario = ({ animal }: { animal: Animal }) => (
-  <div className="group block bg-white rounded-xl shadow-md overflow-hidden transition-all">
-    <Link href={`/adote/${animal.id}`} className="block relative overflow-hidden">
+// --- Card de Animal Comunitário (CORRIGIDO) ---
+const AnimalCardComunitario = ({ animal }: { animal: AnimalComunitario }) => (
+  <div className="group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+    <div className="block relative overflow-hidden">
       <img
-        src={`${api.defaults.baseURL}${animal.animalImageUrl}`}
-        alt={`Foto de ${animal.nome}`}
+        src={`${api.defaults.baseURL}${animal.imageUrl}`}
+        alt={`Foto de ${animal.nomeTemporario}`}
         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
       <div className="absolute bottom-4 left-4">
-        <h3 className="text-xl font-bold text-white drop-shadow">{animal.nome}</h3>
-        <p className="text-sm text-gray-200">{animal.raca}</p>
+        {/* CORRIGIDO: usa 'nomeTemporario' */}
+        <h3 className="text-xl font-bold text-white drop-shadow">{animal.nomeTemporario}</h3>
       </div>
-    </Link>
+    </div>
     <div className="p-4">
-      <div className="flex flex-wrap gap-2 text-xs mb-4">
-        <span className="flex items-center bg-blue-50 text-blue-800 px-2 py-1 rounded-full font-medium">
-          {animal.sexo}
-        </span>
-        <span className="flex items-center bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">
-          {animal.porte}
-        </span>
-      </div>
       <div className="bg-gray-50 p-3 rounded-lg border">
           <p className="text-xs font-bold text-gray-600 uppercase mb-1">Localização</p>
-          <p className="text-sm font-semibold text-gray-800">{animal.localizacaoComunitaria || 'Não informada'}</p>
+          {/* CORRIGIDO: usa 'rua' e 'cidade' */}
+          <p className="text-sm font-semibold text-gray-800">{animal.rua}, {animal.cidade}</p>
       </div>
     </div>
   </div>
 );
 
 export default function ComunitariosPage() {
-  const [animais, setAnimais] = useState<Animal[]>([]);
+  const [animais, setAnimais] = useState<AnimalComunitario[]>([]); // ATUALIZADO
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,13 +53,14 @@ export default function ComunitariosPage() {
     try {
       const params = new URLSearchParams();
       
-      // Adiciona o filtro de localização, se preenchido
+      // ATUALIZADO: o filtro agora deve procurar em 'cidade' ou 'rua'
+      // O backend precisará ser ajustado para suportar essa busca
       if (debouncedLocalizacao) {
-        params.append('localizacaoComunitaria', debouncedLocalizacao);
+        params.append('search', debouncedLocalizacao);
       }
 
-      // ATUALIZADO: Chama a nova rota dedicada para animais comunitários
-      const res = await api.get<Animal[]>(`/animais/comunitarios?${params.toString()}`);
+      // CORRIGIDO: Chama a rota correta que criamos no backend
+      const res = await api.get<AnimalComunitario[]>(`/animais-comunitarios?${params.toString()}`);
       setAnimais(res.data);
     } catch (err) {
       console.error("Erro ao buscar animais comunitários:", err);
@@ -87,7 +81,7 @@ export default function ComunitariosPage() {
   return (
     <main className="bg-gray-50 min-h-screen">
       {/* --- HERO BANNER --- */}
-      <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/comunitarios-banner.jpg')" }}>
+      <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/FacaParte.avif')" }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
           <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
@@ -153,4 +147,3 @@ export default function ComunitariosPage() {
     </main>
   );
 }
-

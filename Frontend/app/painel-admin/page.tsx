@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent, useCallback, useRef, useMemo } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal, AnimalComunitario } from '../../types';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import Input from '../components/common/input';
@@ -10,9 +10,7 @@ import Button from '../components/common/button';
 import Textarea from '../components/common/textarea';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-// npm install recharts
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
 
 // --- COMPONENTE REUTILIZÁVEL DE MODAL ---
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; children: React.ReactNode }) => {
@@ -34,7 +32,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { is
 
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes';
+type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes' | 'animaisComunitarios';
 
 // --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
 type WeeklyActivity = {
@@ -81,7 +79,7 @@ const Dashboard = ({
       setIsLoading(true);
       setError(null);
       try {
-        const response = await api.get('/dashboard/summary'); 
+        const response = await api.get('/dashboard/summary');
         const data = response.data;
 
         setStats(data.stats);
@@ -114,7 +112,7 @@ const Dashboard = ({
       <p className="text-xs text-gray-500 mt-4">{description}</p>
     </div>
   );
-  
+
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-full">
@@ -214,22 +212,19 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [editingSlide, setEditingSlide] = useState<Slide | null>(null); // Estado para controlar a edição
+  const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
 
-  // Função para limpar o formulário e sair do modo de edição
   const resetForm = () => {
     setTitle('');
     setSubtitle('');
     setFile(null);
     setEditingSlide(null);
-    // Limpa o campo de input de arquivo visualmente
     const fileInput = document.getElementById('slide-file-input') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
   };
   
-  // Função para lidar com o clique no botão "Editar"
   const handleEditClick = (slide: Slide) => {
     setEditingSlide(slide);
     setTitle(slide.title);
@@ -239,10 +234,9 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    // Se estiver editando, chama a função de update
     if (editingSlide) {
       handleUpdate();
-    } else { // Senão, chama a função de criar
+    } else {
       handleCreate();
     }
   };
@@ -274,12 +268,11 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('subtitle', subtitle);
-    if (file) { // Só anexa o arquivo se um novo for selecionado
+    if (file) {
       formData.append('file', file);
     }
 
     try {
-      // Assumindo que a rota de update é PATCH /slide/:id
       const response = await api.patch<Slide>(`/slide/${editingSlide.id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -292,7 +285,6 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   };
 
   const handleDelete = async (id: number) => {
-    // Usando o modal de confirmação do navegador
     if (window.confirm('Tem a certeza que deseja apagar este slide?')) {
       try {
         await api.delete(`/slide/${id}`);
@@ -319,7 +311,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
               accept="image/*" 
               onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} 
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" 
-              required={!editingSlide} // A imagem só é obrigatória ao criar
+              required={!editingSlide}
             />
              {editingSlide && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a imagem atual.</p>}
           </div>
@@ -355,7 +347,6 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
     </section>
   );
 };
-
 
 // 3. COMPONENTE PARA GERIR VOLUNTÁRIOS
 const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario[] }) => {
@@ -719,7 +710,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
 
   return (
     <section className="space-y-8">
-      {/* Formulário de Cadastro/Edição */}
       <div className="bg-white rounded-xl shadow p-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">
           {editingId ? 'Editar Animal' : 'Cadastrar Novo Animal'}
@@ -786,7 +776,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
         </form>
       </div>
 
-      {/* Tabela de Animais Cadastrados */}
       <div className="bg-white rounded-xl shadow p-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Animais Cadastrados</h3>
 
@@ -831,10 +820,6 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
     </section>
   );
 };
-
-
-
-
 
 // 7. COMPONENTE PARA GERIR ADOÇÕES
 const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
@@ -1004,91 +989,12 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     );
 };
 
-// --- NOVO COMPONENTE PARA GERIR RELATÓRIOS (COM CORREÇÃO DE TIPOS) ---
-const ReportsManager = () => {
-
-  // Função genérica para lidar com o download de qualquer relatório
-  const handleExport = async (format: 'csv' | 'pdf', reportType: string, fileName: string) => {
-    const endpoint = `/reports/${reportType}/${format}`;
-    const toastId = toast.loading(`A gerar o seu relatório ${format.toUpperCase()}...`);
-
-    try {
-      const response = await api.get(endpoint, {
-        responseType: 'blob',
-      });
-      
-      const mimeType = format === 'pdf' ? 'application/pdf' : 'text/csv';
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      
-      if (link.parentNode) {
-        link.parentNode.removeChild(link);
-      }
-      
-      toast.dismiss(toastId);
-      toast.success('Download do relatório iniciado.');
-
-    } catch (error) {
-      toast.dismiss(toastId);
-      toast.error(`Ocorreu um erro ao gerar o relatório ${format.toUpperCase()}.`);
-      console.error(`Erro na exportação de ${format.toUpperCase()}:`, error);
-    }
-  };
-
-  // CORREÇÃO: Definindo os tipos para as propriedades do ReportCard
-  type ReportCardProps = {
-    title: string;
-    description: string;
-    reportType: string;
-    csvFileName: string;
-    pdfFileName: string;
-  };
-
-  // Componente para o cartão de cada relatório
-  const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName }: ReportCardProps) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-      <p className="text-sm text-gray-600 mt-1 mb-4">{description}</p>
-      <div className="flex items-center space-x-3">
-        <Button onClick={() => handleExport('csv', reportType, csvFileName)}>
-          Exportar CSV
-        </Button>
-        <Button onClick={() => handleExport('pdf', reportType, pdfFileName)} className="bg-red-700 hover:bg-red-800">
-          Exportar PDF
-        </Button>
-      </div>
-    </div>
-  );
-
-  return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Central de Relatórios</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <ReportCard 
-          title="Relatório de Doações"
-          description="Exporte uma lista completa de todas as doações recebidas."
-          reportType="donations"
-          csvFileName="relatorio_doacoes.csv"
-          pdfFileName="relatorio_doacoes.pdf"
-        />
-        {/* Adicione mais cartões de relatório aqui conforme necessário */}
-      </div>
-    </section>
-  );
-};
-
-// --- COMPONENTE ATUALIZADO ---
 // 8. COMPONENTE PARA GERIR DIVULGAÇÕES
 const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoes: Divulgacao[], onUpdate: () => void }) => {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pendentes' | 'historico'>('pendentes');
   
-  // --- NOVOS ESTADOS PARA O MODAL ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDivulgacao, setSelectedDivulgacao] = useState<Divulgacao | null>(null);
   const [animalFormData, setAnimalFormData] = useState({
@@ -1106,17 +1012,16 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
     d => d.status === DivulgacaoStatus.REVISADO || d.status === DivulgacaoStatus.REJEITADO
   );
   
-  // Função para abrir o modal e pré-popular os dados
   const handleOpenApprovalModal = (divulgacao: Divulgacao) => {
     setSelectedDivulgacao(divulgacao);
     setAnimalFormData({
-      nome: '', // Começa vazio para o admin preencher
+      nome: '',
       raca: divulgacao.raca,
       descricao: divulgacao.descricao || '',
-      idade: '', // Começa vazio
-      especie: Especie.CAO, // Padrão
-      sexo: Sexo.MACHO,     // Padrão
-      porte: Porte.PEQUENO, // Padrão
+      idade: '',
+      especie: Especie.CAO,
+      sexo: Sexo.MACHO,
+      porte: Porte.PEQUENO,
     });
     setIsModalOpen(true);
   };
@@ -1153,7 +1058,6 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
     setLoadingStates(prev => ({ ...prev, [`status-${id}`]: false }));
   };
   
-  // --- FUNÇÃO DE CONVERSÃO MODIFICADA ---
   const handleConvertToAnimal = async (event: FormEvent) => {
     event.preventDefault();
     if (!selectedDivulgacao) return;
@@ -1167,7 +1071,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
     );
     
     setLoadingStates(prev => ({ ...prev, [`convert-${id}`]: false }));
-    setIsModalOpen(false); // Fecha o modal
+    setIsModalOpen(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -1192,7 +1096,6 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
 
   return (
     <section>
-      {/* --- O CÓDIGO DO MODAL --- */}
       {isModalOpen && selectedDivulgacao && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[60] p-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
@@ -1307,77 +1210,6 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
           <img src={selectedImage} alt="Visualização ampliada" className="max-w-full max-h-full rounded-lg" />
         </div>
       )}
-    </section>
-  );
-};
-
-// --- NOVO COMPONENTE PARA GERIR CONFIGURAÇÕES ---
-const ConfiguracaoManager = () => {
-  const [gamificacaoAtiva, setGamificacaoAtiva] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      setIsLoading(true);
-      try {
-        const response = await api.get('/configuracao');
-        setGamificacaoAtiva(response.data.gamificacaoAtiva);
-      } catch (error) {
-        toast.error("Erro ao carregar as configurações.");
-        console.error("Erro ao buscar configuração:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchConfig();
-  }, []);
-
-  const handleToggleChange = async (novoStatus: boolean) => {
-    // Atualiza a UI imediatamente para uma resposta rápida
-    setGamificacaoAtiva(novoStatus);
-
-    try {
-      await api.patch('/configuracao', {
-        gamificacaoAtiva: novoStatus,
-      });
-      toast.success('Configuração guardada com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao guardar a configuração.');
-      // Reverte a alteração na UI em caso de erro
-      setGamificacaoAtiva(!novoStatus);
-      console.error("Erro ao salvar configuração:", error);
-    }
-  };
-
-  return (
-    <section>
-      <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">Configurações Gerais</h3>
-        
-        {isLoading ? (
-          <p className="text-gray-500">A carregar...</p>
-        ) : (
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <p className="font-medium text-gray-800">Sistema de Gamificação</p>
-              <p className="text-sm text-gray-500">
-                Ative ou desative a atribuição de pontos e conquistas em todo o site.
-              </p>
-            </div>
-            {/* Componente de Interruptor (Toggle Switch) */}
-            <label htmlFor="gamification-toggle" className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                id="gamification-toggle" 
-                className="sr-only peer"
-                checked={gamificacaoAtiva}
-                onChange={(e) => handleToggleChange(e.target.checked)}
-              />
-              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-            </label>
-          </div>
-        )}
-      </div>
     </section>
   );
 };
@@ -1563,6 +1395,306 @@ const ConteudoManager = () => {
   );
 };
 
+// --- COMPONENTE PARA GERIR RELATÓRIOS ---
+const ReportsManager = () => {
+
+  // Função genérica para lidar com o download de qualquer relatório
+  const handleExport = async (format: 'csv' | 'pdf', reportType: string, fileName: string) => {
+    const endpoint = `/reports/${reportType}/${format}`;
+    const toastId = toast.loading(`A gerar o seu relatório ${format.toUpperCase()}...`);
+
+    try {
+      const response = await api.get(endpoint, {
+        responseType: 'blob',
+      });
+      
+      const mimeType = format === 'pdf' ? 'application/pdf' : 'text/csv';
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
+      
+      toast.dismiss(toastId);
+      toast.success('Download do relatório iniciado.');
+
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(`Ocorreu um erro ao gerar o relatório ${format.toUpperCase()}.`);
+      console.error(`Erro na exportação de ${format.toUpperCase()}:`, error);
+    }
+  };
+
+  type ReportCardProps = {
+    title: string;
+    description: string;
+    reportType: string;
+    csvFileName: string;
+    pdfFileName: string;
+  };
+
+  // Componente para o cartão de cada relatório
+  const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName }: ReportCardProps) => (
+    <div className="bg-white p-6 rounded-2xl shadow-lg">
+      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+      <p className="text-sm text-gray-600 mt-1 mb-4">{description}</p>
+      <div className="flex items-center space-x-3">
+        <Button onClick={() => handleExport('csv', reportType, csvFileName)}>
+          Exportar CSV
+        </Button>
+        <Button onClick={() => handleExport('pdf', reportType, pdfFileName)} className="bg-red-700 hover:bg-red-800">
+          Exportar PDF
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">Central de Relatórios</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ReportCard 
+          title="Relatório de Doações"
+          description="Exporte uma lista completa de todas as doações recebidas."
+          reportType="donations"
+          csvFileName="relatorio_doacoes.csv"
+          pdfFileName="relatorio_doacoes.pdf"
+        />
+        {/* Adicione mais cartões de relatório aqui conforme necessário */}
+      </div>
+    </section>
+  );
+};
+
+// 10. COMPONENTE PARA GERIR CONFIGURAÇÕES
+const ConfiguracaoManager = () => {
+  const [gamificacaoAtiva, setGamificacaoAtiva] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get('/configuracao');
+        setGamificacaoAtiva(response.data.gamificacaoAtiva);
+      } catch (error) {
+        toast.error("Erro ao carregar as configurações.");
+        console.error("Erro ao buscar configuração:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const handleToggleChange = async (novoStatus: boolean) => {
+    setGamificacaoAtiva(novoStatus);
+
+    try {
+      await api.patch('/configuracao', {
+        gamificacaoAtiva: novoStatus,
+      });
+      toast.success('Configuração guardada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao guardar a configuração.');
+      setGamificacaoAtiva(!novoStatus);
+      console.error("Erro ao salvar configuração:", error);
+    }
+  };
+
+  return (
+    <section>
+      <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+        <h3 className="text-xl font-semibold text-gray-800 mb-6">Configurações Gerais</h3>
+        
+        {isLoading ? (
+          <p className="text-gray-500">A carregar...</p>
+        ) : (
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <p className="font-medium text-gray-800">Sistema de Gamificação</p>
+              <p className="text-sm text-gray-500">
+                Ative ou desative a atribuição de pontos e conquistas em todo o site.
+              </p>
+            </div>
+            <label htmlFor="gamification-toggle" className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                id="gamification-toggle" 
+                className="sr-only peer"
+                checked={gamificacaoAtiva}
+                onChange={(e) => handleToggleChange(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+// 11. COMPONENTE PARA GERIR ANIMAIS COMUNITÁRIOS
+const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComunitario[], onUpdate: () => void }) => {
+    const initialState = {
+        nomeTemporario: '',
+        cidade: '',
+        rua: '',
+    };
+
+    const [formData, setFormData] = useState(initialState);
+    const [file, setFile] = useState<File | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const resetForm = () => {
+        setFormData(initialState);
+        setFile(null);
+        setEditingId(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleSubmit = async (event: FormEvent) => {
+        event.preventDefault();
+        setIsLoading(true);
+
+        const data = new FormData();
+        data.append('nomeTemporario', formData.nomeTemporario);
+        data.append('cidade', formData.cidade);
+        data.append('rua', formData.rua);
+        
+        if (file) {
+            data.append('file', file);
+        }
+
+        try {
+            if (editingId) {
+                // Rota de UPDATE
+                await api.patch(`/animais-comunitarios/${editingId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                toast.success('Registo atualizado com sucesso!');
+            } else {
+                // Rota de CREATE
+                if (!file) {
+                    toast.error('Por favor, selecione uma imagem.');
+                    setIsLoading(false);
+                    return;
+                }
+                await api.post('/animais-comunitarios', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+                toast.success('Animal comunitário registado com sucesso!');
+            }
+            resetForm();
+            onUpdate(); // Atualiza a lista na tela
+        } catch (error) {
+            console.error('Erro ao salvar animal comunitário:', error);
+            toast.error('Não foi possível salvar o registo.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const handleEdit = (animal: AnimalComunitario) => {
+        setEditingId(animal.id);
+        setFormData({
+            nomeTemporario: animal.nomeTemporario,
+            cidade: animal.cidade,
+            rua: animal.rua,
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDelete = async (animalId: string) => {
+        if (window.confirm('Tem a certeza que deseja apagar este registo?')) {
+            try {
+                await api.delete(`/animais-comunitarios/${animalId}`);
+                toast.success('Registo apagado com sucesso!');
+                onUpdate();
+            } catch (error) {
+                toast.error('Erro ao apagar o registo.');
+            }
+        }
+    };
+
+    return (
+        <section className="space-y-8">
+            <div className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    {editingId ? 'Editar Animal Comunitário' : 'Registar Novo Animal Comunitário'}
+                </h3>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-1">
+                          <Input label="Nome / Identificação" value={formData.nomeTemporario} onChange={(e) => setFormData({ ...formData, nomeTemporario: e.target.value })} placeholder="Ex: Gato Frajola do Bairro" required />
+                        </div>
+                        <div className="md:col-span-1">
+                          <Input label="Cidade" value={formData.cidade} onChange={(e) => setFormData({ ...formData, cidade: e.target.value })} placeholder="Ex: São Paulo" required />
+                        </div>
+                        <div className="md:col-span-1">
+                          <Input label="Rua e Número (ou Ponto de Referência)" value={formData.rua} onChange={(e) => setFormData({ ...formData, rua: e.target.value })} placeholder="Ex: Rua das Flores, 123" required />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Foto do Animal</label>
+                        <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => { if (e.target.files) setFile(e.target.files[0]); }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" required={!editingId} />
+                        {editingId && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a foto atual.</p>}
+                    </div>
+                    
+                    <div className="flex justify-end items-center gap-4">
+                        {editingId && (<Button type="button" variant="outline" onClick={resetForm}>Cancelar Edição</Button>)}
+                        <Button type="submit" isLoading={isLoading}>{editingId ? 'Atualizar Registo' : 'Adicionar Registo'}</Button>
+                    </div>
+                </form>
+            </div>
+
+            <div className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Animais Comunitários Registados</h3>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome / ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {animais.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="text-center py-10 text-gray-500">
+                                        Nenhum animal comunitário registado.
+                                    </td>
+                                </tr>
+                            ) : (
+                                animais.map(animal => (
+                                    <tr key={animal.id}>
+                                        <td className="px-6 py-4">
+                                            <img src={`${api.defaults.baseURL}${animal.imageUrl}`} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.rua}, {animal.cidade}</td>
+                                        <td className="px-6 py-4 text-center text-sm font-medium space-x-4">
+                                            <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
+                                            <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    );
+};
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
@@ -1576,6 +1708,7 @@ export default function AdminPanelPage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
   const [adocoes, setAdocoes] = useState<Adocao[]>([]);
   const [divulgacoes, setDivulgacoes] = useState<Divulgacao[]>([]);
+  const [animaisComunitarios, setAnimaisComunitarios] = useState<AnimalComunitario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -1583,14 +1716,15 @@ export default function AdminPanelPage() {
     setLoading(true);
     setError(null);
     try {
-      const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes, divulgacoesRes] = await Promise.all([
+      const [voluntariosRes, usuariosRes, slidesRes, doacoesRes, animaisRes, adocoesRes, divulgacoesRes, animaisComunitariosRes] = await Promise.all([
         api.get<Voluntario[]>('/voluntario'),
         api.get<Usuario[]>('/usuario'),
         api.get<Slide[]>('/slide'),
         api.get<Doacao[]>('/doacao'),
         api.get<Animal[]>('/animais?context=admin'),
         api.get<Adocao[]>('/adocoes'),
-        api.get<Divulgacao[]>('/divulgacao'), 
+        api.get<Divulgacao[]>('/divulgacao'),
+        api.get<AnimalComunitario[]>('/animais-comunitarios'),
       ]);
       setVoluntarios(voluntariosRes.data);
       setUsuarios(usuariosRes.data);
@@ -1599,6 +1733,7 @@ export default function AdminPanelPage() {
       setAnimais(animaisRes.data);
       setAdocoes(adocoesRes.data);
       setDivulgacoes(divulgacoesRes.data);
+      setAnimaisComunitarios(animaisComunitariosRes.data);
     } catch (err) {
       setError('Falha ao carregar os dados do painel.');
       toast.error('Falha ao carregar os dados do painel.');
@@ -1636,25 +1771,13 @@ export default function AdminPanelPage() {
   }
 
 const Sidebar = () => (
-
-  
-  // O container principal ocupa a altura total da tela e é um flex container vertical.
-  // A largura é controlada pelo estado 'isSidebarOpen', como antes.
   <aside className={`bg-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0'}`}>
-    
-    {/* Este wrapper interno garante que o conteúdo (texto e ícones) desapareça ao colapsar */}
     <div className="flex flex-col flex-1 overflow-hidden">
-
-      {/* 1. Cabeçalho da Sidebar (Fixo no topo) */}
       <div className="p-4 flex-shrink-0">
         <h2 className="text-2xl font-bold whitespace-nowrap">Painel Admin</h2>
       </div>
 
-      {/* 2. Área de Navegação (Com rolagem) */}
-      {/* - 'flex-1' faz a navegação ocupar todo o espaço vertical disponível.
-        - 'overflow-y-auto' cria a barra de rolagem somente se os itens não couberem.
-      */}
-  <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 custom-scrollbar">
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 custom-scrollbar">
         <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
           <span>📊</span>
           <span>Dashboard</span>
@@ -1666,6 +1789,10 @@ const Sidebar = () => (
         <button onClick={() => setActiveView('animais')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
           <span>🐾</span>
           <span>Gerir Animais</span>
+        </button>
+        <button onClick={() => setActiveView('animaisComunitarios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animaisComunitarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
+          <span>🏘️</span>
+          <span>Animais Comunitários</span>
         </button>
         <button onClick={() => setActiveView('adocoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
           <span>❤️</span>
@@ -1701,7 +1828,6 @@ const Sidebar = () => (
         </button>
       </nav>
 
-      {/* 3. Rodapé da Sidebar (Fixo no fundo) */}
       <div className="p-4 flex-shrink-0">
         <Link href="/" className="flex items-center justify-center gap-3 text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1710,7 +1836,6 @@ const Sidebar = () => (
           <span>Sair do Painel</span>
         </Link>
       </div>
-
     </div>
   </aside>
 );
@@ -1727,11 +1852,12 @@ const MainContent = () => {
     divulgacoes: 'Gestão de Divulgações da Comunidade',
     conteudo: 'Gestão de Conteúdo e Parceiros',
     relatórios: 'Relatórios',
-    configuracoes: 'Configurações Gerais'
+    configuracoes: 'Configurações Gerais',
+    animaisComunitarios: 'Gestão de Animais Comunitários'
   };
   
   return (
-  <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
+    <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
       <header className="bg-white shadow-sm p-4 flex-shrink-0 flex items-center">
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -1747,6 +1873,7 @@ const MainContent = () => {
                   {activeView === 'dashboard' && <Dashboard user={user} setActiveView={setActiveView} />}
                   {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                   {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
+                  {activeView === 'animaisComunitarios' && <AnimalComunitarioManager animais={animaisComunitarios} onUpdate={fetchData} />}
                   {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
                   {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
                   {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
@@ -1758,7 +1885,7 @@ const MainContent = () => {
               </>
           )}
       </div>
-  </div>
+    </div>
   )
 };
 
