@@ -262,7 +262,7 @@ export default function AnimalDetailPage() {
     const handleAdoptionSubmit = async (formData: any) => {
         try {
             await api.post('/adocoes', formData);
-            toast.success('Pedido de adoção enviado com sucesso! Entraremos em contacto.');
+            toast.success('Pedido de adoção enviado com sucesso! Entraremos em contato.');
             setIsModalOpen(false);
             setHasPendingAdoption(true);
             if (animal) {

@@ -6,7 +6,7 @@ import api from '../services/api';
 import { AnimalComunitario } from '../../types'; 
 import { useDebounce } from 'use-debounce';
 
-// --- Ícone ---
+// --- Sub-componente: Ícone ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
     strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -14,9 +14,12 @@ const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: strin
   </svg>
 );
 
-// --- Card de Animal ---
-const AnimalCardComunitario = ({ animal }: { animal: AnimalComunitario }) => (
-  <div className="group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+// --- Sub-componente: Card de Animal ---
+const AnimalCardComunitario = ({ animal, onCardClick }: { animal: AnimalComunitario, onCardClick: (animal: AnimalComunitario) => void }) => (
+  <div 
+    className="group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+    onClick={() => onCardClick(animal)}
+  >
     <div className="block relative overflow-hidden">
       <img
         src={`${api.defaults.baseURL}${animal.imageUrl}`}
@@ -39,25 +42,33 @@ const AnimalCardComunitario = ({ animal }: { animal: AnimalComunitario }) => (
   </div>
 );
 
+// --- Componente Principal da Página ---
 export default function ComunitariosPage() {
+  // --- Estados de Dados e UI ---
   const [animais, setAnimais] = useState<AnimalComunitario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // --- Estados do Filtro ---
   const [localizacao, setLocalizacao] = useState('');
   const [debouncedLocalizacao] = useDebounce(localizacao, 500);
 
-  // --- NOVO: Estado para controlar a visualização (lista ou mapa) ---
-  const [viewMode, setViewMode] = useState<'lista' | 'mapa'>('lista');
-
-  // --- NOVO: Importação dinâmica do mapa ---
+  // --- Estados dos Modais ---
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState<AnimalComunitario | null>(null);
+  
+  // --- Importações Dinâmicas de Componentes ---
   const MapaGeralComunitarios = useMemo(() => dynamic(
-    () => import('../components/common/MapaGeralComunitarios'),
-    {
-      ssr: false,
-      loading: () => <div className="h-[600px] w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500">A carregar mapa...</p></div>
-    }
+    () => import('../components/common/MapaGeralComunitarios'), 
+    { ssr: false, loading: () => <div className="h-full w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500">A carregar mapa...</p></div> }
+  ), []);
+  
+  const AnimalDetailModal = useMemo(() => dynamic(
+    () => import('../components/common/AnimalDetailModal'), 
+    { ssr: false }
   ), []);
 
+  // --- Lógica de Busca de Dados ---
   const fetchAnimais = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -67,7 +78,6 @@ export default function ComunitariosPage() {
         params.append('search', debouncedLocalizacao);
       }
       
-      // Usa a rota geral que retorna todos os dados
       const res = await api.get<AnimalComunitario[]>(`/animais-comunitarios?${params.toString()}`);
       setAnimais(res.data);
     } catch (err) {
@@ -86,14 +96,13 @@ export default function ComunitariosPage() {
     setLocalizacao('');
   };
 
+  // --- Renderização do Componente ---
   return (
     <main className="bg-gray-50 min-h-screen">
       <section className="relative h-[40vh] sm:h-[50vh] bg-center bg-cover" style={{ backgroundImage: "url('/FacaParte.avif')" }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
-          <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
-            Nossos Animais Comunitários
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">Nossos Animais Comunitários</h1>
           <p className="mt-4 text-lg sm:text-xl max-w-2xl">
             Eles vivem em nossas ruas e praças, e também precisam do nosso cuidado. Conheça os peludos que fazem parte da nossa comunidade.
           </p>
@@ -101,74 +110,103 @@ export default function ComunitariosPage() {
       </section>
 
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        {/* --- Barra de Filtros --- */}
         <div className="bg-white p-5 rounded-lg shadow-md mb-8 border border-gray-100">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            {/* --- ATUALIZADO: Campo de pesquisa e botões de visualização --- */}
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div className="flex-grow">
               <label htmlFor="localizacao" className="block text-sm font-medium text-gray-700 mb-1">
                 Pesquisar por localização
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
                   <Icon path="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" className="w-5 h-5" />
                 </span>
                 <input
-                  id="localizacao" type="text" value={localizacao}
+                  id="localizacao"
+                  type="text"
+                  value={localizacao}
                   onChange={e => setLocalizacao(e.target.value)}
                   placeholder="Digite um endereço ou ponto de referência..."
-                  className="w-full pl-10 pr-4 py-2 rounded-md border-gray-300 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full pl-10 pr-4 py-2 rounded-md border-gray-300 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder:text-gray-500"
                 />
               </div>
             </div>
-            
-            {/* --- NOVO: Botões para alternar a visualização --- */}
-            <div className="flex-shrink-0 flex items-end h-full pt-6 md:pt-0">
-              <div className="inline-flex rounded-md shadow-sm">
-                <button
-                  onClick={() => setViewMode('lista')}
-                  className={`px-4 py-2 text-sm font-medium border rounded-l-lg ${viewMode === 'lista' ? 'bg-amber-600 text-white border-amber-600 z-10' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                >
-                  Lista
-                </button>
-                <button
-                  onClick={() => setViewMode('mapa')}
-                  className={`px-4 py-2 text-sm font-medium border rounded-r-lg ${viewMode === 'mapa' ? 'bg-amber-600 text-white border-amber-600 z-10' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                >
-                  Mapa
-                </button>
-              </div>
-            </div>
+            <button 
+              onClick={handleResetFilters} 
+              className="text-sm font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap px-4 py-2 rounded-md hover:bg-amber-50 transition-colors"
+            >
+              Limpar filtro
+            </button>
           </div>
         </div>
 
-        {/* --- ATUALIZADO: Renderização condicional da lista ou mapa --- */}
-        {loading && <p className="text-center text-gray-500">A carregar animais...</p>}
-        {error && <p className="text-center text-red-600">{error}</p>}
+        {/* --- Botão para Abrir o Mapa Geral --- */}
+        <div className="mb-8 flex justify-center">
+            <button 
+                onClick={() => setIsMapModalOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-transform hover:scale-105"
+            >
+                <Icon path="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3l6-3" />
+                Visualizar mapeamento de animais comunitários
+            </button>
+        </div>
+
+        {/* --- Grelha de Animais --- */}
+        {loading && <p className="text-center text-gray-500 py-10">A carregar animais...</p>}
+        {error && <p className="text-center text-red-600 bg-red-100 p-4 rounded-lg">{error}</p>}
         
         {!loading && !error && (
           animais.length > 0 ? (
-            <>
-              {viewMode === 'lista' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in-up">
-                  {animais.map(animal => (
-                    <AnimalCardComunitario key={animal.id} animal={animal} />
-                  ))}
-                </div>
-              )}
-              {viewMode === 'mapa' && (
-                <div className="bg-white rounded-xl shadow-lg p-2 border animate-fade-in-up">
-                  <MapaGeralComunitarios animais={animais} />
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in-up">
+              {animais.map(animal => (
+                <AnimalCardComunitario 
+                  key={animal.id} 
+                  animal={animal} 
+                  onCardClick={setSelectedAnimal} 
+                />
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-16 bg-white rounded-lg shadow-md border border-gray-100">
+            <div className="text-center py-16 bg-white rounded-lg shadow-md border">
               <p className="mt-4 text-gray-700 font-semibold">Nenhum animal comunitário encontrado.</p>
               <p className="text-gray-500">Tente ajustar a sua pesquisa ou volte mais tarde.</p>
             </div>
           )
         )}
       </div>
+
+      {/* --- Modais (Renderizados condicionalmente) --- */}
+      {isMapModalOpen && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-4 animate-fade-in"
+          onClick={() => setIsMapModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-full max-w-6xl h-[90vh] p-4 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                <h2 className="text-2xl font-bold text-gray-800">Mapeamento de Animais Comunitários</h2>
+                <button 
+                    onClick={() => setIsMapModalOpen(false)} 
+                    className="p-2 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                >
+                    <Icon path="M6 18L18 6M6 6l12 12" className="w-6 h-6" />
+                </button>
+            </div>
+            <div className="flex-grow h-full">
+                <MapaGeralComunitarios animais={animais} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedAnimal && (
+        <AnimalDetailModal 
+          animal={selectedAnimal}
+          onClose={() => setSelectedAnimal(null)}
+        />
+      )}
     </main>
   );
 }
