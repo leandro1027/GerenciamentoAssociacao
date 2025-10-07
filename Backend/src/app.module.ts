@@ -19,6 +19,7 @@ import { ReportsModule } from './reports/reports.module';
 import { GamificacaoModule } from './gamificacao/gamificacao.module';
 import { ConfiguracaoModule } from './configuracao/configuracao.module';
 import { AnimaisComunitariosModule } from './animais-comunitarios/animais-comunitarios.module';
+import { GeocodingModule } from './geocoding/geocoding.module';
 
 
 @Module({
@@ -41,6 +42,7 @@ import { AnimaisComunitariosModule } from './animais-comunitarios/animais-comuni
     GamificacaoModule,
     ConfiguracaoModule,
     AnimaisComunitariosModule,
+    GeocodingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

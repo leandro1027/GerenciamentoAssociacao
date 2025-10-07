@@ -1543,13 +1543,13 @@ const ConfiguracaoManager = () => {
 
 // 11. COMPONENTE PARA GERIR ANIMAIS COMUNITÁRIOS
 const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComunitario[], onUpdate: () => void }) => {
-    // --- : Estado inicial para usar 'enderecoCompleto' ---
+    // Estado inicial alinhado com o novo DTO
     const initialState = {
         nomeTemporario: '',
         enderecoCompleto: '',
     };
     
-    // --- NOVO: Posição inicial do mapa ---
+    // Posição inicial do mapa (ex: centro da sua cidade)
     const initialPosition = { lat: -26.24, lng: -50.28 };
 
     const [formData, setFormData] = useState(initialState);
@@ -1557,36 +1557,63 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
     const [isLoading, setIsLoading] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Estado para as coordenadas do mapa ---
+    
+    // Estado para as coordenadas do mapa
     const [coordinates, setCoordinates] = useState(initialPosition);
 
-    // Importação dinâmica do mapa ---
+    // Estado para o campo de busca de endereço e loading do geocoding
+    const [addressSearch, setAddressSearch] = useState('');
+    const [isGeocoding, setIsGeocoding] = useState(false);
+
+    // Importação dinâmica do mapa para rodar apenas no cliente
     const MapaDeSelecao = useMemo(() => dynamic(
-        () => import('../components/common/MapaDeSelecao'),
+        () => import('../components/common/MapaDeSelecao'), // Certifique-se que o caminho está correto
         {
             ssr: false,
-            loading: () => <p className="text-center text-gray-500">Carregando mapa...</p>
+            loading: () => <div className="h-[300px] w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500">A carregar mapa...</p></div>
         }
     ), []);
     
-    // -- Adicionado reset das coordenadas ---
+    // Reseta o formulário e os novos estados
     const resetForm = () => {
         setFormData(initialState);
         setFile(null);
         setEditingId(null);
-        setCoordinates(initialPosition); // Reseta o mapa
+        setCoordinates(initialPosition);
+        setAddressSearch('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
     
-    // --- NOVO: Função de callback para o mapa ---
+    // Recebe a posição do componente do mapa
     const handlePositionChange = (position: { lat: number; lng: number }) => {
         setCoordinates(position);
     };
 
-    // --- ALTERADO: Lógica de envio com os novos campos ---
+    // Função para buscar o endereço na API de geocoding
+    const handleAddressSearch = async () => {
+        if (!addressSearch.trim()) {
+            toast.error("Por favor, digite um endereço para buscar.");
+            return;
+        }
+        setIsGeocoding(true);
+        try {
+            const response = await api.get('/geocoding/search', {
+                params: { address: addressSearch }
+            });
+            const { lat, lng } = response.data;
+            setCoordinates({ lat, lng });
+            toast.success("Endereço encontrado!");
+        } catch (error) {
+            toast.error("Não foi possível encontrar este endereço.");
+            console.error("Erro de Geocoding:", error);
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
+    // Envia os dados para a API (criar ou atualizar)
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
@@ -1594,7 +1621,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         const data = new FormData();
         data.append('nomeTemporario', formData.nomeTemporario);
         data.append('enderecoCompleto', formData.enderecoCompleto);
-        // Adiciona as coordenadas
         data.append('latitude', String(coordinates.lat));
         data.append('longitude', String(coordinates.lng));
         
@@ -1604,11 +1630,9 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
 
         try {
             if (editingId) {
-                // Rota de UPDATE
                 await api.patch(`/animais-comunitarios/${editingId}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
                 toast.success('Registo atualizado com sucesso!');
             } else {
-                // Rota de CREATE
                 if (!file) {
                     toast.error('Por favor, selecione uma imagem.');
                     setIsLoading(false);
@@ -1618,7 +1642,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                 toast.success('Animal comunitário registado com sucesso!');
             }
             resetForm();
-            onUpdate(); // Atualiza a lista na tela
+            onUpdate();
         } catch (error) {
             console.error('Erro ao salvar animal comunitário:', error);
             toast.error('Não foi possível salvar o registo.');
@@ -1627,14 +1651,13 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     };
     
-    // --- ALTERADO: Setup dos dados de localização ao editar ---
+    // Prepara o formulário para edição
     const handleEdit = (animal: AnimalComunitario) => {
         setEditingId(animal.id);
         setFormData({
             nomeTemporario: animal.nomeTemporario,
-            enderecoCompleto: animal.enderecoCompleto || '', // Usa o novo campo
+            enderecoCompleto: animal.enderecoCompleto || '',
         });
-        // Atualiza o mapa com a localização salva
         if (animal.latitude && animal.longitude) {
             setCoordinates({ lat: animal.latitude, lng: animal.longitude });
         }
@@ -1660,7 +1683,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                     {editingId ? 'Editar Animal Comunitário' : 'Registar Novo Animal Comunitário'}
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* --- ALTERADO: Campos do formulário --- */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Input 
                             label="Nome / Identificação" 
@@ -1670,14 +1692,30 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                             required 
                         />
                         <Input 
-                            label="Endereço Completo (ou Ponto de Referência)" 
+                            label="Endereço Completo (Texto)" 
                             value={formData.enderecoCompleto} 
                             onChange={(e) => setFormData({ ...formData, enderecoCompleto: e.target.value })} 
                             placeholder="Ex: Rua das Flores, 123, Centro" 
                         />
                     </div>
                     
-                    {/* --- NOVO: Seção do Mapa --- */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Procurar endereço no mapa
+                        </label>
+                        <div className="flex items-stretch gap-2">
+                           <Input 
+                                value={addressSearch}
+                                onChange={(e) => setAddressSearch(e.target.value)}
+                                placeholder="Digite o endereço e clique em buscar..."
+                                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddressSearch(); }}}
+                           />
+                           <Button type="button" onClick={handleAddressSearch} isLoading={isGeocoding}>
+                               Buscar
+                           </Button>
+                        </div>
+                    </div>
+                    
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Localização no Mapa (arraste o pino para ajustar)
@@ -1727,7 +1765,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                                             <img src={`${api.defaults.baseURL}${animal.imageUrl}`} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
-                                        {/* --- ALTERADO: Exibição do endereço --- */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.enderecoCompleto || 'Não informado'}</td>
                                         <td className="px-6 py-4 text-center text-sm font-medium space-x-4">
                                             <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
@@ -1743,6 +1780,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         </section>
     );
 };
+
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
