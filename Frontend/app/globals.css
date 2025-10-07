@@ -12,6 +12,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
+.mapa-animal-icon {
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  object-fit: cover;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
