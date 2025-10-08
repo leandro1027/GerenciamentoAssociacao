@@ -117,6 +117,24 @@ export class UsuarioService {
     });
   }
 
+  async getRanking() {
+    const ranking = await this.prisma.usuario.findMany({
+      // Ordena pelos pontos, do maior para o menor
+      orderBy: {
+        pontos: 'desc',
+      },
+      // Limita o resultado ao Top 10
+      take: 10,
+      select: {
+        id: true,
+        nome: true,
+        pontos: true,
+        profileImageUrl: true, 
+      },
+    });
+    return ranking;
+  }
+
   async updateAvatar(id: number, imageUrl: string) {
     const user = await this.prisma.usuario.update({
       where: { id },

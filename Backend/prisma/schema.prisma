@@ -23,6 +23,7 @@ model Usuario {
   estado          String   @db.VarChar(2) @default("SC")
   cidade          String   @default("Não informado")
 
+
   // Relações
   voluntario            Voluntario?
   doacoes               Doacao[]

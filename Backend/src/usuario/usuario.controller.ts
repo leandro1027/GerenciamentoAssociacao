@@ -51,6 +51,12 @@ export class UsuarioController {
     return this.usuarioService.updateAvatar(userId, imageUrl);
   }
 
+   @Get('ranking')
+  getRanking() {
+    // Esta rota é pública, por isso não tem @UseGuards
+    return this.usuarioService.getRanking();
+  }
+
   // --- ROTAS RESTRITAS PARA ADMINISTRADORES ---
 
   @Get()
@@ -74,7 +80,7 @@ export class UsuarioController {
     return this.usuarioService.update(id, updateUsuarioDto);
   }
 
-  @Patch(':id/role')
+@Patch(':id/role')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 updateUserRole(
