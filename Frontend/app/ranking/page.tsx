@@ -2,8 +2,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import api from '../services/api'; // Importamos o 'api' para usar a baseURL
-import { Usuario } from '../../types';   
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../services/api';
+import { Usuario } from '../../types';
 
 type RankingUser = Pick<Usuario, 'id' | 'nome' | 'pontos' | 'profileImageUrl'>;
 
@@ -11,13 +12,247 @@ type Configuracao = {
   gamificacaoAtiva: boolean;
 };
 
-// Componente MedalIcon (mantido para referência futura)
-// function MedalIcon({ rank }: { rank: number }) {
-//   if (rank === 1) return <span className="text-2xl">🥇</span>;
-//   if (rank === 2) return <span className="text-2xl">🥈</span>;
-//   if (rank === 3) return <span className="text-2xl">🥉</span>;
-//   return null;
-// }
+// Componente para a posição no ranking com cores diferenciadas
+function RankPosition({ index }: { index: number }) {
+  const getRankStyle = () => {
+    switch (index) {
+      case 0: // Primeiro lugar
+        return {
+          bg: 'bg-gradient-to-br from-yellow-400 to-amber-500',
+          text: 'text-white',
+          shadow: 'shadow-lg shadow-yellow-200'
+        };
+      case 1: // Segundo lugar
+        return {
+          bg: 'bg-gradient-to-br from-gray-400 to-gray-600',
+          text: 'text-white',
+          shadow: 'shadow-lg shadow-gray-200'
+        };
+      case 2: // Terceiro lugar
+        return {
+          bg: 'bg-gradient-to-br from-amber-600 to-amber-700',
+          text: 'text-white',
+          shadow: 'shadow-lg shadow-amber-200'
+        };
+      default:
+        return {
+          bg: 'bg-gray-100',
+          text: 'text-gray-600',
+          shadow: 'shadow-sm'
+        };
+    }
+  };
+
+  const style = getRankStyle();
+
+  return (
+    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${style.bg} ${style.text} ${style.shadow} transition-all duration-300`}>
+      {index + 1}º
+    </div>
+  );
+}
+
+// Componente para o avatar do usuário
+function UserAvatar({ src, name, index }: { src: string; name: string; index: number }) {
+  const getBorderStyle = () => {
+    switch (index) {
+      case 0: return 'border-2 border-yellow-400 shadow-lg shadow-yellow-200';
+      case 1: return 'border-2 border-gray-400 shadow-lg shadow-gray-200';
+      case 2: return 'border-2 border-amber-600 shadow-lg shadow-amber-200';
+      default: return 'border-2 border-gray-200 shadow-sm';
+    }
+  };
+
+  return (
+    <motion.img
+      whileHover={{ scale: 1.05 }}
+      src={src}
+      alt={`Foto de ${name}`}
+      className={`w-14 h-14 rounded-full object-cover bg-gray-100 transition-all duration-300 ${getBorderStyle()}`}
+      onError={(e) => {
+        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0284c7&color=fff&bold=true&size=128`;
+      }}
+    />
+  );
+}
+
+// Componente para o card de ranking
+function RankingCard({ user, index }: { user: RankingUser; index: number }) {
+  const avatarSrc = user.profileImageUrl
+    ? `${api.defaults.baseURL}${user.profileImageUrl}`
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=0284c7&color=fff&bold=true`;
+
+  const getCardStyle = () => {
+    switch (index) {
+      case 0:
+        return 'bg-gradient-to-r from-yellow-50/80 to-amber-50/60 border-l-4 border-l-yellow-400 shadow-lg';
+      case 1:
+        return 'bg-gradient-to-r from-gray-50/80 to-gray-50/60 border-l-4 border-l-gray-400 shadow-md';
+      case 2:
+        return 'bg-gradient-to-r from-amber-50/80 to-orange-50/60 border-l-4 border-l-amber-600 shadow-md';
+      default:
+        return 'bg-white hover:bg-gray-50/80 border-l-4 border-l-transparent';
+    }
+  };
+
+  return (
+    <motion.li
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      transition={{ 
+        duration: 0.4, 
+        delay: index * 0.1,
+        type: "spring",
+        stiffness: 100
+      }}
+      whileHover={{ 
+        scale: index < 3 ? 1.02 : 1.01,
+        transition: { duration: 0.2 }
+      }}
+      className={`p-6 flex items-center justify-between transition-all duration-300 rounded-xl mb-3 ${getCardStyle()}`}
+    >
+      <div className="flex items-center gap-6 flex-1 min-w-0">
+        <RankPosition index={index} />
+        <UserAvatar src={avatarSrc} name={user.nome} index={index} />
+        <div className="flex-1 min-w-0">
+          <motion.p 
+            className="text-xl font-bold text-gray-900 truncate"
+            whileHover={{ x: 5 }}
+            transition={{ type: "spring", stiffness: 400 }}
+          >
+            {user.nome}
+          </motion.p>
+          {index < 3 && (
+            <motion.span 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.1 + 0.3 }}
+              className="text-sm font-semibold text-amber-600"
+            >
+              {index === 0 ? '🏆 Campeão' : index === 1 ? '🥈 Vice-campeão' : '🥉 Terceiro lugar'}
+            </motion.span>
+          )}
+        </div>
+      </div>
+      <motion.div 
+        className="flex items-center gap-3"
+        whileHover={{ scale: 1.05 }}
+      >
+        <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+          {user.pontos} pts
+        </span>
+      </motion.div>
+    </motion.li>
+  );
+}
+
+// Componente Skeleton para loading
+function RankingSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
+      {[...Array(7)].map((_, index) => (
+        <div key={index} className="p-6 flex items-center justify-between border-b border-gray-200 last:border-b-0">
+          <div className="flex items-center gap-6 flex-1">
+            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>
+            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
+              {index < 3 && <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>}
+            </div>
+          </div>
+          <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Componente para as estatísticas
+function StatisticsCards({ ranking }: { ranking: RankingUser[] }) {
+  const stats = {
+    totalContributors: ranking.length,
+    totalPoints: ranking.reduce((total, user) => total + user.pontos, 0),
+    topScore: ranking[0]?.pontos || 0,
+    averagePoints: ranking.length > 0 ? Math.round(ranking.reduce((total, user) => total + user.pontos, 0) / ranking.length) : 0
+  };
+
+  const statCards = [
+    {
+      title: 'Total de Contribuidores',
+      value: stats.totalContributors,
+      icon: '👥',
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50'
+    },
+    {
+      title: 'Pontos Totais',
+      value: stats.totalPoints.toLocaleString(),
+      icon: '⭐',
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-50'
+    },
+    {
+      title: 'Maior Pontuação',
+      value: stats.topScore.toLocaleString(),
+      icon: '🏆',
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50'
+    },
+    {
+      title: 'Média de Pontos',
+      value: stats.averagePoints.toLocaleString(),
+      icon: '📊',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50'
+    }
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"
+    >
+      {statCards.map((stat, index) => (
+        <motion.div
+          key={stat.title}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+          whileHover={{ 
+            scale: 1.05,
+            transition: { duration: 0.2 }
+          }}
+          className={`${stat.bgColor} rounded-2xl p-6 shadow-lg border border-white/50 backdrop-blur-sm`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
+                {stat.value}
+              </p>
+              <p className="text-gray-600 text-sm mt-2 font-medium">{stat.title}</p>
+            </div>
+            <motion.div 
+              className="text-4xl"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+            >
+              {stat.icon}
+            </motion.div>
+          </div>
+          <motion.div 
+            className={`h-1 mt-4 bg-gradient-to-r ${stat.color} rounded-full`}
+            initial={{ width: 0 }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 0.8, delay: index * 0.1 + 0.3 }}
+          />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
 
 export default function RankingPage() {
   const [isGamificationActive, setIsGamificationActive] = useState(false);
@@ -31,17 +266,14 @@ export default function RankingPage() {
     try {
       const timestamp = new Date().getTime();
       
-      // Primeiro busca a configuração
       const configRes = await api.get<Configuracao>(`/configuracao?t=${timestamp}`);
-      
       setIsGamificationActive(configRes.data.gamificacaoAtiva);
       
-      // 🔥 SOLUÇÃO: Só busca o ranking se a gamificação estiver ativa
       if (configRes.data.gamificacaoAtiva) {
         const rankingRes = await api.get<RankingUser[]>(`/usuario/ranking?t=${timestamp}`);
         setRanking(rankingRes.data);
       } else {
-        setRanking([]); // Limpa o ranking se gamificação estiver desativada
+        setRanking([]);
       }
       
     } catch (err) {
@@ -56,126 +288,175 @@ export default function RankingPage() {
     fetchRankingData();
   }, [fetchRankingData]);
 
-  // Loading state
   if (isLoading) {
     return (
-      <main className="bg-gray-50 min-h-screen py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-gray-800 drop-shadow">🏆 Ranking de Contribuidores 🏆</h1>
-            <p className="mt-2 text-gray-600">Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border p-8 text-center">
-            <div className="animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-            </div>
-          </div>
+      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+              🏆 Ranking de Contribuidores
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
+            </p>
+          </motion.div>
+          <RankingSkeleton />
         </div>
       </main>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <main className="bg-gray-50 min-h-screen py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-gray-800 drop-shadow">🏆 Ranking de Contribuidores 🏆</h1>
-            <p className="mt-2 text-gray-600">Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.</p>
+      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+              🏆 Ranking de Contribuidores
+            </h1>
           </div>
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border p-8 text-center">
-            <div className="text-red-500 text-6xl mb-4">❌</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Erro ao Carregar</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl border p-12 text-center"
+          >
+            <div className="text-8xl mb-6">❌</div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Erro ao Carregar</h2>
+            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">{error}</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={fetchRankingData}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Tentar Novamente
-            </button>
-          </div>
+              🔄 Tentar Novamente
+            </motion.button>
+          </motion.div>
         </div>
       </main>
     );
   }
 
-  // 🔥 Gamificação desativada state
   if (!isGamificationActive) {
     return (
-      <main className="bg-gray-50 min-h-screen py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold text-gray-800 drop-shadow">🏆 Ranking de Contribuidores 🏆</h1>
-            <p className="mt-2 text-gray-600">Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.</p>
+      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+              🏆 Ranking de Contribuidores
+            </h1>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border p-8 text-center">
-            <div className="text-yellow-500 text-6xl mb-4">🔒</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Gamificação Desativada</h2>
-            <p className="text-gray-600 mb-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl border p-12 text-center"
+          >
+            <motion.div 
+              className="text-8xl mb-6"
+              animate={{ 
+                rotate: [0, -10, 10, -10, 0],
+                scale: [1, 1.1, 1.1, 1.1, 1]
+              }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              🔒
+            </motion.div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Gamificação Desativada</h2>
+            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
               O sistema de ranking está temporariamente desativado. 
               Entre em contato com o administrador para mais informações.
             </p>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={fetchRankingData}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              Verificar Status
-            </button>
-          </div>
+              🔍 Verificar Status
+            </motion.button>
+          </motion.div>
         </div>
       </main>
     );
   }
 
-  // Normal state - Ranking ativo
   return (
-    <main className="bg-gray-50 min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-gray-800 drop-shadow">🏆 Ranking de Contribuidores 🏆</h1>
-          <p className="mt-2 text-gray-600">Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.</p>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
-          <ul role="list" className="divide-y divide-gray-200">
-            {ranking.map((user, index) => {
-              const avatarSrc = user.profileImageUrl
-                ? `${api.defaults.baseURL}${user.profileImageUrl}`
-                : `https://ui-avatars.com/api/?name=${user.nome.replace(' ', '+')}&background=0284c7&color=fff`;
+    <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+      <div className="max-w-6xl mx-auto px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+            🏆 Ranking de Contribuidores
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
+          </p>
+        </motion.div>
 
-              return (
-                <li key={user.id} className={`p-4 flex items-center justify-between transition-colors ${index < 3 ? 'bg-amber-50/50' : 'hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-bold text-gray-400 w-8 text-center">{index + 1}º</span>
-                    <img
-                      src={avatarSrc}
-                      alt={`Foto de ${user.nome}`}
-                      className="w-12 h-12 rounded-full border-2 border-gray-200 object-cover bg-gray-100"
-                      onError={(e) => {
-                        // Fallback para caso a imagem não carregue
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${user.nome.replace(' ', '+')}&background=0284c7&color=fff`;
-                      }}
-                    />
-                    <div>
-                      <p className="text-lg font-semibold text-gray-900">{user.nome}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                     {/* <MedalIcon rank={index + 1} /> */}
-                     <p className="text-xl font-bold text-amber-600">{user.pontos} pts</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        
-        {ranking.length === 0 && (
-          <p className="text-center text-gray-500 mt-8">Ainda não há pontuações para exibir. Seja o primeiro a contribuir!</p>
-        )}
+        {/* Estatísticas */}
+        <StatisticsCards ranking={ranking} />
+
+        {/* Ranking */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden"
+        >
+          <div className="p-8 pb-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Top Contribuidores</h2>
+              <motion.div 
+                className="flex items-center gap-2 text-sm text-gray-600"
+                whileHover={{ scale: 1.05 }}
+              >
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+                  {ranking.length} participantes
+                </span>
+              </motion.div>
+            </div>
+            
+            <AnimatePresence mode="popLayout">
+              {ranking.length > 0 ? (
+                <ul className="space-y-4">
+                  {ranking.map((user, index) => (
+                    <RankingCard key={user.id} user={user} index={index} />
+                  ))}
+                </ul>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-2xl font-bold text-gray-700 mb-2">Ranking Vazio</h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    Ainda não há pontuações para exibir. Seja o primeiro a contribuir e entre para o hall da fama!
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="text-center mt-12 text-gray-500"
+        >
+          <p>Última atualização: {new Date().toLocaleString('pt-BR')}</p>
+        </motion.div>
       </div>
     </main>
   );
