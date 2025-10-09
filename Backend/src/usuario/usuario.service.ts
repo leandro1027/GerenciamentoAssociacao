@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 export class UsuarioService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Rota pública para registo
+  // --- REGISTO ---
   async create(createUsuarioDto: CreateUsuarioDto) {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createUsuarioDto.senha, salt);
@@ -26,31 +26,23 @@ export class UsuarioService {
     return result;
   }
 
-  // Usado internamente pela autenticação
+  // --- FUNÇÕES INTERNAS ---
   async findByEmail(email: string) {
     return this.prisma.usuario.findFirst({ where: { email } });
   }
 
-  // Rota de Admin
   async findAll() {
     const users = await this.prisma.usuario.findMany();
-    return users.map(user => {
-      const { senha, ...result } = user;
-      return result;
-    });
+    return users.map(({ senha, ...rest }) => rest);
   }
 
-  // Rota de Admin e uso interno
   async findOne(id: number) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`Utilizador com ID ${id} não encontrado.`);
-    }
+    if (!user) throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     const { senha, ...result } = user;
     return result;
   }
 
-  // Rota de Admin
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
     const user = await this.prisma.usuario.update({
       where: { id },
@@ -60,29 +52,22 @@ export class UsuarioService {
     return result;
   }
 
-  // Rota de Admin para alterar a role
   async updateRole(id: number, newRole: string) {
-    // findOne já lança NotFoundException se o utilizador não existir.
     await this.findOne(id);
-  
     const user = await this.prisma.usuario.update({
-      where: { id: id },
+      where: { id },
       data: { role: newRole },
     });
-
-    // Remove a senha do objeto de retorno para manter o padrão.
     const { senha, ...result } = user;
     return result;
   }
 
-  // Rota de Admin
   async remove(id: number) {
     await this.findOne(id);
     return this.prisma.usuario.delete({ where: { id } });
   }
 
-  // --- MÉTODOS PARA O PERFIL DO UTILIZADOR ---
-
+  // --- PERFIL DO USUÁRIO ---
   async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     const user = await this.prisma.usuario.update({
       where: { id },
@@ -94,19 +79,10 @@ export class UsuarioService {
 
   async changePassword(id: number, changePasswordDto: ChangePasswordDto) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
-    
-    if (!user) {
-      throw new NotFoundException('Utilizador não encontrado.');
-    }
-    
-    const isPasswordMatching = await bcrypt.compare(
-      changePasswordDto.senhaAtual,
-      user.senha,
-    );
+    if (!user) throw new NotFoundException('Usuário não encontrado.');
 
-    if (!isPasswordMatching) {
-      throw new ForbiddenException('A senha atual está incorreta.');
-    }
+    const isPasswordMatching = await bcrypt.compare(changePasswordDto.senhaAtual, user.senha);
+    if (!isPasswordMatching) throw new ForbiddenException('A senha atual está incorreta.');
 
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(changePasswordDto.novaSenha, salt);
@@ -117,24 +93,6 @@ export class UsuarioService {
     });
   }
 
-  async getRanking() {
-    const ranking = await this.prisma.usuario.findMany({
-      // Ordena pelos pontos, do maior para o menor
-      orderBy: {
-        pontos: 'desc',
-      },
-      // Limita o resultado ao Top 10
-      take: 10,
-      select: {
-        id: true,
-        nome: true,
-        pontos: true,
-        profileImageUrl: true, 
-      },
-    });
-    return ranking;
-  }
-
   async updateAvatar(id: number, imageUrl: string) {
     const user = await this.prisma.usuario.update({
       where: { id },
@@ -142,5 +100,20 @@ export class UsuarioService {
     });
     const { senha, ...result } = user;
     return result;
+  }
+
+  // --- RANKING DE PONTUAÇÃO ---
+  async getRanking() {
+    const ranking = await this.prisma.usuario.findMany({
+      orderBy: { pontos: 'desc' },
+      take: 10,
+      select: {
+        id: true,
+        nome: true,
+        pontos: true,
+        profileImageUrl: true,
+      },
+    });
+    return ranking;
   }
 }

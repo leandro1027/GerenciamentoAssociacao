@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Request, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  Request,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -16,28 +29,25 @@ import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  // Rota PÚBLICA para registo
   @Post()
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
   }
 
-  // --- ROTAS DE GESTÃO DE PERFIL PARA UTILIZADOR LOGADO ---
+  // --- PERFIL DO USUÁRIO ---
   @Patch('me/profile')
   @UseGuards(JwtAuthGuard)
   updateMyProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
-    const userId = req.user.id;
-    return this.usuarioService.updateProfile(userId, updateProfileDto);
+    return this.usuarioService.updateProfile(req.user.id, updateProfileDto);
   }
 
   @Patch('me/change-password')
   @UseGuards(JwtAuthGuard)
   changeMyPassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
-    const userId = req.user.id;
-    return this.usuarioService.changePassword(userId, changePasswordDto);
+    return this.usuarioService.changePassword(req.user.id, changePasswordDto);
   }
 
-   @Patch('me/avatar')
+  @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
@@ -46,19 +56,17 @@ export class UsuarioController {
     }),
   )
   uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
-    const userId = req.user.id;
     const imageUrl = `/uploads/${file.filename}`;
-    return this.usuarioService.updateAvatar(userId, imageUrl);
+    return this.usuarioService.updateAvatar(req.user.id, imageUrl);
   }
 
-   @Get('ranking')
+  // --- RANKING (ROTA PÚBLICA) ---
+  @Get('ranking')
   getRanking() {
-    // Esta rota é pública, por isso não tem @UseGuards
     return this.usuarioService.getRanking();
   }
 
-  // --- ROTAS RESTRITAS PARA ADMINISTRADORES ---
-
+  // --- ADMIN ---
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -80,16 +88,12 @@ export class UsuarioController {
     return this.usuarioService.update(id, updateUsuarioDto);
   }
 
-@Patch(':id/role')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
-updateUserRole(
-  @Param('id', ParseIntPipe) id: number,
-  @Body() updateUserRoleDto: UpdateUserRoleDto,
-) {
-  return this.usuarioService.updateRole(id, updateUserRoleDto.role);
-}
-
+  @Patch(':id/role')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  updateUserRole(@Param('id', ParseIntPipe) id: number, @Body() updateUserRoleDto: UpdateUserRoleDto) {
+    return this.usuarioService.updateRole(id, updateUserRoleDto.role);
+  }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -9,8 +9,7 @@ async function bootstrap() {
 
   app.enableCors();
 
-  // --- CORRIGIDO AQUI ---
-  // Adiciona as opções ao ValidationPipe
+  
   app.useGlobalPipes(new ValidationPipe({
     transform: true, // Ativa a transformação automática de tipos
     whitelist: true, // Remove campos que não estão no DTO
