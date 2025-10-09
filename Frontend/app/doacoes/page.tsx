@@ -9,17 +9,17 @@ import Link from 'next/link';
 import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Heart, ClipboardCopy, CheckCircle } from 'lucide-react';
+import { Heart, ClipboardCopy, CheckCircle, ArrowLeft, Shield, Zap, Users, PawPrint } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DoacoesPage() {
-  const { user, isAuthenticated } = useAuth(); // Não precisamos mais do isAuthLoading
+  const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [valor, setValor] = useState<string>('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string | null>(null);
   const [pixKey, setPixKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // O useEffect que forçava o login foi removido.
+  const [copied, setCopied] = useState(false);
 
   const handleGenerateQRCode = (event: FormEvent) => {
     event.preventDefault();
@@ -107,19 +107,17 @@ export default function DoacoesPage() {
   const handleConfirmDonation = async () => {
     setIsLoading(true);
     try {
-      // Cria o objeto de doação base
       const donationData: { valor: number; tipo: string; usuarioId?: number } = {
         valor: parseFloat(valor),
         tipo: 'pix',
       };
 
-      // Se o usuário estiver logado, adiciona o ID dele à doação
       if (isAuthenticated && user) {
         donationData.usuarioId = user.id;
       }
 
       await api.post('/doacao', donationData);
-      toast.success('Doação registrada! Muito obrigado pelo seu apoio incondicional.');
+      toast.success('Doação registrada com sucesso! Muito obrigado pelo seu apoio 💙');
       setValor('');
       setQrCodeDataURL(null);
     } catch (err: any) {
@@ -132,100 +130,311 @@ export default function DoacoesPage() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(pixKey);
+    setCopied(true);
     toast.success('Chave PIX copiada para a área de transferência!');
+    setTimeout(() => setCopied(false), 2000);
   };
 
+  const impactCards = [
+    {
+      icon: <PawPrint className="w-6 h-6" />,
+      amount: "R$ 25",
+      title: "Vermifugação",
+      description: "Protege um animal contra parasitas internos"
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      amount: "R$ 50",
+      title: "Vacinação",
+      description: "Custea uma vacina essencial para a saúde"
+    },
+    {
+      icon: <Heart className="w-6 h-6" />,
+      amount: "R$ 100",
+      title: "Alimentação Mensal",
+      description: "Alimenta um animal resgatado por um mês"
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      amount: "R$ 200",
+      title: "Castração",
+      description: "Ajuda no custo de uma cirurgia de castração"
+    }
+  ];
+
   return (
-    <main className="flex-grow bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-        
-        <div className="space-y-8">
-          <div className="relative">
-            <img 
-              src="/SobreNossaCausa.avif" 
-              alt="Cachorro feliz sendo adotado" 
-              className="rounded-3xl shadow-2xl w-full h-auto object-cover aspect-[4/3]"
-            />
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-blue-100 mb-6">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-semibold text-green-700">Doação 100% Segura</span>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-lg">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Heart className="text-amber-500" />
-              Veja o impacto da sua ajuda
-            </h3>
-            <div className="space-y-3 text-slate-600">
-                <p>Com <strong className="text-amber-700">R$ 25</strong>, você garante um vermífugo essencial.</p>
-                <p>Com <strong className="text-amber-700">R$ 50</strong>, você ajuda a custear uma vacina importante.</p>
-                <p>Com <strong className="text-amber-700">R$ 100</strong>, você alimenta um animal resgatado por um mês inteiro.</p>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-4">
+            Faça a Diferença
+          </h1>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Sua doação transforma vidas. Cada contribuição nos ajuda a oferecer cuidado, 
+            amor e um futuro melhor para nossos amigos de quatro patas.
+          </p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Seção Esquerda - Impacto */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-8"
+          >
+            {/* Imagem Principal */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl transform group-hover:scale-105 transition-transform duration-500"></div>
+              <img 
+                src="/SobreNossaCausa.avif" 
+                alt="Cachorro feliz sendo cuidado" 
+                className="rounded-3xl shadow-2xl w-full h-auto object-cover aspect-[4/3] transform group-hover:scale-[1.02] transition-transform duration-500"
+              />
             </div>
-          </div>
-        </div>
 
-        <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl">
-          <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-slate-800">Faça a diferença hoje</h1>
-            <p className="text-slate-600 max-w-md mx-auto">Cada real doado se transforma em ração, vacinas e um lar seguro para nossos amigos de quatro patas.</p>
-          </div>
-
-          {!qrCodeDataURL ? (
-            <form onSubmit={handleGenerateQRCode} className="space-y-6 pt-8">
-              {/* --- Seção de Identificação Condicional --- */}
-              {isAuthenticated && user && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Você está doando como:</label>
-                  <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg">
-                    <p className="font-semibold text-slate-800">{user.nome}</p>
-                    <p className="text-sm text-slate-500">{user.email}</p>
+            {/* Cards de Impacto */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {impactCards.map((card, index) => (
+                <motion.div
+                  key={card.amount}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="bg-white p-6 rounded-2xl shadow-lg border border-blue-50 hover:shadow-xl transition-all duration-300 group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-blue-100 rounded-xl text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                      {card.icon}
+                    </div>
+                    <span className="text-2xl font-bold text-blue-700">{card.amount}</span>
                   </div>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="valor" className="block text-sm font-medium text-slate-700 mb-2">Escolha ou digite o valor (R$)</label>
-                <div className="flex flex-wrap gap-3 mb-3">
-                  {['25', '50', '100'].map(v => (
-                    <button type="button" key={v} onClick={() => setValor(v)} className={`px-5 py-2 rounded-full font-semibold transition-all duration-200 ${valor === v ? 'bg-amber-500 text-white shadow-md' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>
-                      R$ {v}
-                    </button>
-                  ))}
-                </div>
-                <Input
-                  id="valor"
-                  type="number"
-                  step="0.01"
-                  min="1.00"
-                  placeholder="Outro valor"
-                  value={valor}
-                  onChange={(e) => setValor(e.target.value)}
-                  required
-                />
-              </div>
-
-              <Button type="submit" className="w-full !py-3 text-base bg-amber-800 hover:bg-amber-900 focus:ring-amber-500">
-                Gerar QR Code para PIX
-              </Button>
-            </form>
-          ) : (
-            <div className="flex flex-col items-center space-y-4 pt-6 text-center">
-              <h2 className="text-2xl font-bold text-slate-800">Quase lá!</h2>
-              <p className="text-slate-600">1. Abra o app do seu banco e pague com o QR Code. <br/> 2. Depois, confirme sua doação abaixo.</p>
-              <img src={qrCodeDataURL} alt="QR Code PIX" className="w-60 h-60 border-4 border-slate-300 rounded-lg shadow-lg" />
-              <p className="text-3xl font-bold text-slate-800">R$ {parseFloat(valor).toFixed(2)}</p>
-              
-              <Button onClick={copyToClipboard} variant="outline" className="w-full flex items-center justify-center gap-2">
-                <ClipboardCopy size={18} /> Copiar Chave PIX
-              </Button>
-              <Button onClick={handleConfirmDonation} isLoading={isLoading} className="w-full !py-3 text-base bg-green-600 hover:bg-green-700 focus:ring-green-500 flex items-center justify-center gap-2">
-                <CheckCircle size={20} /> Já fiz o pagamento!
-              </Button>
-
-              <button onClick={() => setQrCodeDataURL(null)} className="text-sm text-slate-500 hover:underline pt-2">
-                Escolher outro valor
-              </button>
+                  <h3 className="font-bold text-slate-800 mb-2">{card.title}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{card.description}</p>
+                </motion.div>
+              ))}
             </div>
-          )}
+          </motion.div>
+
+          {/* Seção Direita - Doação */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white rounded-3xl shadow-2xl border border-blue-100 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-8 text-white">
+              <h2 className="text-3xl font-bold mb-2">Doe Agora</h2>
+              <p className="text-blue-100 opacity-90">Transforme vidas com um gesto simples</p>
+            </div>
+
+            <div className="p-8">
+              <AnimatePresence mode="wait">
+                {!qrCodeDataURL ? (
+                  <motion.form
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onSubmit={handleGenerateQRCode}
+                    className="space-y-6"
+                  >
+                    {/* Identificação do Usuário */}
+                    {isAuthenticated && user && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="bg-blue-50 border border-blue-200 rounded-2xl p-4"
+                      >
+                        <label className="block text-sm font-semibold text-blue-700 mb-2">Você está doando como:</label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                            {user.nome.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-800">{user.nome}</p>
+                            <p className="text-sm text-slate-500">{user.email}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Seção de Valor */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-4">
+                        Escolha o valor da sua doação
+                      </label>
+                      
+                      {/* Botões de Valor Rápido */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {['25', '50', '100', '200'].map(v => (
+                          <motion.button
+                            key={v}
+                            type="button"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setValor(v)}
+                            className={`p-4 rounded-xl font-semibold transition-all duration-200 border-2 ${
+                              valor === v 
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg border-transparent' 
+                                : 'bg-white text-slate-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50'
+                            }`}
+                          >
+                            R$ {v}
+                          </motion.button>
+                        ))}
+                      </div>
+
+                      {/* Input Personalizado */}
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <span className="text-slate-500 font-semibold">R$</span>
+                        </div>
+                        <Input
+                          id="valor"
+                          type="number"
+                          step="0.01"
+                          min="1.00"
+                          placeholder="0,00"
+                          value={valor}
+                          onChange={(e) => setValor(e.target.value)}
+                          required
+                          className="pl-12 text-lg font-semibold py-4 border-2 border-blue-200 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Botão de Ação */}
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button 
+                        type="submit" 
+                        className="w-full !py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        <Zap className="w-5 h-5 mr-2" />
+                        Gerar QR Code PIX
+                      </Button>
+                    </motion.div>
+
+                    {/* Segurança */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-4">
+                      <Shield className="w-4 h-4" />
+                      <span>Pagamento 100% seguro via PIX</span>
+                    </div>
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="qrcode"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex flex-col items-center space-y-6 text-center"
+                  >
+                    {/* Header do QR Code */}
+                    <div className="text-center mb-2">
+                      <h3 className="text-2xl font-bold text-slate-800 mb-2">Pagamento via PIX</h3>
+                      <p className="text-slate-600">Escaneie o QR Code com seu banco</p>
+                    </div>
+
+                    {/* Valor */}
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200">
+                      <p className="text-sm text-slate-600 mb-1">Valor da doação</p>
+                      <p className="text-4xl font-bold text-blue-700">R$ {parseFloat(valor).toFixed(2)}</p>
+                    </div>
+
+                    {/* QR Code */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                      className="p-4 bg-white rounded-2xl shadow-lg border-2 border-blue-100"
+                    >
+                      <img src={qrCodeDataURL} alt="QR Code PIX" className="w-64 h-64" />
+                    </motion.div>
+
+                    {/* Instruções */}
+                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                      <p className="text-sm text-blue-700 font-semibold mb-2">Como pagar:</p>
+                      <ol className="text-sm text-blue-600 space-y-1 text-left">
+                        <li>1. Abra o app do seu banco</li>
+                        <li>2. Escolha pagar com PIX</li>
+                        <li>3. Aponte a câmera para o QR Code</li>
+                        <li>4. Confirme o pagamento</li>
+                      </ol>
+                    </div>
+
+                    {/* Botões de Ação */}
+                    <div className="w-full space-y-3">
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button 
+                          onClick={copyToClipboard}
+                          variant="outline"
+                          className="w-full !py-3 border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 flex items-center justify-center gap-2"
+                        >
+                          <ClipboardCopy size={18} />
+                          {copied ? 'Copiado!' : 'Copiar Chave PIX'}
+                        </Button>
+                      </motion.div>
+
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button 
+                          onClick={handleConfirmDonation} 
+                          isLoading={isLoading}
+                          className="w-full !py-3 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle size={20} />
+                          Confirmar Doação
+                        </Button>
+                      </motion.div>
+                    </div>
+
+                    {/* Voltar */}
+                    <motion.button 
+                      onClick={() => setQrCodeDataURL(null)}
+                      className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition-colors"
+                      whileHover={{ x: -5 }}
+                    >
+                      <ArrowLeft size={16} />
+                      Alterar valor
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
         </div>
+
+        {/* Footer Informativo */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="text-center mt-16 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-blue-100"
+        >
+          <h3 className="text-2xl font-bold text-slate-800 mb-4">Transparência Total</h3>
+          <div className="grid md:grid-cols-3 gap-6 text-slate-600 max-w-4xl mx-auto">
+            <div>
+              <h4 className="font-semibold text-blue-700 mb-2">100% dos recursos</h4>
+              <p className="text-sm">São direcionados para o cuidado dos animais</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-700 mb-2">Relatórios mensais</h4>
+              <p className="text-sm">Prestação de contas transparente</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-700 mb-2">CNPJ regular</h4>
+              <p className="text-sm">Associação legalmente constituída</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </main>
   );
 }
-

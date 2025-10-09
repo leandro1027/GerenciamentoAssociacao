@@ -286,7 +286,7 @@ const OverviewView = ({
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
       description: 'Total de contribuições',
-      action: '/doar'
+      action: '/doacoes'
     },
     {
       title: 'Status de Voluntário',
@@ -295,7 +295,7 @@ const OverviewView = ({
       color: volunteerStatus === 'APROVADO' ? 'from-blue-500 to-blue-600' : 'from-gray-500 to-gray-600',
       bgColor: volunteerStatus === 'APROVADO' ? 'bg-blue-50' : 'bg-gray-50',
       description: 'Seu status atual',
-      action: '/voluntariado'
+      action: '/voluntario'
     },
     {
       title: 'Pedidos de Adoção',
@@ -304,7 +304,7 @@ const OverviewView = ({
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
       description: 'Total de solicitações',
-      action: '/animais'
+      action: '/adote'
     },
     ...(isGamificationActive ? [{
       title: 'Pontuação Total',
@@ -418,7 +418,7 @@ const OverviewView = ({
           <h3 className="text-xl font-bold text-slate-800 mb-4">Ações Rápidas</h3>
           <div className="space-y-3">
             <motion.a 
-              href="/doar"
+              href="/doacoes"
               className="flex items-center gap-3 p-4 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 transition-colors border border-green-200 group"
               whileHover={{ x: 5 }}
             >
@@ -429,7 +429,7 @@ const OverviewView = ({
             </motion.a>
             
             <motion.a 
-              href="/voluntariado"
+              href="/voluntario"
               className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200 group"
               whileHover={{ x: 5 }}
             >
@@ -440,7 +440,7 @@ const OverviewView = ({
             </motion.a>
             
             <motion.a 
-              href="/animais"
+              href="/adote"
               className="flex items-center gap-3 p-4 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors border border-purple-200 group"
               whileHover={{ x: 5 }}
             >
