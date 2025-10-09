@@ -22,11 +22,11 @@ const ICONS = {
   dashboard: <CustomIcon icon={Home} />,
   user: <CustomIcon icon={User} />,
   lock: <CustomIcon icon={Lock} />,
-  gift: <CustomIcon icon={Gift} className="h-8 w-8 text-amber-500" />,
-  heart: <CustomIcon icon={Heart} className="h-8 w-8 text-rose-500" />,
+  gift: <CustomIcon icon={Gift} className="h-8 w-8 text-amber-600" />,
+  heart: <CustomIcon icon={Heart} className="h-8 w-8 text-amber-600" />,
   camera: <CustomIcon icon={Camera} className="h-5 w-5" />,
   clipboard: <CustomIcon icon={Clipboard} />,
-  star: <CustomIcon icon={Star} className="h-8 w-8 text-yellow-400" />,
+  star: <CustomIcon icon={Star} className="h-8 w-8 text-amber-500" />,
   trophy: <CustomIcon icon={Trophy} className="h-6 w-6" />,
 };
 
@@ -135,7 +135,7 @@ const ProfileHeader = ({
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 rounded-2xl shadow-2xl p-8 text-white mb-8 relative overflow-hidden"
+      className="w-full bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-2xl shadow-2xl p-8 text-white mb-8 relative overflow-hidden"
     >
       <div className="absolute inset-0 bg-black/10"></div>
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
@@ -154,7 +154,7 @@ const ProfileHeader = ({
           </div>
           <motion.button 
             onClick={onAvatarChange}
-            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white text-slate-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 opacity-0 group-hover:opacity-100"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -188,11 +188,11 @@ const ProfileHeader = ({
           >
             {user.pontos > 0 && (
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 border border-white/30">
-                <Star className="w-5 h-5 text-yellow-300" />
+                <Star className="w-5 h-5 text-amber-300" />
                 <span className="font-semibold">{user.pontos} pontos</span>
               </div>
             )}
-           
+            
           </motion.div>
         </div>
       </div>
@@ -225,10 +225,10 @@ const ResponsiveNavigation = ({
       {/* Botão Mobile */}
       <motion.button 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="md:hidden w-full bg-white rounded-2xl p-4 shadow-lg mb-4 flex items-center justify-between hover-lift"
+        className="md:hidden w-full bg-white rounded-2xl p-4 shadow-lg mb-4 flex items-center justify-between border border-amber-100"
         whileTap={{ scale: 0.98 }}
       >
-        <span className="font-semibold text-slate-800">Menu do Perfil</span>
+        <span className="font-semibold text-gray-800">Menu do Perfil</span>
         <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-180' : ''}`} />
       </motion.button>
 
@@ -238,7 +238,7 @@ const ResponsiveNavigation = ({
         initial={false}
         animate={{ height: isMobileMenuOpen ? 'auto' : 'auto' }}
       >
-        <div className="bg-white rounded-2xl shadow-lg p-4 space-y-2">
+        <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-4 space-y-2">
           {menuItems.map((item, index) => (
             <motion.button 
               key={item.id}
@@ -246,10 +246,10 @@ const ResponsiveNavigation = ({
                 setActiveView(item.id);
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center space-x-3 p-4 rounded-xl text-left font-semibold transition-all duration-200 hover-lift ${
+              className={`w-full flex items-center space-x-3 p-4 rounded-xl text-left font-semibold transition-all duration-200 border ${
                 activeView === item.id 
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg' 
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg border-transparent' 
+                  : 'text-gray-600 hover:bg-amber-50 hover:text-gray-800 border-amber-50'
               }`}
               whileHover={{ x: 4 }}
               transition={{ delay: index * 0.1 }}
@@ -283,8 +283,8 @@ const OverviewView = ({
       title: 'Doações Realizadas',
       value: donationCount,
       icon: ICONS.gift,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
       description: 'Total de contribuições',
       action: '/doacoes'
     },
@@ -292,8 +292,8 @@ const OverviewView = ({
       title: 'Status de Voluntário',
       value: volunteerStatus || 'Não candidatou',
       icon: ICONS.heart,
-      color: volunteerStatus === 'APROVADO' ? 'from-blue-500 to-blue-600' : 'from-gray-500 to-gray-600',
-      bgColor: volunteerStatus === 'APROVADO' ? 'bg-blue-50' : 'bg-gray-50',
+      color: volunteerStatus === 'APROVADO' ? 'from-amber-500 to-amber-600' : 'from-gray-400 to-gray-500',
+      bgColor: volunteerStatus === 'APROVADO' ? 'bg-amber-50' : 'bg-gray-50',
       description: 'Seu status atual',
       action: '/voluntario'
     },
@@ -301,8 +301,8 @@ const OverviewView = ({
       title: 'Pedidos de Adoção',
       value: pedidos.length,
       icon: ICONS.clipboard,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
       description: 'Total de solicitações',
       action: '/adote'
     },
@@ -327,9 +327,9 @@ const OverviewView = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'APROVADA': return 'text-green-600 bg-green-100';
-      case 'RECUSADA': return 'text-red-600 bg-red-100';
-      default: return 'text-yellow-600 bg-yellow-100';
+      case 'APROVADA': return 'text-green-600 bg-green-100 border border-green-200';
+      case 'RECUSADA': return 'text-red-600 bg-red-100 border border-red-200';
+      default: return 'text-amber-600 bg-amber-100 border border-amber-200';
     }
   };
 
@@ -344,7 +344,7 @@ const OverviewView = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
             whileHover={{ scale: 1.05, y: -5 }}
-            className={`${stat.bgColor} rounded-2xl p-6 shadow-lg border border-transparent hover-lift cursor-pointer`}
+            className={`${stat.bgColor} rounded-2xl p-6 shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300 cursor-pointer`}
             onClick={() => window.location.href = stat.action}
           >
             <div className="flex items-center justify-between mb-4">
@@ -352,9 +352,9 @@ const OverviewView = ({
                 {stat.icon}
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-1">{stat.value}</h3>
-            <p className="text-slate-600 font-semibold text-sm mb-2">{stat.title}</p>
-            <p className="text-slate-400 text-xs">{stat.description}</p>
+            <h3 className="text-2xl font-bold text-gray-800 mb-1">{stat.value}</h3>
+            <p className="text-gray-600 font-semibold text-sm mb-2">{stat.title}</p>
+            <p className="text-gray-400 text-xs">{stat.description}</p>
           </motion.div>
         ))}
       </div>
@@ -363,13 +363,13 @@ const OverviewView = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Atividades Recentes */}
         <motion.div 
-          className="bg-white rounded-2xl p-6 shadow-lg border hover-lift"
+          className="bg-white rounded-2xl p-6 shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-500" />
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-amber-500" />
             Atividades Recentes
           </h3>
           <div className="space-y-4">
@@ -377,18 +377,18 @@ const OverviewView = ({
               recentActivities.map((activity, index) => (
                 <motion.div 
                   key={activity.id} 
-                  className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-amber-50 hover:bg-amber-100 transition-colors border border-amber-200"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 + 0.4 }}
                 >
                   <div className={`w-2 h-2 rounded-full ${
                     activity.status === 'APROVADA' ? 'bg-green-500' : 
-                    activity.status === 'RECUSADA' ? 'bg-red-500' : 'bg-yellow-500'
+                    activity.status === 'RECUSADA' ? 'bg-red-500' : 'bg-amber-500'
                   }`}></div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 text-sm truncate">{activity.title}</p>
-                    <p className="text-slate-500 text-xs">{activity.date.toLocaleDateString('pt-BR')}</p>
+                    <p className="font-semibold text-gray-800 text-sm truncate">{activity.title}</p>
+                    <p className="text-gray-500 text-xs">{activity.date.toLocaleDateString('pt-BR')}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(activity.status)}`}>
                     {activity.status.replace('_', ' ')}
@@ -397,7 +397,7 @@ const OverviewView = ({
               ))
             ) : (
               <motion.p 
-                className="text-slate-500 text-center py-8"
+                className="text-gray-500 text-center py-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -410,19 +410,19 @@ const OverviewView = ({
 
         {/* Ações Rápidas */}
         <motion.div 
-          className="bg-white rounded-2xl p-6 shadow-lg border hover-lift"
+          className="bg-white rounded-2xl p-6 shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h3 className="text-xl font-bold text-slate-800 mb-4">Ações Rápidas</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Ações Rápidas</h3>
           <div className="space-y-3">
             <motion.a 
               href="/doacoes"
-              className="flex items-center gap-3 p-4 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 transition-colors border border-green-200 group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200 group"
               whileHover={{ x: 5 }}
             >
-              <div className="p-2 bg-green-100 rounded-lg group-hover:scale-110 transition-transform">
+              <div className="p-2 bg-amber-100 rounded-lg group-hover:scale-110 transition-transform">
                 <Gift className="w-5 h-5" />
               </div>
               <span className="font-semibold">Fazer uma Doação</span>
@@ -430,10 +430,10 @@ const OverviewView = ({
             
             <motion.a 
               href="/voluntario"
-              className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200 group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200 group"
               whileHover={{ x: 5 }}
             >
-              <div className="p-2 bg-blue-100 rounded-lg group-hover:scale-110 transition-transform">
+              <div className="p-2 bg-amber-100 rounded-lg group-hover:scale-110 transition-transform">
                 <Heart className="w-5 h-5" />
               </div>
               <span className="font-semibold">Tornar-se Voluntário</span>
@@ -441,10 +441,10 @@ const OverviewView = ({
             
             <motion.a 
               href="/adote"
-              className="flex items-center gap-3 p-4 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors border border-purple-200 group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200 group"
               whileHover={{ x: 5 }}
             >
-              <div className="p-2 bg-purple-100 rounded-lg group-hover:scale-110 transition-transform">
+              <div className="p-2 bg-amber-100 rounded-lg group-hover:scale-110 transition-transform">
                 <Clipboard className="w-5 h-5" />
               </div>
               <span className="font-semibold">Adotar um Animal</span>
@@ -472,13 +472,13 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
 
     return (
         <motion.div 
-            className="bg-white p-8 rounded-2xl shadow-lg space-y-8 hover-lift"
+            className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 space-y-8 hover:shadow-xl transition-all duration-300"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
         >
             <div>
-                <h2 className="text-3xl font-bold text-slate-800 mb-2">Meu Progresso</h2>
-                <p className="text-slate-500 text-lg">Acumule pontos e ajude ainda mais a nossa causa!</p>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Meu Progresso</h2>
+                <p className="text-gray-500 text-lg">Acumule pontos e ajude ainda mais a nossa causa!</p>
             </div>
 
             {/* Nível e Progresso */}
@@ -492,20 +492,20 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                     <p className="font-bold text-2xl">{pontos} <span className="text-lg font-medium opacity-90">pontos</span></p>
                 </motion.div>
 
-                <div className="bg-slate-50 p-6 rounded-2xl border">
+                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-slate-700 text-lg">Progresso para o Nível {level + 1}</h3>
+                        <h3 className="font-bold text-gray-700 text-lg">Progresso para o Nível {level + 1}</h3>
                         <p className="text-sm font-semibold text-amber-700">{pointsInCurrentLevel} / {POINTS_PER_LEVEL}</p>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden mb-2">
+                    <div className="w-full bg-amber-200 rounded-full h-4 overflow-hidden mb-2">
                         <motion.div 
                             className="bg-gradient-to-r from-amber-500 to-orange-500 h-4 rounded-full shadow-inner"
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercentage}%` }}
                             transition={{ duration: 1, delay: 0.5 }}
-                        /> {/* <-- CORREÇÃO: Esta div estava mal fechada */}
+                        />
                     </div>
-                    <p className="text-sm text-slate-500 text-center">
+                    <p className="text-sm text-gray-500 text-center">
                         {pointsToNextLevel} pontos para o próximo nível
                     </p>
                 </div>
@@ -513,28 +513,28 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
 
             {/* Como ganhar pontos */}
             <motion.div 
-                className="border-t pt-6"
+                className="border-t border-amber-200 pt-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
             >
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Como ganhar pontos?</h3>
-                <div className="space-y-3 text-slate-600">
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50" whileHover={{ x: 5 }}>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Como ganhar pontos?</h3>
+                <div className="space-y-3 text-gray-600">
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
                         <span className="text-2xl">🎁</span>
                         <div>
                             <p className="font-semibold">+50 pontos</p>
                             <p className="text-sm">Faça uma doação para a associação</p>
                         </div>
                     </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-rose-50" whileHover={{ x: 5 }}>
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
                         <span className="text-2xl">❤️</span>
                         <div>
                             <p className="font-semibold">+100 pontos</p>
                             <p className="text-sm">Candidate-se e seja aprovado como voluntário</p>
                         </div>
                     </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-blue-50" whileHover={{ x: 5 }}>
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
                         <span className="text-2xl">📝</span>
                         <div>
                             <p className="font-semibold">+150 pontos</p>
@@ -546,12 +546,12 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
 
             {/* Conquistas */}
             <motion.div 
-                className="border-t pt-6"
+                className="border-t border-amber-200 pt-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
             >
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Conquistas</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Conquistas</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {achievements.map((achievement, index) => (
                         <motion.div
@@ -559,7 +559,7 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                             className={`flex flex-col items-center gap-3 p-4 rounded-xl text-center border-2 ${
                                 achievement.unlocked 
                                 ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg' 
-                                : 'bg-slate-50 border-slate-200 opacity-60'
+                                : 'bg-amber-50 border-amber-200 opacity-60'
                             }`}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -570,12 +570,12 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                                 {achievement.icon}
                             </div>
                             <p className={`font-semibold text-sm ${
-                                achievement.unlocked ? 'text-slate-800' : 'text-slate-400'
+                                achievement.unlocked ? 'text-gray-800' : 'text-gray-400'
                             }`}>
                                 {achievement.name}
                             </p>
                             <p className={`text-xs ${
-                                achievement.unlocked ? 'text-green-600' : 'text-slate-400'
+                                achievement.unlocked ? 'text-green-600' : 'text-gray-400'
                             }`}>
                                 {achievement.unlocked ? '🏆 Conquistada' : achievement.description}
                             </p>
@@ -583,7 +583,7 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                     ))}
                 </div>
             </motion.div>
-        </motion.div> // <-- CORREÇÃO: Esta div estava a mais e mal posicionada
+        </motion.div>
     );
 };
 
@@ -617,7 +617,7 @@ export default function ProfilePage() {
       if (user.profileImageUrl) {
         setAvatarUrl(`${api.defaults.baseURL}${user.profileImageUrl}?t=${new Date().getTime()}`);
       } else {
-        setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=0ea5e9&color=fff&size=128&bold=true`);
+        setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&size=128&bold=true`);
       }
     }
   }, [user]);
@@ -667,13 +667,12 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validação básica do arquivo
     if (!file.type.startsWith('image/')) {
       toast.error('Por favor, selecione uma imagem válida.');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB
+    if (file.size > 5 * 1024 * 1024) {
       toast.error('A imagem deve ter menos de 5MB.');
       return;
     }
@@ -701,14 +700,14 @@ export default function ProfilePage() {
   // Estados de loading e autenticação
   if (isAuthLoading) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
         <motion.div 
           className="text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Carregando seu perfil...</p>
+          <p className="text-gray-600">Carregando seu perfil...</p>
         </motion.div>
       </main>
     );
@@ -716,18 +715,18 @@ export default function ProfilePage() {
 
   if (!isAuthenticated || !user) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+      <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 p-4">
         <motion.div 
-          className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center space-y-6 hover-lift"
+          className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl text-center space-y-6 border border-amber-100"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto border border-red-200">
             <Lock className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900">Acesso Negado</h2>
-          <p className="text-slate-600">Por favor, faça login para aceder ao seu perfil.</p>
-          <Link href="/login" className="block w-full px-6 py-4 font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-lift">
+          <h2 className="text-3xl font-extrabold text-gray-900">Acesso Negado</h2>
+          <p className="text-gray-600">Por favor, faça login para aceder ao seu perfil.</p>
+          <Link href="/login" className="block w-full px-6 py-4 font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-600">
             Ir para o Login
           </Link>
         </motion.div>
@@ -736,7 +735,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen p-4 sm:p-6 lg:p-8">
+    <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header do Perfil */}
         <ProfileHeader 
@@ -785,11 +784,11 @@ export default function ProfilePage() {
 
                 {activeView === 'edit_profile' && (
                   <motion.div 
-                    className="bg-white p-8 rounded-2xl shadow-lg hover-lift"
+                    className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Editar Dados Pessoais</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Editar Dados Pessoais</h2>
                     <form onSubmit={handleProfileUpdate} className="space-y-6">
                       <div>
                         <label htmlFor="nome" className="block mb-3 text-sm font-semibold text-gray-700">Nome Completo</label>
@@ -798,7 +797,7 @@ export default function ProfilePage() {
                           value={nome} 
                           onChange={e => setNome(e.target.value)} 
                           disabled={isProfileLoading}
-                          className={errors.nome ? 'border-red-500' : ''}
+                          className={errors.nome ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'}
                         />
                         {errors.nome && <p className="text-red-500 text-sm mt-1">{errors.nome}</p>}
                       </div>
@@ -811,7 +810,7 @@ export default function ProfilePage() {
                           value={email} 
                           onChange={e => setEmail(e.target.value)} 
                           disabled={isProfileLoading}
-                          className={errors.email ? 'border-red-500' : ''}
+                          className={errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'}
                         />
                         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                       </div>
@@ -823,7 +822,7 @@ export default function ProfilePage() {
                           value={telefone} 
                           onChange={e => setTelefone(e.target.value)} 
                           disabled={isProfileLoading}
-                          className={errors.telefone ? 'border-red-500' : ''}
+                          className={errors.telefone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'}
                         />
                         {errors.telefone && <p className="text-red-500 text-sm mt-1">{errors.telefone}</p>}
                       </div>
@@ -832,12 +831,12 @@ export default function ProfilePage() {
                         <Button 
                           type="button" 
                           onClick={() => setActiveView('overview')} 
-                          className="bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold" 
+                          className="bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold border border-gray-300" 
                           disabled={isProfileLoading}
                         >
                           Cancelar
                         </Button>
-                        <Button type="submit" isLoading={isProfileLoading}>
+                        <Button type="submit" isLoading={isProfileLoading} className="bg-amber-500 hover:bg-amber-600 border-amber-600">
                           Guardar Alterações
                         </Button>
                       </div>
@@ -847,11 +846,11 @@ export default function ProfilePage() {
 
                 {activeView === 'change_password' && (
                   <motion.div 
-                    className="bg-white p-8 rounded-2xl shadow-lg hover-lift"
+                    className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Alterar Senha</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Alterar Senha</h2>
                     <form onSubmit={handlePasswordChange} className="space-y-6">
                       <div>
                         <label htmlFor="senhaAtual" className="block mb-3 text-sm font-semibold text-gray-700">Senha Atual</label>
@@ -863,7 +862,7 @@ export default function ProfilePage() {
                           icon={showCurrentPassword ? <Eye/> : <EyeOff/>} 
                           onIconClick={() => setShowCurrentPassword(!showCurrentPassword)} 
                           disabled={isPasswordLoading}
-                          className={errors.senhaAtual ? 'border-red-500' : ''}
+                          className={errors.senhaAtual ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'}
                         />
                         {errors.senhaAtual && <p className="text-red-500 text-sm mt-1">{errors.senhaAtual}</p>}
                       </div>
@@ -878,7 +877,7 @@ export default function ProfilePage() {
                           icon={showNewPassword ? <Eye/> : <EyeOff/>} 
                           onIconClick={() => setShowNewPassword(!showNewPassword)} 
                           disabled={isPasswordLoading}
-                          className={errors.novaSenha ? 'border-red-500' : ''}
+                          className={errors.novaSenha ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'}
                         />
                         {errors.novaSenha && <p className="text-red-500 text-sm mt-1">{errors.novaSenha}</p>}
                       </div>
@@ -887,12 +886,12 @@ export default function ProfilePage() {
                         <Button 
                           type="button" 
                           onClick={() => setActiveView('overview')} 
-                          className="bg-slate-200 text-slate-800 hover:bg-slate-300 font-semibold" 
+                          className="bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold border border-gray-300" 
                           disabled={isPasswordLoading}
                         >
                           Cancelar
                         </Button>
-                        <Button type="submit" isLoading={isPasswordLoading}>
+                        <Button type="submit" isLoading={isPasswordLoading} className="bg-amber-500 hover:bg-amber-600 border-amber-600">
                           Alterar Senha
                         </Button>
                       </div>
@@ -902,19 +901,19 @@ export default function ProfilePage() {
 
                 {activeView === 'meus_pedidos' && (
                   <motion.div 
-                    className="bg-white p-8 rounded-2xl shadow-lg hover-lift"
+                    className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Meus Pedidos de Adoção</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Meus Pedidos de Adoção</h2>
                     {profileData.pedidos.length === 0 ? (
                       <div className="text-center py-12">
-                        <Clipboard className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-600 mb-2">Nenhum pedido de adoção</h3>
-                        <p className="text-slate-500 mb-6">Você ainda não fez nenhum pedido de adoção.</p>
+                        <Clipboard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhum pedido de adoção</h3>
+                        <p className="text-gray-500 mb-6">Você ainda não fez nenhum pedido de adoção.</p>
                         <Link 
                           href="/animais" 
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-colors"
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition-colors border border-amber-600"
                         >
                           <Heart className="w-4 h-4" />
                           Ver Animais para Adoção
@@ -926,7 +925,7 @@ export default function ProfilePage() {
                           pedido.animal && (
                             <motion.div 
                               key={pedido.id} 
-                              className="flex items-center justify-between p-6 border rounded-2xl bg-gradient-to-r from-slate-50 to-white hover-lift"
+                              className="flex items-center justify-between p-6 border rounded-2xl bg-gradient-to-r from-amber-50 to-white hover:shadow-lg transition-all duration-300 border-amber-200"
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.1 }}
@@ -935,7 +934,7 @@ export default function ProfilePage() {
                                 <img 
                                   src={`${api.defaults.baseURL}${pedido.animal.animalImageUrl}`} 
                                   alt={pedido.animal.nome}
-                                  className="w-20 h-20 object-cover rounded-xl shadow-md"
+                                  className="w-20 h-20 object-cover rounded-xl shadow-md border border-amber-200"
                                   onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Sem+Foto'; }}
                                 />
                                 <div>
@@ -947,7 +946,7 @@ export default function ProfilePage() {
                               <span className={`px-4 py-2 text-sm font-semibold rounded-full ${
                                 pedido.status === 'APROVADA' ? 'bg-green-100 text-green-800 border border-green-200' :
                                 pedido.status === 'RECUSADA' ? 'bg-red-100 text-red-800 border border-red-200' :
-                                'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                'bg-amber-100 text-amber-800 border border-amber-200'
                               }`}>
                                 {pedido.status.replace('_', ' ')}
                               </span>

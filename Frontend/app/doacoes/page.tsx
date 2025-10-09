@@ -117,7 +117,7 @@ export default function DoacoesPage() {
       }
 
       await api.post('/doacao', donationData);
-      toast.success('Doação registrada com sucesso! Muito obrigado pelo seu apoio 💙');
+      toast.success('Doação registrada com sucesso! Muito obrigado pelo seu apoio 💛');
       setValor('');
       setQrCodeDataURL(null);
     } catch (err: any) {
@@ -163,7 +163,7 @@ export default function DoacoesPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -171,14 +171,14 @@ export default function DoacoesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-blue-100 mb-6">
+          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-amber-200 mb-6">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-sm font-semibold text-green-700">Doação 100% Segura</span>
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-4">
             Faça a Diferença
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
             Sua doação transforma vidas. Cada contribuição nos ajuda a oferecer cuidado, 
             amor e um futuro melhor para nossos amigos de quatro patas.
           </p>
@@ -193,7 +193,7 @@ export default function DoacoesPage() {
           >
             {/* Imagem Principal */}
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl transform group-hover:scale-105 transition-transform duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-3xl transform group-hover:scale-105 transition-transform duration-500"></div>
               <img 
                 src="/SobreNossaCausa.avif" 
                 alt="Cachorro feliz sendo cuidado" 
@@ -210,16 +210,16 @@ export default function DoacoesPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.05, y: -5 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg border border-blue-50 hover:shadow-xl transition-all duration-300 group"
+                  className="bg-white p-6 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300 group"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-blue-100 rounded-xl text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <div className="p-2 bg-amber-100 rounded-xl text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                       {card.icon}
                     </div>
-                    <span className="text-2xl font-bold text-blue-700">{card.amount}</span>
+                    <span className="text-2xl font-bold text-amber-700">{card.amount}</span>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-2">{card.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{card.description}</p>
+                  <h3 className="font-bold text-gray-800 mb-2">{card.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{card.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -229,11 +229,11 @@ export default function DoacoesPage() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-3xl shadow-2xl border border-blue-100 overflow-hidden"
+            className="bg-white rounded-3xl shadow-2xl border border-amber-100 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-8 text-white">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 text-white">
               <h2 className="text-3xl font-bold mb-2">Doe Agora</h2>
-              <p className="text-blue-100 opacity-90">Transforme vidas com um gesto simples</p>
+              <p className="text-amber-100 opacity-90">Transforme vidas com um gesto simples</p>
             </div>
 
             <div className="p-8">
@@ -252,16 +252,16 @@ export default function DoacoesPage() {
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="bg-blue-50 border border-blue-200 rounded-2xl p-4"
+                        className="bg-amber-50 border border-amber-200 rounded-2xl p-4"
                       >
-                        <label className="block text-sm font-semibold text-blue-700 mb-2">Você está doando como:</label>
+                        <label className="block text-sm font-semibold text-amber-700 mb-2">Você está doando como:</label>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
                             {user.nome.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-800">{user.nome}</p>
-                            <p className="text-sm text-slate-500">{user.email}</p>
+                            <p className="font-semibold text-gray-800">{user.nome}</p>
+                            <p className="text-sm text-gray-500">{user.email}</p>
                           </div>
                         </div>
                       </motion.div>
@@ -269,7 +269,7 @@ export default function DoacoesPage() {
 
                     {/* Seção de Valor */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-4">
                         Escolha o valor da sua doação
                       </label>
                       
@@ -284,8 +284,8 @@ export default function DoacoesPage() {
                             onClick={() => setValor(v)}
                             className={`p-4 rounded-xl font-semibold transition-all duration-200 border-2 ${
                               valor === v 
-                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg border-transparent' 
-                                : 'bg-white text-slate-700 border-blue-200 hover:border-blue-300 hover:bg-blue-50'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg border-transparent' 
+                                : 'bg-white text-gray-700 border-amber-200 hover:border-amber-300 hover:bg-amber-50'
                             }`}
                           >
                             R$ {v}
@@ -296,7 +296,7 @@ export default function DoacoesPage() {
                       {/* Input Personalizado */}
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <span className="text-slate-500 font-semibold">R$</span>
+                          <span className="text-gray-500 font-semibold">R$</span>
                         </div>
                         <Input
                           id="valor"
@@ -307,7 +307,7 @@ export default function DoacoesPage() {
                           value={valor}
                           onChange={(e) => setValor(e.target.value)}
                           required
-                          className="pl-12 text-lg font-semibold py-4 border-2 border-blue-200 focus:border-blue-500"
+                          className="pl-12 text-lg font-semibold py-4 border-2 border-amber-200 focus:border-amber-500 focus:ring-amber-500"
                         />
                       </div>
                     </div>
@@ -316,7 +316,7 @@ export default function DoacoesPage() {
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button 
                         type="submit" 
-                        className="w-full !py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="w-full !py-4 text-lg font-semibold bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <Zap className="w-5 h-5 mr-2" />
                         Gerar QR Code PIX
@@ -324,7 +324,7 @@ export default function DoacoesPage() {
                     </motion.div>
 
                     {/* Segurança */}
-                    <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-4">
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500 pt-4">
                       <Shield className="w-4 h-4" />
                       <span>Pagamento 100% seguro via PIX</span>
                     </div>
@@ -339,14 +339,14 @@ export default function DoacoesPage() {
                   >
                     {/* Header do QR Code */}
                     <div className="text-center mb-2">
-                      <h3 className="text-2xl font-bold text-slate-800 mb-2">Pagamento via PIX</h3>
-                      <p className="text-slate-600">Escaneie o QR Code com seu banco</p>
+                      <h3 className="text-2xl font-bold text-gray-800 mb-2">Pagamento via PIX</h3>
+                      <p className="text-gray-600">Escaneie o QR Code com seu banco</p>
                     </div>
 
                     {/* Valor */}
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border-2 border-blue-200">
-                      <p className="text-sm text-slate-600 mb-1">Valor da doação</p>
-                      <p className="text-4xl font-bold text-blue-700">R$ {parseFloat(valor).toFixed(2)}</p>
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200">
+                      <p className="text-sm text-gray-600 mb-1">Valor da doação</p>
+                      <p className="text-4xl font-bold text-amber-700">R$ {parseFloat(valor).toFixed(2)}</p>
                     </div>
 
                     {/* QR Code */}
@@ -354,15 +354,15 @@ export default function DoacoesPage() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 200 }}
-                      className="p-4 bg-white rounded-2xl shadow-lg border-2 border-blue-100"
+                      className="p-4 bg-white rounded-2xl shadow-lg border-2 border-amber-100"
                     >
                       <img src={qrCodeDataURL} alt="QR Code PIX" className="w-64 h-64" />
                     </motion.div>
 
                     {/* Instruções */}
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                      <p className="text-sm text-blue-700 font-semibold mb-2">Como pagar:</p>
-                      <ol className="text-sm text-blue-600 space-y-1 text-left">
+                    <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                      <p className="text-sm text-amber-700 font-semibold mb-2">Como pagar:</p>
+                      <ol className="text-sm text-amber-600 space-y-1 text-left">
                         <li>1. Abra o app do seu banco</li>
                         <li>2. Escolha pagar com PIX</li>
                         <li>3. Aponte a câmera para o QR Code</li>
@@ -376,7 +376,7 @@ export default function DoacoesPage() {
                         <Button 
                           onClick={copyToClipboard}
                           variant="outline"
-                          className="w-full !py-3 border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 flex items-center justify-center gap-2"
+                          className="w-full !py-3 border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300 flex items-center justify-center gap-2"
                         >
                           <ClipboardCopy size={18} />
                           {copied ? 'Copiado!' : 'Copiar Chave PIX'}
@@ -398,7 +398,7 @@ export default function DoacoesPage() {
                     {/* Voltar */}
                     <motion.button 
                       onClick={() => setQrCodeDataURL(null)}
-                      className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition-colors"
+                      className="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2 transition-colors"
                       whileHover={{ x: -5 }}
                     >
                       <ArrowLeft size={16} />
@@ -416,20 +416,20 @@ export default function DoacoesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="text-center mt-16 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-blue-100"
+          className="text-center mt-16 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-amber-100"
         >
-          <h3 className="text-2xl font-bold text-slate-800 mb-4">Transparência Total</h3>
-          <div className="grid md:grid-cols-3 gap-6 text-slate-600 max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">Transparência Total</h3>
+          <div className="grid md:grid-cols-3 gap-6 text-gray-600 max-w-4xl mx-auto">
             <div>
-              <h4 className="font-semibold text-blue-700 mb-2">100% dos recursos</h4>
+              <h4 className="font-semibold text-amber-700 mb-2">100% dos recursos</h4>
               <p className="text-sm">São direcionados para o cuidado dos animais</p>
             </div>
             <div>
-              <h4 className="font-semibold text-blue-700 mb-2">Relatórios mensais</h4>
+              <h4 className="font-semibold text-amber-700 mb-2">Relatórios mensais</h4>
               <p className="text-sm">Prestação de contas transparente</p>
             </div>
             <div>
-              <h4 className="font-semibold text-blue-700 mb-2">CNPJ regular</h4>
+              <h4 className="font-semibold text-amber-700 mb-2">CNPJ regular</h4>
               <p className="text-sm">Associação legalmente constituída</p>
             </div>
           </div>
