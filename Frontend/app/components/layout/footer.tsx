@@ -8,6 +8,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   if (pathname === '/painel-admin') return null;
+  if (pathname === '/login') return null;
 
   return (
     <footer className="bg-amber-900 text-white mt-auto">
