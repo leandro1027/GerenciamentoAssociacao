@@ -88,8 +88,8 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo - AUMENTADA */}
-          <div className="flex-shrink-0 flex items-center gap-3">
+          {/* Logo - AUMENTADA e MAIS À ESQUERDA */}
+          <div className="flex-shrink-0 flex items-center gap-3 mr-8"> {/* Adicionado mr-8 para dar mais espaço */}
             <Link 
               href="/" 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -107,7 +107,7 @@ const Navbar = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent"> {/* Aumentado de text-xl para text-2xl */}
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                   Associação
                 </h1>
                 <p className="text-xs text-gray-500">Fabiana Forte Huergo</p>
@@ -116,12 +116,12 @@ const Navbar = () => {
           </div>
 
           {/* Links Desktop */}
-          <div className="hidden lg:flex lg:items-center lg:space-x-1">
+          <div className="hidden lg:flex lg:items-center lg:space-x-1 flex-1 justify-center"> {/* Adicionado flex-1 e justify-center */}
             {renderNavLinks()}
             {isAuthenticated && user?.role === "ADMIN" && (
               <Link 
                 href="/painel-admin" 
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 hover:text-purple-800 transition-all duration-300"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300" // REMOVIDO O ROXO
               >
                 <Settings className="w-4 h-4" />
                 Painel Admin
@@ -159,7 +159,7 @@ const Navbar = () => {
                     <p className="font-semibold text-gray-800 group-hover:text-amber-700">
                       {user?.nome?.split(' ')[0]}
                     </p>
-                    <p className="text-xs text-gray-500">{user?.pontos || 0} pontos</p>
+                    {/* REMOVIDA A PONTUAÇÃO DO USUÁRIO */}
                   </div>
                   <svg 
                     className={`w-4 h-4 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} 
@@ -195,9 +195,9 @@ const Navbar = () => {
                       <Link 
                         href="/painel-admin" 
                         onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-purple-700 hover:bg-purple-50 transition-colors group"
+                        className="flex items-center gap-3 px-4 py-3 text-amber-700 hover:bg-amber-50 transition-colors group" // REMOVIDO O ROXO
                       >
-                        <Settings className="w-4 h-4 text-purple-600" />
+                        <Settings className="w-4 h-4 text-amber-600" /> {/* Alterado para âmbar */}
                         <span>Painel Admin</span>
                       </Link>
                     )}
@@ -237,11 +237,7 @@ const Navbar = () => {
 
           {/* Menu Mobile Button */}
           <div className="flex md:hidden items-center gap-2">
-            {isAuthenticated && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                {user?.pontos || 0}
-              </div>
-            )}
+            {/* REMOVIDO O BADGE DE PONTOS DO MOBILE */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               type="button"
@@ -272,7 +268,7 @@ const Navbar = () => {
               <Link 
                 href="/painel-admin" 
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors" // REMOVIDO O ROXO
               >
                 <Settings className="w-4 h-4" />
                 Painel Admin
@@ -287,9 +283,7 @@ const Navbar = () => {
                   <p className="font-semibold text-gray-800">{user?.nome}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
-                      {user?.pontos || 0} pontos
-                    </div>
+                    {/* REMOVIDO OS PONTOS DO MOBILE */}
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-xs text-gray-500">Online</span>
                   </div>

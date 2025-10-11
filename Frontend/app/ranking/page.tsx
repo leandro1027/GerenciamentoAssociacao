@@ -1,4 +1,3 @@
-// Ficheiro: /app/ranking/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -18,26 +17,26 @@ function RankPosition({ index }: { index: number }) {
     switch (index) {
       case 0: // Primeiro lugar
         return {
-          bg: 'bg-gradient-to-br from-yellow-400 to-amber-500',
+          bg: 'bg-gradient-to-br from-amber-400 to-amber-600',
           text: 'text-white',
-          shadow: 'shadow-lg shadow-yellow-200'
+          shadow: 'shadow-lg shadow-amber-200'
         };
       case 1: // Segundo lugar
         return {
-          bg: 'bg-gradient-to-br from-gray-400 to-gray-600',
+          bg: 'bg-gradient-to-br from-amber-300 to-amber-500',
           text: 'text-white',
-          shadow: 'shadow-lg shadow-gray-200'
+          shadow: 'shadow-lg shadow-amber-200'
         };
       case 2: // Terceiro lugar
         return {
-          bg: 'bg-gradient-to-br from-amber-600 to-amber-700',
-          text: 'text-white',
+          bg: 'bg-gradient-to-br from-amber-200 to-amber-400',
+          text: 'text-amber-900',
           shadow: 'shadow-lg shadow-amber-200'
         };
       default:
         return {
-          bg: 'bg-gray-100',
-          text: 'text-gray-600',
+          bg: 'bg-amber-100',
+          text: 'text-amber-800',
           shadow: 'shadow-sm'
         };
     }
@@ -56,10 +55,10 @@ function RankPosition({ index }: { index: number }) {
 function UserAvatar({ src, name, index }: { src: string; name: string; index: number }) {
   const getBorderStyle = () => {
     switch (index) {
-      case 0: return 'border-2 border-yellow-400 shadow-lg shadow-yellow-200';
-      case 1: return 'border-2 border-gray-400 shadow-lg shadow-gray-200';
-      case 2: return 'border-2 border-amber-600 shadow-lg shadow-amber-200';
-      default: return 'border-2 border-gray-200 shadow-sm';
+      case 0: return 'border-2 border-amber-400 shadow-lg shadow-amber-200';
+      case 1: return 'border-2 border-amber-300 shadow-lg shadow-amber-200';
+      case 2: return 'border-2 border-amber-200 shadow-lg shadow-amber-200';
+      default: return 'border-2 border-amber-100 shadow-sm';
     }
   };
 
@@ -68,9 +67,9 @@ function UserAvatar({ src, name, index }: { src: string; name: string; index: nu
       whileHover={{ scale: 1.05 }}
       src={src}
       alt={`Foto de ${name}`}
-      className={`w-14 h-14 rounded-full object-cover bg-gray-100 transition-all duration-300 ${getBorderStyle()}`}
+      className={`w-14 h-14 rounded-full object-cover bg-amber-100 transition-all duration-300 ${getBorderStyle()}`}
       onError={(e) => {
-        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0284c7&color=fff&bold=true&size=128`;
+        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f59e0b&color=fff&bold=true&size=128`;
       }}
     />
   );
@@ -80,18 +79,18 @@ function UserAvatar({ src, name, index }: { src: string; name: string; index: nu
 function RankingCard({ user, index }: { user: RankingUser; index: number }) {
   const avatarSrc = user.profileImageUrl
     ? `${api.defaults.baseURL}${user.profileImageUrl}`
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=0284c7&color=fff&bold=true`;
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&bold=true`;
 
   const getCardStyle = () => {
     switch (index) {
       case 0:
-        return 'bg-gradient-to-r from-yellow-50/80 to-amber-50/60 border-l-4 border-l-yellow-400 shadow-lg';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-400 shadow-lg';
       case 1:
-        return 'bg-gradient-to-r from-gray-50/80 to-gray-50/60 border-l-4 border-l-gray-400 shadow-md';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-300 shadow-md';
       case 2:
-        return 'bg-gradient-to-r from-amber-50/80 to-orange-50/60 border-l-4 border-l-amber-600 shadow-md';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-200 shadow-md';
       default:
-        return 'bg-white hover:bg-gray-50/80 border-l-4 border-l-transparent';
+        return 'bg-white hover:bg-amber-50/80 border-l-4 border-l-transparent';
     }
   };
 
@@ -139,7 +138,7 @@ function RankingCard({ user, index }: { user: RankingUser; index: number }) {
         className="flex items-center gap-3"
         whileHover={{ scale: 1.05 }}
       >
-        <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+        <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
           {user.pontos} pts
         </span>
       </motion.div>
@@ -150,18 +149,18 @@ function RankingCard({ user, index }: { user: RankingUser; index: number }) {
 // Componente Skeleton para loading
 function RankingSkeleton() {
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden border">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-amber-200">
       {[...Array(7)].map((_, index) => (
-        <div key={index} className="p-6 flex items-center justify-between border-b border-gray-200 last:border-b-0">
+        <div key={index} className="p-6 flex items-center justify-between border-b border-amber-200 last:border-b-0">
           <div className="flex items-center gap-6 flex-1">
-            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>
-            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+            <div className="w-12 h-12 rounded-full bg-amber-200 animate-pulse"></div>
+            <div className="w-10 h-10 rounded-full bg-amber-200 animate-pulse"></div>
             <div className="flex-1 space-y-2">
-              <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4"></div>
-              {index < 3 && <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3"></div>}
+              <div className="h-6 bg-amber-200 rounded animate-pulse w-3/4"></div>
+              {index < 3 && <div className="h-4 bg-amber-200 rounded animate-pulse w-1/3"></div>}
             </div>
           </div>
-          <div className="w-20 h-8 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-20 h-8 bg-amber-200 rounded animate-pulse"></div>
         </div>
       ))}
     </div>
@@ -182,29 +181,33 @@ function StatisticsCards({ ranking }: { ranking: RankingUser[] }) {
       title: 'Total de Contribuidores',
       value: stats.totalContributors,
       icon: '👥',
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50'
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200'
     },
     {
       title: 'Pontos Totais',
       value: stats.totalPoints.toLocaleString(),
       icon: '⭐',
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50'
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200'
     },
     {
       title: 'Maior Pontuação',
       value: stats.topScore.toLocaleString(),
       icon: '🏆',
       color: 'from-amber-500 to-amber-600',
-      bgColor: 'bg-amber-50'
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200'
     },
     {
       title: 'Média de Pontos',
       value: stats.averagePoints.toLocaleString(),
       icon: '📊',
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50'
+      color: 'from-amber-500 to-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200'
     }
   ];
 
@@ -225,14 +228,14 @@ function StatisticsCards({ ranking }: { ranking: RankingUser[] }) {
             scale: 1.05,
             transition: { duration: 0.2 }
           }}
-          className={`${stat.bgColor} rounded-2xl p-6 shadow-lg border border-white/50 backdrop-blur-sm`}
+          className={`${stat.bgColor} rounded-2xl p-6 shadow-lg border ${stat.borderColor} backdrop-blur-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
+              <p className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent">
                 {stat.value}
               </p>
-              <p className="text-gray-600 text-sm mt-2 font-medium">{stat.title}</p>
+              <p className="text-amber-700 text-sm mt-2 font-medium">{stat.title}</p>
             </div>
             <motion.div 
               className="text-4xl"
@@ -290,17 +293,17 @@ export default function RankingPage() {
 
   if (isLoading) {
     return (
-      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+      <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
               🏆 Ranking de Contribuidores
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-amber-700 max-w-2xl mx-auto">
               Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
             </p>
           </motion.div>
@@ -312,26 +315,26 @@ export default function RankingPage() {
 
   if (error) {
     return (
-      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+      <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
               🏆 Ranking de Contribuidores
             </h1>
           </div>
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl border p-12 text-center"
+            className="bg-white rounded-2xl shadow-xl border border-amber-200 p-12 text-center"
           >
             <div className="text-8xl mb-6">❌</div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Erro ao Carregar</h2>
-            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">{error}</p>
+            <h2 className="text-3xl font-bold text-amber-800 mb-4">Erro ao Carregar</h2>
+            <p className="text-amber-700 text-lg mb-8 max-w-md mx-auto">{error}</p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={fetchRankingData}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               🔄 Tentar Novamente
             </motion.button>
@@ -343,17 +346,17 @@ export default function RankingPage() {
 
   if (!isGamificationActive) {
     return (
-      <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+      <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
               🏆 Ranking de Contribuidores
             </h1>
           </div>
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl border p-12 text-center"
+            className="bg-white rounded-2xl shadow-xl border border-amber-200 p-12 text-center"
           >
             <motion.div 
               className="text-8xl mb-6"
@@ -365,8 +368,8 @@ export default function RankingPage() {
             >
               🔒
             </motion.div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Gamificação Desativada</h2>
-            <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+            <h2 className="text-3xl font-bold text-amber-800 mb-4">Gamificação Desativada</h2>
+            <p className="text-amber-700 text-lg mb-8 max-w-md mx-auto">
               O sistema de ranking está temporariamente desativado. 
               Entre em contato com o administrador para mais informações.
             </p>
@@ -374,7 +377,7 @@ export default function RankingPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={fetchRankingData}
-              className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               🔍 Verificar Status
             </motion.button>
@@ -385,7 +388,7 @@ export default function RankingPage() {
   }
 
   return (
-    <main className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
+    <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
       <div className="max-w-6xl mx-auto px-4">
         <motion.div 
           initial={{ opacity: 0, y: -30 }}
@@ -393,10 +396,10 @@ export default function RankingPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-black bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
             🏆 Ranking de Contribuidores
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-amber-700 max-w-2xl mx-auto leading-relaxed">
             Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
           </p>
         </motion.div>
@@ -409,16 +412,16 @@ export default function RankingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 overflow-hidden"
         >
           <div className="p-8 pb-4">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Top Contribuidores</h2>
+              <h2 className="text-2xl font-bold text-amber-800">Top Contribuidores</h2>
               <motion.div 
-                className="flex items-center gap-2 text-sm text-gray-600"
+                className="flex items-center gap-2 text-sm text-amber-700"
                 whileHover={{ scale: 1.05 }}
               >
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+                <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">
                   {ranking.length} participantes
                 </span>
               </motion.div>
@@ -438,8 +441,8 @@ export default function RankingPage() {
                   className="text-center py-12"
                 >
                   <div className="text-6xl mb-4">📊</div>
-                  <h3 className="text-2xl font-bold text-gray-700 mb-2">Ranking Vazio</h3>
-                  <p className="text-gray-600 max-w-md mx-auto">
+                  <h3 className="text-2xl font-bold text-amber-700 mb-2">Ranking Vazio</h3>
+                  <p className="text-amber-600 max-w-md mx-auto">
                     Ainda não há pontuações para exibir. Seja o primeiro a contribuir e entre para o hall da fama!
                   </p>
                 </motion.div>
@@ -453,7 +456,7 @@ export default function RankingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center mt-12 text-gray-500"
+          className="text-center mt-12 text-amber-600"
         >
           <p>Última atualização: {new Date().toLocaleString('pt-BR')}</p>
         </motion.div>

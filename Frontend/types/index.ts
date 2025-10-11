@@ -114,7 +114,7 @@ export interface Divulgacao {
   imageUrl: string;
   descricao?: string | null;
   status: DivulgacaoStatus;
-  createdAt: string; // Datas são recebidas como string da API
+  createdAt: string;
   usuarioId: number;
   usuario?: Usuario;
 }

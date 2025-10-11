@@ -60,7 +60,7 @@ export default function AnimalDetailModal({ animal, onClose }: ModalProps) {
             </div>
             
             <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-500 uppercase">Visto pela última vez em:</p>
+                <p className="text-sm font-semibold text-gray-500 uppercase">Costuma ficar em:</p>
                 <p className="text-gray-700">{animal.enderecoCompleto || 'Localização não informada'}</p>
             </div>
 

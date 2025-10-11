@@ -3,13 +3,12 @@
 
 import React from 'react';
 
-// Definimos as propriedades que nosso card genérico vai aceitar
 type CardProps = {
   imageUrl: string;
   title: string;
   description: string;
   imageAlt?: string;
-  children?: React.ReactNode; // 'children' é onde colocaremos nossos botões de ação
+  children?: React.ReactNode; // 'children' é onde é colocado os botões de ação
 };
 
 const Card = ({ imageUrl, title, description, imageAlt = 'Imagem do card', children }: CardProps) => {

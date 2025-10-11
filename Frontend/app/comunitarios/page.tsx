@@ -104,7 +104,7 @@ export default function ComunitariosPage() {
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center text-white px-4">
           <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">Nossos Animais Comunitários</h1>
           <p className="mt-4 text-lg sm:text-xl max-w-2xl">
-            Eles vivem em nossas ruas e praças, e também precisam do nosso cuidado. Conheça os peludos que fazem parte da nossa comunidade.
+            Eles vivem em nossas ruas e praças. Conheça os peludos que fazem parte da nossa comunidade.
           </p>
         </div>
       </section>
@@ -151,8 +151,8 @@ export default function ComunitariosPage() {
             </button>
         </div>
 
-        {/* --- Grelha de Animais --- */}
-        {loading && <p className="text-center text-gray-500 py-10">A carregar animais...</p>}
+        {/* --- Animais --- */}
+        {loading && <p className="text-center text-gray-500 py-10"> Carregando animais...</p>}
         {error && <p className="text-center text-red-600 bg-red-100 p-4 rounded-lg">{error}</p>}
         
         {!loading && !error && (
