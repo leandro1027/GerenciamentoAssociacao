@@ -7,11 +7,23 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Input from '../components/common/input';
 import Button from '../components/common/button';
-import { Doacao, Voluntario, Usuario, Adocao } from '../../types';
+import { Doacao, Voluntario, Usuario, Adocao, Conquista, UsuarioConquista } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Camera, Clock, ChevronDown, Star, Trophy, Gift, Heart, Clipboard, User, Lock, Home } from 'lucide-react';
+import { Eye, EyeOff, Camera, Clock, ChevronDown, Star, Trophy, Gift, Heart, Clipboard, User, Lock, Home, Calendar, CheckCircle, XCircle } from 'lucide-react';
 
-type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos' | 'gamification';
+type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos' | 'gamification' | 'login_history';
+
+// ADICIONE ESTE TIPO
+type UsuarioConquistaComDetalhes = UsuarioConquista & {
+  conquista: Conquista;
+};
+
+// ADICIONE ESTE TIPO PARA O HISTÓRICO DE LOGIN
+type LoginHistory = {
+  data: Date;
+  pontosGanhos: number;
+  status: 'completed' | 'missed';
+};
 
 // --- ÍCONES PERSONALIZADOS ---
 const CustomIcon = ({ icon: Icon, className = "h-6 w-6" }: { icon: any; className?: string }) => (
@@ -28,6 +40,7 @@ const ICONS = {
   clipboard: <CustomIcon icon={Clipboard} />,
   star: <CustomIcon icon={Star} className="h-8 w-8 text-amber-500" />,
   trophy: <CustomIcon icon={Trophy} className="h-6 w-6" />,
+  calendar: <CustomIcon icon={Calendar} className="h-6 w-6" />,
 };
 
 // --- HOOK PARA DADOS DO PERFIL ---
@@ -36,6 +49,8 @@ const useProfileData = (user: Usuario | null) => {
     donationCount: 0,
     volunteerStatus: null as string | null,
     pedidos: [] as Adocao[],
+    conquistas: [] as UsuarioConquistaComDetalhes[],
+    loginHistory: [] as LoginHistory[], // << ADICIONE AQUI
     isGamificationActive: false,
     isLoading: true
   });
@@ -45,19 +60,25 @@ const useProfileData = (user: Usuario | null) => {
 
     const fetchProfileData = async () => {
       try {
-        const [donationsRes, volunteerRes, adocoesRes, configRes] = await Promise.all([
+        const [donationsRes, volunteerRes, adocoesRes, configRes, conquistasRes] = await Promise.all([
           api.get<Doacao[]>('/doacao'),
           api.get<Voluntario | null>('/voluntario/meu-status'),
           api.get<Adocao[]>('/adocoes/meus-pedidos'),
           api.get('/configuracao'),
+          api.get<UsuarioConquistaComDetalhes[]>('/gamificacao/minhas-conquistas'),
         ]);
 
         const userDonations = donationsRes.data.filter(d => d.usuarioId === user.id);
+        
+        // GERA HISTÓRICO DE LOGIN BASEADO NA DATA DO ÚLTIMO LOGIN COM PONTOS
+        const loginHistory = generateLoginHistory(user.ultimoLoginComPontos);
         
         setProfileData({
           donationCount: userDonations.length,
           volunteerStatus: volunteerRes.data?.status || null,
           pedidos: adocoesRes.data,
+          conquistas: conquistasRes.data,
+          loginHistory, // << ARMAZENE O HISTÓRICO
           isGamificationActive: configRes.data.gamificacaoAtiva,
           isLoading: false
         });
@@ -72,6 +93,38 @@ const useProfileData = (user: Usuario | null) => {
   }, [user]);
 
   return profileData;
+};
+
+// --- FUNÇÃO PARA GERAR HISTÓRICO DE LOGIN ---
+const generateLoginHistory = (ultimoLoginComPontos: Date | null | undefined): LoginHistory[] => {
+  const history: LoginHistory[] = [];
+  const hoje = new Date();
+  
+  // Gera os últimos 7 dias
+  for (let i = 6; i >= 0; i--) {
+    const data = new Date();
+    data.setDate(hoje.getDate() - i);
+    data.setHours(0, 0, 0, 0);
+    
+    // Verifica se é um dia com login (antes ou igual ao último login com pontos)
+    let isCompleted = false;
+    
+    if (ultimoLoginComPontos) {
+      const ultimoLoginDate = new Date(ultimoLoginComPontos);
+      ultimoLoginDate.setHours(0, 0, 0, 0);
+      
+      // Verifica se a data atual do loop é menor ou igual ao último login
+      isCompleted = data.getTime() <= ultimoLoginDate.getTime();
+    }
+    
+    history.push({
+      data,
+      pontosGanhos: isCompleted ? 5 : 0,
+      status: isCompleted ? 'completed' : 'missed'
+    });
+  }
+  
+  return history;
 };
 
 // --- HOOK PARA VALIDAÇÃO ---
@@ -214,7 +267,10 @@ const ResponsiveNavigation = ({
 
   const menuItems = [
     { id: 'overview' as ProfileView, label: 'Resumo', icon: ICONS.dashboard },
-    ...(isGamificationActive ? [{ id: 'gamification' as ProfileView, label: 'Minha Pontuação', icon: ICONS.trophy }] : []),
+    ...(isGamificationActive ? [
+      { id: 'gamification' as ProfileView, label: 'Minha Pontuação', icon: ICONS.trophy },
+      { id: 'login_history' as ProfileView, label: 'Histórico de Login', icon: ICONS.calendar }
+    ] : []),
     { id: 'edit_profile' as ProfileView, label: 'Editar Perfil', icon: ICONS.user },
     { id: 'change_password' as ProfileView, label: 'Alterar Senha', icon: ICONS.lock },
     { id: 'meus_pedidos' as ProfileView, label: 'Meus Pedidos', icon: ICONS.clipboard },
@@ -456,19 +512,13 @@ const OverviewView = ({
   );
 };
 
-const GamificationView = ({ pontos }: { pontos: number }) => {
+// --- COMPONENTE GAMIFICATION ATUALIZADO ---
+const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: UsuarioConquistaComDetalhes[] }) => {
     const POINTS_PER_LEVEL = 100;
     const level = Math.floor(pontos / POINTS_PER_LEVEL) + 1;
     const pointsInCurrentLevel = pontos % POINTS_PER_LEVEL;
     const progressPercentage = (pointsInCurrentLevel / POINTS_PER_LEVEL) * 100;
     const pointsToNextLevel = POINTS_PER_LEVEL - pointsInCurrentLevel;
-
-    const achievements = [
-        { id: 1, name: 'Primeira Doação', icon: '🎁', unlocked: pontos >= 50, description: 'Faça sua primeira doação' },
-        { id: 2, name: 'Coração Voluntário', icon: '❤️', unlocked: pontos >= 100, description: 'Torne-se voluntário' },
-        { id: 3, name: 'Herói de um Peludo', icon: '🏆', unlocked: pontos >= 200, description: 'Complete uma adoção' },
-        { id: 4, name: 'Amigo Fiel', icon: '⭐', unlocked: pontos >= 300, description: 'Alcance 300 pontos' },
-    ];
 
     return (
         <motion.div 
@@ -541,6 +591,13 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                             <p className="text-sm">Complete uma adoção responsável</p>
                         </div>
                     </motion.div>
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
+                        <span className="text-2xl">🔐</span>
+                        <div>
+                            <p className="font-semibold">+5 pontos</p>
+                            <p className="text-sm">Login diário</p>
+                        </div>
+                    </motion.div>
                 </div>
             </motion.div>
 
@@ -551,36 +608,200 @@ const GamificationView = ({ pontos }: { pontos: number }) => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
             >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Conquistas</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {achievements.map((achievement, index) => (
-                        <motion.div
-                            key={achievement.id}
-                            className={`flex flex-col items-center gap-3 p-4 rounded-xl text-center border-2 ${
-                                achievement.unlocked 
-                                ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg' 
-                                : 'bg-amber-50 border-amber-200 opacity-60'
-                            }`}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.6 + index * 0.1 }}
-                            whileHover={{ scale: 1.05 }}
-                        >
-                            <div className={`text-3xl ${achievement.unlocked ? '' : 'grayscale'}`}>
-                                {achievement.icon}
-                            </div>
-                            <p className={`font-semibold text-sm ${
-                                achievement.unlocked ? 'text-gray-800' : 'text-gray-400'
-                            }`}>
-                                {achievement.name}
-                            </p>
-                            <p className={`text-xs ${
-                                achievement.unlocked ? 'text-green-600' : 'text-gray-400'
-                            }`}>
-                                {achievement.unlocked ? '🏆 Conquistada' : achievement.description}
-                            </p>
-                        </motion.div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Minhas Conquistas</h3>
+                
+                {conquistas.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {conquistas.map((userConquista, index) => (
+                      <motion.div
+                        key={userConquista.conquista.id}
+                        title={userConquista.conquista.descricao}
+                        className="flex flex-col items-center gap-3 p-4 rounded-xl text-center border-2 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="text-3xl">
+                          {userConquista.conquista.icone}
+                        </div>
+                        <p className="font-semibold text-sm text-gray-800">
+                          {userConquista.conquista.nome}
+                        </p>
+                        <p className="text-xs text-green-700 font-medium">
+                          🏆 Conquistada em {new Date(userConquista.dataDeGanho).toLocaleDateString('pt-BR')}
+                        </p>
+                      </motion.div>
                     ))}
+                  </div>
+                ) : (
+                  // Mensagem para quando não há conquistas
+                  <div className="text-center py-8 text-gray-500">
+                    <Trophy className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <p>Você ainda não desbloqueou nenhuma conquista.</p>
+                    <p className="text-sm">Continue ajudando para ganhar suas primeiras medalhas!</p>
+                  </div>
+                )}
+            </motion.div>
+        </motion.div>
+    );
+};
+
+// --- NOVO COMPONENTE: HISTÓRICO DE LOGIN ---
+const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) => {
+    const hoje = new Date();
+    const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    const getStreak = () => {
+        let streak = 0;
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        
+        for (let i = loginHistory.length - 1; i >= 0; i--) {
+            const dia = new Date(loginHistory[i].data);
+            dia.setHours(0, 0, 0, 0);
+            
+            if (loginHistory[i].status === 'completed') {
+                const diffDias = Math.floor((hoje.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDias === streak) {
+                    streak++;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        return streak;
+    };
+
+    const currentStreak = getStreak();
+
+    return (
+        <motion.div 
+            className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 space-y-8 hover:shadow-xl transition-all duration-300"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+        >
+            <div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Histórico de Login Diário</h2>
+                <p className="text-gray-500 text-lg">Acompanhe sua sequência de logins e ganhe pontos todos os dias!</p>
+            </div>
+
+            {/* Estatísticas de Sequência */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <motion.div 
+                    className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                >
+                    <p className="text-sm font-semibold opacity-90">Sequência Atual</p>
+                    <p className="text-6xl font-extrabold my-4">{currentStreak}</p>
+                    <p className="font-bold text-lg">dias consecutivos</p>
+                </motion.div>
+
+                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-center">
+                    <Calendar className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                    <h3 className="font-bold text-gray-700 text-lg mb-2">Pontos por Login</h3>
+                    <p className="text-2xl font-bold text-amber-600">+5</p>
+                    <p className="text-sm text-gray-500 mt-1">pontos por dia</p>
+                </div>
+
+                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-center">
+                    <Star className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                    <h3 className="font-bold text-gray-700 text-lg mb-2">Total do Mês</h3>
+                    <p className="text-2xl font-bold text-amber-600">
+                        {loginHistory.filter(l => l.status === 'completed').length * 5}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">pontos ganhos</p>
+                </div>
+            </div>
+
+            {/* Calendário de Logins */}
+            <motion.div 
+                className="border-t border-amber-200 pt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+            >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Últimos 7 Dias</h3>
+                <div className="grid grid-cols-7 gap-4">
+                    {loginHistory.map((day, index) => {
+                        const isToday = day.data.toDateString() === hoje.toDateString();
+                        const diaSemana = diasDaSemana[day.data.getDay()];
+                        const diaMes = day.data.getDate();
+                        const mes = meses[day.data.getMonth()];
+                        
+                        return (
+                            <motion.div
+                                key={index}
+                                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
+                                    day.status === 'completed'
+                                        ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg'
+                                        : 'bg-gray-50 border-gray-200 opacity-60'
+                                } ${isToday ? 'ring-2 ring-amber-400 ring-opacity-50' : ''}`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 + index * 0.1 }}
+                                whileHover={{ scale: 1.05 }}
+                            >
+                                <div className={`text-2xl mb-2 ${
+                                    day.status === 'completed' ? 'text-green-600' : 'text-gray-400'
+                                }`}>
+                                    {day.status === 'completed' ? <CheckCircle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+                                </div>
+                                <p className={`font-semibold text-sm ${
+                                    day.status === 'completed' ? 'text-gray-800' : 'text-gray-400'
+                                }`}>
+                                    {diaSemana}
+                                </p>
+                                <p className="text-xs text-gray-500 mb-1">{diaMes} {mes}</p>
+                                <p className={`text-xs font-medium ${
+                                    day.status === 'completed' ? 'text-green-600' : 'text-gray-400'
+                                }`}>
+                                    {day.status === 'completed' ? '+5 pontos' : 'Sem login'}
+                                </p>
+                                {isToday && (
+                                    <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full mt-1 font-semibold">
+                                        Hoje
+                                    </span>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            </motion.div>
+
+            {/* Dicas */}
+            <motion.div 
+                className="border-t border-amber-200 pt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+            >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">💡 Dicas para Manter sua Sequência</h3>
+                <div className="space-y-3 text-gray-600">
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
+                        <div className="text-2xl">📱</div>
+                        <div>
+                            <p className="font-semibold">Faça login todos os dias</p>
+                            <p className="text-sm">Mesmo que seja rápido, não quebre a sequência!</p>
+                        </div>
+                    </motion.div>
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
+                        <div className="text-2xl">⏰</div>
+                        <div>
+                            <p className="font-semibold">Estabeleça um horário</p>
+                            <p className="text-sm">Escolha um momento do dia para fazer login sempre no mesmo horário</p>
+                        </div>
+                    </motion.div>
+                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
+                        <div className="text-2xl">🎯</div>
+                        <div>
+                            <p className="font-semibold">Ative as notificações</p>
+                            <p className="text-sm">Receba lembretes para não esquecer do login diário</p>
+                        </div>
+                    </motion.div>
                 </div>
             </motion.div>
         </motion.div>
@@ -780,7 +1001,18 @@ export default function ProfilePage() {
                   />
                 )}
 
-                {activeView === 'gamification' && <GamificationView pontos={user.pontos || 0} />}
+                {activeView === 'gamification' && (
+                  <GamificationView 
+                    pontos={user.pontos || 0} 
+                    conquistas={profileData.conquistas}
+                  />
+                )}
+
+                {activeView === 'login_history' && (
+                  <LoginHistoryView 
+                    loginHistory={profileData.loginHistory}
+                  />
+                )}
 
                 {activeView === 'edit_profile' && (
                   <motion.div 

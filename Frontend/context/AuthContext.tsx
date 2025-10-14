@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Usuario } from '../types';
 import api from '@/app/services/api';
 import Cookies from 'js-cookie';
+import toast from 'react-hot-toast'; // 1. IMPORTAR O TOAST
 
 interface AuthContextType {
   user: Usuario | null;
@@ -12,7 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
-  updateUser: (newUserData: Usuario) => void;
+  updateUser: (newUserData: Partial<Usuario>) => void; // Alterado para Partial<Usuario> para mais flexibilidade
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,16 +50,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadUserFromCookies();
   }, []);
 
+  // --- FUNÇÃO LOGIN ATUALIZADA ---
   const login = async (email: string, pass: string) => {
-    const response = await api.post<{ access_token: string }>('/auth/login', { email, senha: pass });
-    const { access_token } = response.data;
+    // 2. ATUALIZAR O TIPO DA RESPOSTA ESPERADA
+    const response = await api.post<{ access_token: string; dailyPointsAwarded: boolean }>('/auth/login', { email, senha: pass });
+    const { access_token, dailyPointsAwarded } = response.data;
 
     if (access_token) {
-      Cookies.set('token', access_token, { expires: 1 / 24 });
+      Cookies.set('token', access_token, { expires: 1 }); // Expira em 1 dia
       setAuthHeader(access_token);
+      
+      // Busca os dados do usuário atualizados (com os novos pontos, se houver)
       const { data: userData } = await api.get<Usuario>('/auth/profile');
       setUser(userData);
-      router.push('/');
+
+      // 3. VERIFICAR A FLAG E MOSTRAR A NOTIFICAÇÃO
+      if (dailyPointsAwarded) {
+        toast.success('Você ganhou 5 pontos pelo seu login diário! 🎉');
+      }
+      
+      toast.success(`Bem-vindo(a) de volta, ${userData.nome}!`);
+      router.push('/perfil');
     }
   };
 
@@ -69,9 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  // NOVA FUNÇÃO PARA ATUALIZAR O UTILIZADOR EM TODA A APLICAÇÃO
-  const updateUser = (newUserData: Usuario) => {
-    setUser(newUserData);
+  // Função para atualizar o usuário em toda a aplicação (ex: após editar perfil)
+  const updateUser = (newUserData: Partial<Usuario>) => {
+    setUser(currentUser => currentUser ? { ...currentUser, ...newUserData } : null);
   };
 
   const value = { user, isAuthenticated: !!user, isLoading, login, logout, updateUser };

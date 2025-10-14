@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
+import { GamificacaoService } from 'src/gamificacao/gamificacao.service';
+import { Usuario } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -15,23 +17,95 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
     private configService: ConfigService,
+    private gamificacaoService: GamificacaoService, // Serviço de gamificação injetado
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usuarioService.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.senha))) {
-      const { senha, ...result } = user;
-      return result;
+      // Retorna o objeto de usuário completo para ser usado no login
+      return user;
     }
     return null;
   }
 
-  async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role };
+  // --- MÉTODO LOGIN ATUALIZADO E CORRIGIDO ---
+  async login(user: Usuario) {
+    let dailyPointsAwarded = false;
+
+    // 1. Processa o bônus de login diário ANTES de buscar os dados finais
+    const bonusResult = await this.processarBonusLoginDiario(user);
+    if (bonusResult) {
+      dailyPointsAwarded = true;
+    }
+    
+    // 2. Re-busca o usuário do banco DEPOIS de processar o bônus.
+    // Isso garante que a pontuação retornada para o frontend já esteja atualizada.
+    const usuarioAtualizado = await this.prisma.usuario.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!usuarioAtualizado) {
+      throw new UnauthorizedException("Usuário não encontrado após a validação.");
+    }
+
+    // Constrói manualmente o objeto de resposta para evitar o erro de tipagem
+    // e garantir que a senha seja excluída.
+    const userResponse = {
+        id: usuarioAtualizado.id,
+        nome: usuarioAtualizado.nome,
+        email: usuarioAtualizado.email,
+        role: usuarioAtualizado.role,
+        telefone: usuarioAtualizado.telefone,
+        profileImageUrl: usuarioAtualizado.profileImageUrl,
+        passwordResetToken: usuarioAtualizado.passwordResetToken,
+        passwordResetExpires: usuarioAtualizado.passwordResetExpires,
+        divulgacoes_aprovadas: usuarioAtualizado.divulgacoes_aprovadas,
+        estado: usuarioAtualizado.estado,
+        cidade: usuarioAtualizado.cidade,
+        pontos: usuarioAtualizado.pontos,
+        ultimoLoginComPontos: usuarioAtualizado.ultimoLoginComPontos,
+    };
+
+    const payload = { email: userResponse.email, sub: userResponse.id, role: userResponse.role };
+    
+    // 3. Retorna o token, o usuário JÁ ATUALIZADO e a flag de bônus
     return {
       access_token: this.jwtService.sign(payload),
+      user: userResponse,
+      dailyPointsAwarded,
     };
   }
+
+  // --- MÉTODO PRIVADO PARA A LÓGICA DE LOGIN DIÁRIO ---
+  private async processarBonusLoginDiario(user: Usuario): Promise<boolean> {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Zera o horário para comparar apenas o dia
+
+    const ultimoLogin = user.ultimoLoginComPontos;
+    let ultimoLoginDate: Date | null = null;
+    if (ultimoLogin) {
+        ultimoLoginDate = new Date(ultimoLogin);
+        ultimoLoginDate.setHours(0, 0, 0, 0); // Zera o horário do último login também
+    }
+    
+    // Se o usuário nunca recebeu pontos por login ou se o último foi em um dia anterior
+    if (!ultimoLoginDate || ultimoLoginDate.getTime() < hoje.getTime()) {
+      // Concede 5 pontos
+      await this.gamificacaoService.adicionarPontos(user.id, 5);
+      
+      // Atualiza a data do último login para agora, registrando que o bônus foi dado hoje
+      await this.prisma.usuario.update({
+        where: { id: user.id },
+        data: { ultimoLoginComPontos: new Date() },
+      });
+      
+      return true; // Retorna true para indicar que os pontos foram concedidos
+    }
+
+    return false; // Retorna false se os pontos não foram concedidos (já logou hoje)
+  }
+
 
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
@@ -41,7 +115,7 @@ export class AuthService {
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const passwordResetExpires = new Date(Date.now() + 2 * 60 * 1000); // Expira em 2 minutos
+    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
 
     await this.prisma.usuario.update({
       where: { id: user.id },
@@ -64,7 +138,7 @@ export class AuthService {
       to: user.email,
       from: `Associação <${emailUser}>`,
       subject: 'Redefinição de Senha da Sua Conta',
-      text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 2 minutos.\n`,
+      text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 10 minutos.\n`,
     };
 
     try {
@@ -74,10 +148,8 @@ export class AuthService {
     }
   }
 
-  // --- NOVO MÉTODO ADICIONADO ---
   async validateResetToken(token: string): Promise<void> {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
     const user = await this.prisma.usuario.findFirst({
       where: {
         passwordResetToken: hashedToken,
@@ -91,16 +163,12 @@ export class AuthService {
   }
 
   async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
-    // 1. Reutiliza a lógica de validação
     await this.validateResetToken(token);
-
-    // 2. Busca o usuário novamente para obter o ID (a validação já garante que ele existe)
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await this.prisma.usuario.findFirst({
         where: { passwordResetToken: hashedToken }
     });
 
-    // Esta verificação é uma segurança extra, mas a lógica principal está no validateResetToken
     if (!user) {
         throw new BadRequestException('Token inválido ou expirado.');
     }
@@ -117,4 +185,5 @@ export class AuthService {
       },
     });
   }
-} 
+}
+

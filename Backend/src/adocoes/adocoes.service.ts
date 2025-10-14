@@ -2,11 +2,18 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAdocoeDto } from './dto/create-adocoe.dto';
 import { StatusAdocao, StatusAnimal } from '@prisma/client';
+import { GamificacaoService } from 'src/gamificacao/gamificacao.service'; // 1. IMPORTAR O SERVIÇO DE GAMIFICAÇÃO
 
 @Injectable()
 export class AdocoesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gamificacaoService: GamificacaoService, // 2. INJETAR O SERVIÇO NO CONSTRUTOR
+  ) {}
 
+  /**
+   * Cria uma nova solicitação de adoção.
+   */
   async create(createAdocaoDto: CreateAdocoeDto, userId: number) {
     const { animalId, tipoMoradia, outrosAnimais, tempoDisponivel, motivoAdocao } = createAdocaoDto;
 
@@ -34,6 +41,9 @@ export class AdocoesService {
     });
   }
 
+  /**
+   * Busca todas as solicitações de adoção para um usuário específico.
+   */
   findAllForUser(userId: number) {
     return this.prisma.adocao.findMany({
       where: { usuarioId: userId },
@@ -46,11 +56,14 @@ export class AdocoesService {
     });
   }
 
+  /**
+   * Busca todas as solicitações de adoção para o painel de administração.
+   */
   findAllForAdmin() {
     return this.prisma.adocao.findMany({
       include: {
-        animal: true,   // Inclui detalhes do animal
-        usuario: true,  // Inclui detalhes do utilizador
+        animal: true, // Inclui detalhes do animal
+        usuario: true, // Inclui detalhes do utilizador
       },
       orderBy: {
         dataSolicitacao: 'desc',
@@ -58,17 +71,25 @@ export class AdocoesService {
     });
   }
 
+  /**
+   * Atualiza o status de uma solicitação de adoção.
+   * Se o novo status for 'APROVADA', aciona a lógica de gamificação.
+   */
   async updateStatus(id: string, status: StatusAdocao) {
     const adocao = await this.prisma.adocao.findUnique({
-        where: { id },
+      where: { id },
     });
 
     if (!adocao) {
-        throw new NotFoundException(`Pedido de adoção com ID "${id}" não encontrado.`);
+      throw new NotFoundException(`Pedido de adoção com ID "${id}" não encontrado.`);
     }
 
-    // Se a adoção for aprovada, atualiza o status do animal também.
-    if (status === StatusAdocao.APROVADA) {
+    // A lógica de gamificação só deve ser acionada na TRANSIÇÃO para APROVADA.
+    // Isso evita que a recompensa seja dada múltiplas vezes caso a ação seja repetida.
+    if (adocao.status !== StatusAdocao.APROVADA && status === StatusAdocao.APROVADA) {
+      
+      // Usamos uma transação para garantir que todas as operações (atualizar adoção,
+      // atualizar animal e dar pontos/medalhas) aconteçam com sucesso, ou nenhuma delas.
       return this.prisma.$transaction(async (prisma) => {
         // 1. Atualiza o pedido de adoção
         const updatedAdocao = await prisma.adocao.update({
@@ -76,21 +97,28 @@ export class AdocoesService {
           data: { status, dataFinalizacao: new Date() },
         });
 
-        // 2. Atualiza o status do animal para ADOTADO
+        // 2. Atualiza o status do animal para ADOTADO e o torna indisponível
         await prisma.animal.update({
           where: { id: adocao.animalId },
           data: { status: StatusAnimal.ADOTADO, disponivel: false },
         });
 
+        // 3. ACIONA O GATILHO DE GAMIFICAÇÃO!
+        // Passamos o ID do usuário e o cliente da transação para o serviço de gamificação.
+        await this.gamificacaoService.processarRecompensaPorAdocao(
+          updatedAdocao.usuarioId,
+          prisma,
+        );
+
         return updatedAdocao;
       });
     }
 
-    // atualiza o pedido
+    // Para qualquer outra atualização de status (ex: EM_ANALISE, RECUSADA),
+    // apenas atualiza o pedido de adoção sem acionar a gamificação.
     return this.prisma.adocao.update({
       where: { id },
       data: { status },
     });
   }
 }
-

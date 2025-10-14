@@ -4,7 +4,7 @@ import { GamificacaoController } from './gamificacao.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule], // Apenas o PrismaModule deve estar aqui
+  imports: [PrismaModule], 
   controllers: [GamificacaoController],
   providers: [GamificacaoService],
   exports: [GamificacaoService],

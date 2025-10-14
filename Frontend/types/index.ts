@@ -7,6 +7,7 @@ export interface Usuario {
   telefone?: string;
   profileImageUrl?: string;
   pontos:number
+  ultimoLoginComPontos?: Date | null;
 }
 
 export type StatusVoluntario = 'pendente' | 'aprovado' | 'recusado';
@@ -35,6 +36,22 @@ export type DoacaoComUsuario = Doacao & {
 };
 
 export type StatusDoacao = 'PENDENTE' | 'CONFIRMADA' | 'REJEITADA';
+
+export interface Conquista {
+  id: number;
+  nome: string;
+  descricao: string;
+  icone: string; // Este é o campo para o emoji, como '🏆'
+  pontosBonus: number;
+}
+
+export interface UsuarioConquista {
+  dataDeGanho: string; // A API retorna a data como string
+  usuarioId: number;
+  conquistaId: number;
+  // A relação 'conquista' não precisa estar aqui, pois vamos criar
+  // um tipo 'helper' no componente que a utiliza.
+}
 
 export interface Slide {
   id: number;
