@@ -24,9 +24,17 @@ export interface Doacao {
   usuarioId: number;
   valor: number;
   tipo: string;
+  status: 'PENDENTE' | 'CONFIRMADA' | 'REJEITADA'; // Adicionado
+  comprovanteUrl?: string | null; // Adicionado
   data: string;
-  usuario?: Usuario;
+  usuario: Usuario | null;
 }
+
+export type DoacaoComUsuario = Doacao & {
+  usuario: Usuario | null;
+};
+
+export type StatusDoacao = 'PENDENTE' | 'CONFIRMADA' | 'REJEITADA';
 
 export interface Slide {
   id: number;

@@ -25,6 +25,12 @@ export class ReportsController {
   async exportDonationsPdf(@Res() res: Response) {
     const columns = this.donationsReportService.getColumns();
     const data = await this.donationsReportService.getData();
-    this.reportsService.generatePdf(res, 'relatorio_doacoes.pdf', 'Relatório de Doações', columns, data);
+    this.reportsService.generatePdf(
+      res,
+      'relatorio_doacoes.pdf',
+      'Relatório de Doações',
+      columns,
+      data,
+    );
   }
 }

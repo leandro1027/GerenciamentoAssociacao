@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent, useCallback, useRef, useMemo } from 'react';
 import api from '../services/api';
-import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal, AnimalComunitario } from '../../types';
+import { Voluntario, Usuario, StatusVoluntario, Slide, Doacao, Animal, Especie, Sexo, Porte, Adocao, StatusAdocao, Divulgacao, DivulgacaoStatus, Parceiro, StatusAnimal, AnimalComunitario, DoacaoComUsuario, StatusDoacao} from '../../types';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import Input from '../components/common/input';
@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import dynamic from 'next/dynamic';
+import { Check, X, ExternalLink, Loader2 } from 'lucide-react';
+
 
 
 // --- COMPONENTE REUTILIZÁVEL DE MODAL ---
@@ -558,15 +560,39 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
     );
 };
 
-// 5. COMPONENTE PARA LISTAR DOAÇÕES
-const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) => {
+// COMPONENTE PARA LISTAR DOAÇÕES
+const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsuario[] }) => {
+    // 2. ESTADO PARA GERENCIAR AS DOAÇÕES E O CARREGAMENTO
+    const [donations, setDonations] = useState<DoacaoComUsuario[]>(initialDonations);
+    const [loadingId, setLoadingId] = useState<number | null>(null);
+
+    // 3. FUNÇÃO PARA ATUALIZAR O STATUS (CONFIRMAR/REJEITAR)
+    const handleUpdateStatus = async (id: number, status: StatusDoacao) => {
+        setLoadingId(id); // Ativa o ícone de loading para a linha específica
+        try {
+            const response = await api.patch(`/doacao/${id}/status`, { status });
+            // Atualiza a lista na tela sem precisar recarregar a página
+            setDonations(prevDonations =>
+                prevDonations.map(d => (d.id === id ? response.data : d))
+            );
+            toast.success(`Doação ${status === 'CONFIRMADA' ? 'confirmada' : 'rejeitada'}!`);
+        } catch (error) {
+            toast.error('Erro ao atualizar o status da doação.');
+        } finally {
+            setLoadingId(null); // Desativa o loading
+        }
+    };
+
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString: string | Date) => { // Aceita Date para evitar erros
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
+
+    // URL base da sua API para montar o link do comprovante
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3333';
 
     return (
         <section>
@@ -578,17 +604,59 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doador</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                {/* 4. NOVAS COLUNAS ADICIONADAS */}
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Comprovante</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {initialDonations.map(doacao => (
-                                <tr key={doacao.id}>
+                            {/* Usando o estado 'donations' em vez de 'initialDonations' */}
+                            {donations.map(doacao => (
+                                <tr key={doacao.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{doacao.usuario?.nome || 'Utilizador não encontrado'}</div>
+                                        <div className="text-sm font-medium text-gray-900">{doacao.usuario?.nome || 'Doação Anônima'}</div>
                                         <div className="text-sm text-gray-500">{doacao.usuario?.email}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{formatCurrency(doacao.valor)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(doacao.data)}</td>
+                                    {/* 5. DADOS DAS NOVAS COLUNAS */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                            doacao.status === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
+                                            doacao.status === 'REJEITADA' ? 'bg-red-100 text-red-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                            {doacao.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                        <a
+                                            href={`${API_BASE_URL}/${doacao.comprovanteUrl}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-amber-600 hover:text-amber-800 inline-flex items-center gap-1 font-semibold"
+                                        >
+                                            Visualizar <ExternalLink size={14} />
+                                        </a>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        {/* Renderização condicional: botões, loading ou nada */}
+                                        {loadingId === doacao.id ? (
+                                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-gray-400" />
+                                        ) : doacao.status === 'PENDENTE' ? (
+                                            <div className="flex justify-center space-x-3">
+                                                <button onClick={() => handleUpdateStatus(doacao.id, 'CONFIRMADA')} className="text-green-600 hover:text-green-800" title="Confirmar Doação">
+                                                    <Check className="w-5 h-5" />
+                                                </button>
+                                                <button onClick={() => handleUpdateStatus(doacao.id, 'REJEITADA')} className="text-red-600 hover:text-red-800" title="Rejeitar Doação">
+                                                    <X className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -598,6 +666,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: Doacao[] }) =
         </section>
     );
 };
+
 
 // 6. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {

@@ -99,6 +99,8 @@ model Doacao {
   tipo      String
   data      DateTime     @default(now())
   status    StatusDoacao @default(PENDENTE)
+  comprovanteUrl String?
+
 
   // Relação opcional para permitir doações anónimas
   usuarioId Int?

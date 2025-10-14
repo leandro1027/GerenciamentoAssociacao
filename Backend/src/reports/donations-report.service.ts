@@ -1,33 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StatusDoacao } from '@prisma/client';
+import { ReportColumn } from '../reports/reports.service'; // 🔹 Import do tipo
 
 @Injectable()
 export class DonationsReportService {
   constructor(private prisma: PrismaService) {}
 
-  // Define as colunas para o relatório de doações
-  getColumns() {
+  // 🔹 Define colunas do relatório com tipos corretos
+  getColumns(): ReportColumn[] {
     return [
-      { key: 'id', header: 'ID' },
-      { key: 'usuario.nome', header: 'Nome do Doador', width: 150 },
-      { key: 'valor', header: 'Valor (R$)' },
-      { key: 'data', header: 'Data' },
+      { key: 'nomeDoador', header: 'Nome do Doador', width: 250, align: 'left' },
+      { key: 'valor', header: 'Valor (R$)', width: 100, align: 'right' },
+      { key: 'data', header: 'Data', width: 120, align: 'center' },
     ];
   }
 
-  // Busca e formata os dados para o relatório de doações
+  // 🔹 Busca e formata dados
   async getData() {
-    const donations = await this.prisma.doacao.findMany({
-      include: {
-        usuario: { select: { nome: true } },
-      },
+    const confirmedDonations = await this.prisma.doacao.findMany({
+      where: { status: StatusDoacao.CONFIRMADA },
+      include: { usuario: { select: { nome: true } } },
       orderBy: { data: 'desc' },
     });
 
-    return donations.map(d => ({
-      ...d,
-      valor: d.valor.toFixed(2).replace('.', ','),
-      data: new Date(d.data).toLocaleDateString('pt-BR'),
+    return confirmedDonations.map((donation) => ({
+      nomeDoador: donation.usuario?.nome || 'Doação Anônima',
+      valor: donation.valor.toFixed(2).replace('.', ','),
+      data: new Date(donation.data).toLocaleDateString('pt-BR'),
     }));
   }
 }
