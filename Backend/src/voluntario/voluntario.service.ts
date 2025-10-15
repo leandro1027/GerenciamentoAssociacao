@@ -1,42 +1,39 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { NotFoundError } from 'rxjs';
+import { GamificacaoService } from 'src/gamificacao/gamificacao.service';
 
 @Injectable()
 export class VoluntarioService {
-  constructor(private readonly prisma:PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gamificacaoService: GamificacaoService,
+  ) {}
 
-   async create(createVoluntarioDto: CreateVoluntarioDto) {
-    const { usuarioId, motivo } = createVoluntarioDto;
+  async create(createVoluntarioDto: CreateVoluntarioDto, usuarioId: number) {
+    const { motivo } = createVoluntarioDto;
 
-    // 2. Verifique se já existe uma candidatura para este utilizador
     const existingVoluntario = await this.prisma.voluntario.findUnique({
-      where: {
-        usuarioId: usuarioId,
-      },
+      where: { usuarioId: usuarioId },
     });
 
-    // 3. Se já existir, retorne um erro claro
     if (existingVoluntario) {
-      throw new ConflictException('Este utilizador já enviou uma candidatura.');
+      throw new ConflictException('Você já enviou uma candidatura.');
     }
 
-    // 4. Se não existir, crie a nova candidatura
     return this.prisma.voluntario.create({
       data: {
-        usuarioId,
+        usuarioId: usuarioId,
         motivo,
       },
     });
   }
 
-
   findAll() {
     return this.prisma.voluntario.findMany({
       include: {
-        usuario: true, 
+        usuario: true,
       },
     });
   }
@@ -45,7 +42,7 @@ export class VoluntarioService {
     const voluntario = await this.prisma.voluntario.findUnique({
       where: { id },
       include: {
-        usuario: true, 
+        usuario: true,
       },
     });
 
@@ -55,18 +52,39 @@ export class VoluntarioService {
     return voluntario;
   }
 
- findOneByUserId(userId: number) {
+  findOneByUserId(userId: number) {
     return this.prisma.voluntario.findUnique({
       where: { usuarioId: userId },
     });
   }
 
   async update(id: number, updateVoluntarioDto: UpdateVoluntarioDto) {
-    await this.findOne(id);
+    return this.prisma.$transaction(async (prisma) => {
+      const voluntarioOriginal = await prisma.voluntario.findUnique({
+        where: { id },
+      });
 
-    return this.prisma.voluntario.update({
-      where: {id},
-      data: updateVoluntarioDto,
+      if (!voluntarioOriginal) {
+        throw new NotFoundException(`Candidatura de voluntário com ID ${id} não encontrada.`);
+      }
+
+      const voluntarioAtualizado = await prisma.voluntario.update({
+        where: { id },
+        data: updateVoluntarioDto,
+      });
+
+      if (
+        voluntarioAtualizado.status === 'aprovado' &&
+        voluntarioOriginal.status !== 'aprovado' &&
+        voluntarioAtualizado.usuarioId
+      ) {
+        await this.gamificacaoService.processarRecompensaPorVoluntariadoAprovado(
+          voluntarioAtualizado.usuarioId,
+          prisma,
+        );
+      }
+
+      return voluntarioAtualizado;
     });
   }
 
@@ -74,7 +92,7 @@ export class VoluntarioService {
     await this.findOne(id);
 
     return this.prisma.voluntario.delete({
-      where: {id},
+      where: { id },
     });
   }
 }

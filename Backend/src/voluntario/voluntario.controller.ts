@@ -1,50 +1,79 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, createParamDecorator, ExecutionContext, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+  Request, // ALTERAÇÃO: Importa o decorator Request
+} from '@nestjs/common';
 import { VoluntarioService } from './voluntario.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateVoluntarioDto } from './dto/create-voluntario.dto';
 import { UpdateVoluntarioDto } from './dto/update-voluntario.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { Request as ExpressRequest } from 'express';
+// A importação do GetUser foi removida
 import { Usuario } from '@prisma/client';
 
-export const GetUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user;
-  },
-);
-
 @Controller('voluntario')
+@UseGuards(JwtAuthGuard)
 export class VoluntarioController {
   constructor(private readonly voluntarioService: VoluntarioService) {}
 
-  // Rota para UTILIZADOR LOGADO: Qualquer utilizador autenticado pode candidatar-se.
   @Post()
-  @UseGuards(JwtAuthGuard)
-  create(@Body() createVoluntarioDto: CreateVoluntarioDto) {
-    return this.voluntarioService.create(createVoluntarioDto);
+  // ALTERAÇÃO: Usamos @Request() para pegar o objeto de requisição completo
+  create(@Body() createVoluntarioDto: CreateVoluntarioDto, @Request() req) {
+    // O JwtAuthGuard anexa o 'user' ao request. Extraímos o ID dele aqui.
+    const usuarioId = req.user.id;
+    return this.voluntarioService.create(createVoluntarioDto, usuarioId);
   }
 
-  // Rota de ADMIN: Apenas administradores podem ver todas as candidaturas.
+  @Get('meu-status')
+  // ALTERAÇÃO: Usamos @Request() aqui também
+  findMyStatus(@Request() req) {
+    const usuarioId = req.user.id;
+    return this.voluntarioService.findOneByUserId(usuarioId);
+  }
+
+  // ===================================================================
+  // ROTAS DE ADMINISTRAÇÃO (Nenhuma alteração necessária aqui)
+  // ===================================================================
+
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('ADMIN')
   findAll() {
     return this.voluntarioService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('meu-status')
-  findMyStatus(@GetUser() user: Usuario) {
-    return this.voluntarioService.findOneByUserId(user.id);
+  @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.voluntarioService.findOne(id);
   }
 
-  // Rota de ADMIN: Apenas administradores podem aprovar/recusar candidaturas.
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('ADMIN')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateVoluntarioDto: UpdateVoluntarioDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateVoluntarioDto: UpdateVoluntarioDto,
+  ) {
     return this.voluntarioService.update(id, updateVoluntarioDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.voluntarioService.remove(id);
   }
 }

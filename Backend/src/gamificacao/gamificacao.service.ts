@@ -58,7 +58,29 @@ export class GamificacaoService {
     });
   }
 
-  // gamificacao.service.ts
+   async processarRecompensaPorVoluntariadoAprovado(
+    usuarioId: number,
+    prisma: Prisma.TransactionClient,
+  ) {
+    // 1. Verifica se a gamificação está ativa
+    if (!(await this.isGamificacaoAtiva())) {
+      return;
+    }
+
+    this.logger.log(`Processando recompensas de voluntariado para o usuário ID: ${usuarioId}`);
+
+    // 2. Adiciona os 100 pontos pela aprovação
+    await this.adicionarPontos(usuarioId, 100, prisma);
+
+    // 3. Adiciona a conquista "Coração Voluntário"
+    // A função verificarEAdicionarConquista já garante que o usuário não a receberá duas vezes.
+    await this.verificarEAdicionarConquista(
+      usuarioId,
+      'Coração Voluntário',
+      prisma,
+    );
+  }
+
 async getLoginHistory(usuarioId: number) {
   const seteDiasAtras = new Date();
   seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
