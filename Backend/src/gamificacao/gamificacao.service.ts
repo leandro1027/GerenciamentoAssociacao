@@ -2,7 +2,8 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateConquistaDto } from './dto/create-conquista.dto';
 import { UpdateConquistaDto } from './dto/update-conquista.dto';
-import { Prisma, StatusAdocao } from '@prisma/client';
+// CORREÇÃO: Adicionado DivulgacaoStatus para ser usado no novo método
+import { Prisma, StatusAdocao, DivulgacaoStatus } from '@prisma/client';
 
 // Interface para definir o tipo de retorno do histórico de login
 export interface LoginHistoryStatus {
@@ -41,6 +42,43 @@ export class GamificacaoService {
     }
   }
 
+  async processarRecompensaPorVoluntariadoAprovado(
+    usuarioId: number,
+    prisma: Prisma.TransactionClient,
+  ) {
+    if (!(await this.isGamificacaoAtiva())) {
+      return;
+    }
+    this.logger.log(`Processando recompensas de voluntariado para o usuário ID: ${usuarioId}`);
+    await this.adicionarPontos(usuarioId, 100, prisma);
+    await this.verificarEAdicionarConquista(
+      usuarioId,
+      'Coração Voluntário',
+      prisma,
+    );
+  }
+
+  // --- NOVO MÉTODO ADICIONADO AQUI ---
+  async processarRecompensaPorDivulgacaoAprovada(
+    usuarioId: number,
+    prisma: Prisma.TransactionClient,
+  ) {
+    if (!(await this.isGamificacaoAtiva())) {
+      return;
+    }
+    this.logger.log(`Processando recompensas de divulgação para o usuário ID: ${usuarioId}`);
+    
+    // Adiciona 50 pontos pela aprovação
+    await this.adicionarPontos(usuarioId, 50, prisma);
+
+    // Adiciona a conquista "Bom Coração"
+    await this.verificarEAdicionarConquista(
+      usuarioId,
+      'Bom Coração',
+      prisma,
+    );
+  }
+
   // ===================================================================
   // MÉTODOS DE CONSULTA (para o Frontend)
   // ===================================================================
@@ -58,80 +96,53 @@ export class GamificacaoService {
     });
   }
 
-   async processarRecompensaPorVoluntariadoAprovado(
-    usuarioId: number,
-    prisma: Prisma.TransactionClient,
-  ) {
-    // 1. Verifica se a gamificação está ativa
-    if (!(await this.isGamificacaoAtiva())) {
-      return;
-    }
+  async getLoginHistory(usuarioId: number) {
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+    seteDiasAtras.setUTCHours(0, 0, 0, 0);
 
-    this.logger.log(`Processando recompensas de voluntariado para o usuário ID: ${usuarioId}`);
-
-    // 2. Adiciona os 100 pontos pela aprovação
-    await this.adicionarPontos(usuarioId, 100, prisma);
-
-    // 3. Adiciona a conquista "Coração Voluntário"
-    // A função verificarEAdicionarConquista já garante que o usuário não a receberá duas vezes.
-    await this.verificarEAdicionarConquista(
-      usuarioId,
-      'Coração Voluntário',
-      prisma,
-    );
-  }
-
-async getLoginHistory(usuarioId: number) {
-  const seteDiasAtras = new Date();
-  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-  seteDiasAtras.setUTCHours(0, 0, 0, 0);
-
-  // Busca os logins dos últimos 7 dias
-  const logins = await this.prisma.loginDiario.findMany({
-    where: {
-      usuarioId,
-      data: {
-        gte: seteDiasAtras
+    const logins = await this.prisma.loginDiario.findMany({
+      where: {
+        usuarioId,
+        data: {
+          gte: seteDiasAtras
+        }
+      },
+      orderBy: {
+        data: 'asc'
       }
-    },
-    orderBy: {
-      data: 'asc'
+    });
+
+    const ultimosSeteDias: { data: Date; status: 'completed' | 'missed' }[] = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const data = new Date();
+      data.setDate(data.getDate() - i);
+      data.setUTCHours(0, 0, 0, 0);
+
+      const loginDoDia = logins.find(login => {
+        const loginDate = new Date(login.data);
+        loginDate.setUTCHours(0, 0, 0, 0);
+        return loginDate.getTime() === data.getTime();
+      });
+
+      ultimosSeteDias.push({
+        data,
+        status: loginDoDia ? 'completed' : 'missed'
+      });
     }
-  });
-
-  // Cria um array com os últimos 7 dias
-  const ultimosSeteDias: { data: Date; status: 'completed' | 'missed' }[] = [];
-  
-  for (let i = 6; i >= 0; i--) {
-    const data = new Date();
-    data.setDate(data.getDate() - i);
-    data.setUTCHours(0, 0, 0, 0);
-
-    const loginDoDia = logins.find(login => {
-      const loginDate = new Date(login.data);
-      loginDate.setUTCHours(0, 0, 0, 0);
-      return loginDate.getTime() === data.getTime();
-    });
-
-    ultimosSeteDias.push({
-      data,
-      status: loginDoDia ? 'completed' : 'missed'
-    });
+    return ultimosSeteDias;
   }
-
-  return ultimosSeteDias;
-}
-
 
   // ===================================================================
   // MÉTODOS INTERNOS
   // ===================================================================
 
   async adicionarPontos(
-      usuarioId: number,
-      pontos: number,
-      prismaClient: Prisma.TransactionClient | PrismaService = this.prisma
-    ): Promise<void> {
+     usuarioId: number,
+     pontos: number,
+     prismaClient: Prisma.TransactionClient | PrismaService = this.prisma
+   ): Promise<void> {
     if (!(await this.isGamificacaoAtiva()) || !usuarioId) {
       return;
     }

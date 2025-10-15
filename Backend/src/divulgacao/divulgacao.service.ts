@@ -1,15 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
-import { AnimalService } from 'src/animal/animal.service';
 import { DivulgacaoStatus } from '@prisma/client';
 import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto';
+import { GamificacaoService } from 'src/gamificacao/gamificacao.service'; // NOVO: Importa o serviço
 
 @Injectable()
 export class DivulgacaoService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly animalService: AnimalService,
+    private readonly gamificacaoService: GamificacaoService, // NOVO: Injeta o serviço
+    // O AnimalService não é usado aqui, pode ser removido se não for usado em outros métodos
   ) {}
 
   create(createDivulgacaoDto: CreateDivulgacaoDto, file: Express.Multer.File, userId: number) {
@@ -34,7 +35,6 @@ export class DivulgacaoService {
     });
   }
 
-  // Para o painel admin
   findAll() {
     return this.prisma.divulgacao.findMany({
       include: { usuario: true },
@@ -42,12 +42,35 @@ export class DivulgacaoService {
     });
   }
 
-  //Atualiza o status de uma divulgação
+  // --- MÉTODO ATUALIZADO COM A LÓGICA DE GAMIFICAÇÃO ---
   async updateStatus(id: string, status: DivulgacaoStatus) {
-    await this.prisma.divulgacao.findUniqueOrThrow({ where: { id } });
-    return this.prisma.divulgacao.update({
-      where: { id },
-      data: { status },
+    // Usamos uma transação para garantir que ambas as operações (atualização e gamificação) funcionem
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Busca a divulgação original para saber o status antigo e o ID do usuário
+      const divulgacaoOriginal = await prisma.divulgacao.findUniqueOrThrow({
+        where: { id },
+      });
+
+      // 2. Atualiza o status da divulgação
+      const divulgacaoAtualizada = await prisma.divulgacao.update({
+        where: { id },
+        data: { status },
+      });
+
+      // 3. Verifica se a condição para gamificação foi atendida
+      if (
+        divulgacaoAtualizada.status === DivulgacaoStatus.REVISADO && // Se o novo status for APROVADO
+        divulgacaoOriginal.status !== DivulgacaoStatus.REVISADO &&  // E o status antigo NÃO ERA APROVADO
+        divulgacaoAtualizada.usuarioId
+      ) {
+        // Chama o método no GamificacaoService para dar os pontos e a conquista
+        await this.gamificacaoService.processarRecompensaPorDivulgacaoAprovada(
+          divulgacaoAtualizada.usuarioId,
+          prisma, // Passa o cliente da transação
+        );
+      }
+      
+      return divulgacaoAtualizada;
     });
   }
 
@@ -55,8 +78,7 @@ export class DivulgacaoService {
     const divulgacao = await this.prisma.divulgacao.findUniqueOrThrow({
       where: { id },
     });
-
-    // 1. Cria um novo animal com os dados do formulário
+    
     const novoAnimal = await this.prisma.animal.create({
       data: {
         nome: convertDto.nome,
@@ -70,21 +92,17 @@ export class DivulgacaoService {
         castrado: divulgacao.castrado,
       },
     });
-
-    // 2. ATUALIZA o status da divulgação original em vez de apagar
-    await this.prisma.divulgacao.update({
-      where: { id },
-      data: { status: DivulgacaoStatus.REVISADO }, // <-- LÓGICA CORRIGIDA
-    });
+    
+    // ATENÇÃO: Se converter para animal também conta como "aprovação",
+    // a lógica da gamificação também deveria ser adicionada aqui!
+    // Se o status aqui também muda para REVISADO, a gamificação será acionada.
+    await this.updateStatus(id, DivulgacaoStatus.REVISADO);
 
     return novoAnimal;
   }
 
   async remove(id: string) {
-    const divulgacao = await this.prisma.divulgacao.findUnique({ where: { id } });
-    if (!divulgacao) {
-      throw new NotFoundException(`Divulgação com ID "${id}" não encontrada.`);
-    }
+    await this.prisma.divulgacao.findUniqueOrThrow({ where: { id } });
     return this.prisma.divulgacao.delete({ where: { id } });
   }
 }
