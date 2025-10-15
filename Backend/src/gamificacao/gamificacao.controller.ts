@@ -10,53 +10,71 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { GamificacaoService } from './gamificacao.service';
 import { CreateConquistaDto } from './dto/create-conquista.dto';
 import { UpdateConquistaDto } from './dto/update-conquista.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard'; // <-- Ajuste o caminho se necessário
-import { RolesGuard } from 'src/auth/roles.guard'; // <-- Ajuste o caminho se necessário
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { CurrentUser } from 'src/auth/current-user.decorator';
-import { Usuario } from '@prisma/client';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('Gamificação')
+@ApiBearerAuth()
 @Controller('gamificacao')
-@UseGuards(JwtAuthGuard, RolesGuard) // Protege todas as rotas com autenticação e verificação de role
+@UseGuards(JwtAuthGuard, RolesGuard) // Protege TODAS as rotas do controller
 export class GamificacaoController {
   constructor(private readonly gamificacaoService: GamificacaoService) {}
 
-  // Rota para criar uma nova conquista (só para admins)
+  // ===================================================================
+  // ROTAS DO USUÁRIO (Acessíveis por qualquer usuário logado)
+  // ===================================================================
+
+
+  /**
+   * Retorna todas as conquistas ganhas pelo usuário autenticado.
+   */
+  @Get('minhas-conquistas')
+  @ApiOperation({ summary: 'Lista as conquistas do usuário autenticado' })
+  @ApiResponse({ status: 200, description: 'Conquistas retornadas com sucesso.'})
+  @ApiResponse({ status: 401, description: 'Não autorizado.'})
+  findMinhasConquistas(@Request() req) {
+    // O @UseGuards aqui era redundante, pois já está definido para a classe inteira.
+    const usuarioId = req.user.sub;
+    return this.gamificacaoService.findConquistasByUsuario(usuarioId);
+  }
+
+
+  // ===================================================================
+  // ROTAS DE ADMINISTRAÇÃO (Acessíveis apenas por usuários com role 'ADMIN')
+  // ===================================================================
+
   @Post('conquistas')
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Cria uma nova conquista (Admin)' })
   create(@Body() createConquistaDto: CreateConquistaDto) {
     return this.gamificacaoService.create(createConquistaDto);
   }
 
-  
-
-  // Rota para listar todas as conquistas (só para admins)
   @Get('conquistas')
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Lista todas as conquistas existentes (Admin)' })
   findAll() {
     return this.gamificacaoService.findAll();
   }
-
-    @Get('minhas-conquistas')
-  @UseGuards(JwtAuthGuard) // Protege a rota, mas permite que QUALQUER usuário logado acesse
-  findMinhasConquistas(@CurrentUser() user: Usuario) {
-    return this.gamificacaoService.findConquistasByUsuario(user.id);
-  }
-
-  // Rota para obter detalhes de uma conquista (só para admins)
+  
   @Get('conquistas/:id')
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Busca uma conquista por ID (Admin)' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.gamificacaoService.findOne(id);
   }
 
-  // Rota para atualizar uma conquista (só para admins)
   @Patch('conquistas/:id')
-   @Roles('ADMIN')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Atualiza uma conquista (Admin)' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateConquistaDto: UpdateConquistaDto,
@@ -64,10 +82,17 @@ export class GamificacaoController {
     return this.gamificacaoService.update(id, updateConquistaDto);
   }
 
-  // Rota para remover uma conquista (só para admins)
+  @Get('login-history')
+  @UseGuards(JwtAuthGuard)
+  async getLoginHistory(@Req() req) {
+    const usuarioId = req.user.id;
+    return this.gamificacaoService.getLoginHistory(usuarioId);
+  }
+
   @Delete('conquistas/:id')
   @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove uma conquista (Admin)' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.gamificacaoService.remove(id);
   }

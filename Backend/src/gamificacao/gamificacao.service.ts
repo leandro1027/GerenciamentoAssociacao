@@ -4,21 +4,21 @@ import { CreateConquistaDto } from './dto/create-conquista.dto';
 import { UpdateConquistaDto } from './dto/update-conquista.dto';
 import { Prisma, StatusAdocao } from '@prisma/client';
 
+// Interface para definir o tipo de retorno do histórico de login
+export interface LoginHistoryStatus {
+  data: Date;
+  status: 'completed' | 'missed';
+}
+
 @Injectable()
 export class GamificacaoService {
   private readonly logger = new Logger(GamificacaoService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   // ===================================================================
-  // MÉTODOS DE LÓGICA DE NEGÓCIO (Chamados por outros serviços)
+  // MÉTODOS DE LÓGICA DE NEGÓCIO
   // ===================================================================
 
-  /**
-   * Processa as recompensas (pontos e conquistas) para um usuário
-   * quando uma de suas adoções é aprovada.
-   * @param usuarioId ID do usuário que realizou a adoção.
-   * @param prisma O cliente Prisma da transação para garantir a atomicidade.
-   */
   async processarRecompensaPorAdocao(
     usuarioId: number,
     prisma: Prisma.TransactionClient,
@@ -26,13 +26,9 @@ export class GamificacaoService {
     if (!(await this.isGamificacaoAtiva())) {
       return;
     }
-
     this.logger.log(`Processando recompensas de adoção para o usuário ID: ${usuarioId}`);
-
-    // 1. Conceder 200 pontos pela adoção
     await this.adicionarPontos(usuarioId, 200, prisma);
 
-    // 2. Verificar se o usuário deve ganhar a medalha "Salvador de Vidas"
     const totalAdocoesAprovadas = await prisma.adocao.count({
       where: {
         usuarioId: usuarioId,
@@ -40,7 +36,6 @@ export class GamificacaoService {
       },
     });
 
-    // Concede a medalha apenas se esta for a primeira adoção aprovada do usuário
     if (totalAdocoesAprovadas === 1) {
       await this.verificarEAdicionarConquista(usuarioId, 'Salvador de Vidas', prisma);
     }
@@ -50,11 +45,6 @@ export class GamificacaoService {
   // MÉTODOS DE CONSULTA (para o Frontend)
   // ===================================================================
 
-  /**
-   * Busca todas as conquistas que um usuário específico ganhou.
-   * Inclui os detalhes de cada conquista (nome, ícone, etc.).
-   * @param usuarioId O ID do usuário.
-   */
   async findConquistasByUsuario(usuarioId: number) {
     this.logger.log(`Buscando conquistas para o usuário ID: ${usuarioId}`);
     return this.prisma.usuarioConquista.findMany({
@@ -68,14 +58,53 @@ export class GamificacaoService {
     });
   }
 
+  // gamificacao.service.ts
+async getLoginHistory(usuarioId: number) {
+  const seteDiasAtras = new Date();
+  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+  seteDiasAtras.setUTCHours(0, 0, 0, 0);
+
+  // Busca os logins dos últimos 7 dias
+  const logins = await this.prisma.loginDiario.findMany({
+    where: {
+      usuarioId,
+      data: {
+        gte: seteDiasAtras
+      }
+    },
+    orderBy: {
+      data: 'asc'
+    }
+  });
+
+  // Cria um array com os últimos 7 dias
+  const ultimosSeteDias: { data: Date; status: 'completed' | 'missed' }[] = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const data = new Date();
+    data.setDate(data.getDate() - i);
+    data.setUTCHours(0, 0, 0, 0);
+
+    const loginDoDia = logins.find(login => {
+      const loginDate = new Date(login.data);
+      loginDate.setUTCHours(0, 0, 0, 0);
+      return loginDate.getTime() === data.getTime();
+    });
+
+    ultimosSeteDias.push({
+      data,
+      status: loginDoDia ? 'completed' : 'missed'
+    });
+  }
+
+  return ultimosSeteDias;
+}
+
+
   // ===================================================================
-  // MÉTODOS INTERNOS (Blocos de construção da gamificação)
+  // MÉTODOS INTERNOS
   // ===================================================================
 
-  /**
-   * Adiciona uma quantidade de pontos a um usuário.
-   * Pode ser executado dentro de uma transação do Prisma.
-   */
   async adicionarPontos(
       usuarioId: number,
       pontos: number,
@@ -95,10 +124,6 @@ export class GamificacaoService {
     });
   }
 
-  /**
-   * Verifica se um usuário já possui uma conquista e, caso não, a atribui.
-   * Pode ser executado dentro de uma transação do Prisma.
-   */
   async verificarEAdicionarConquista(
     usuarioId: number,
     nomeConquista: string,
@@ -112,7 +137,7 @@ export class GamificacaoService {
     });
 
     if (!conquista) {
-      this.logger.warn(`Conquista "${nomeConquista}" não encontrada no banco de dados.`);
+      this.logger.warn(`Conquista "${nomeConquista}" não encontrada.`);
       return;
     }
 
@@ -152,15 +177,11 @@ export class GamificacaoService {
   // ===================================================================
 
   async create(createConquistaDto: CreateConquistaDto) {
-    return this.prisma.conquista.create({
-      data: createConquistaDto,
-    });
+    return this.prisma.conquista.create({ data: createConquistaDto });
   }
 
   async findAll() {
-    return this.prisma.conquista.findMany({
-        orderBy: { id: 'asc' }
-    });
+    return this.prisma.conquista.findMany({ orderBy: { id: 'asc' } });
   }
 
   async findOne(id: number) {

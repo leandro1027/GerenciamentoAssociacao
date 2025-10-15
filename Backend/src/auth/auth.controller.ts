@@ -1,4 +1,3 @@
-// backend/src/auth/auth.controller.ts
 import { Controller, Post, Body, UnauthorizedException, UseGuards, Get, Request, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/auth.dto';
@@ -10,18 +9,20 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
     const user = await this.authService.validateUser(loginDto.email, loginDto.senha);
     if (!user) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      throw new UnauthorizedException('Credenciais inválidas. Verifique seu e-mail e senha.');
     }
+    // A lógica de gamificação é tratada dentro do authService.login
     return this.authService.login(user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
-    // O objeto 'req.user' é adicionado pelo Guard após validar o token
+    // O objeto 'req.user' é populado pelo JwtAuthGuard após validar o token
     return req.user;
   }
 
@@ -29,20 +30,19 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body('email') email: string) {
     await this.authService.forgotPassword(email);
-    return { message: 'Se um utilizador com esse e-mail existir, um link de redefinição foi enviado.' };
+    // Mensagem genérica para não confirmar se um e-mail está ou não cadastrado
+    return { message: 'Se um usuário com esse e-mail existir, um link de redefinição foi enviado.' };
   }
 
-  // --- ROTA ADICIONADA ---
-  // Esta rota serve apenas para verificar se o token é válido, sem alterar a senha.
   @Get('validate-reset-token/:token')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 (Sucesso, sem conteúdo) se o token for válido
+  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 (Success, No Content) se o token for válido
   async validateResetToken(@Param('token') token: string) {
+    // Apenas valida, não retorna corpo na resposta em caso de sucesso
     await this.authService.validateResetToken(token);
   }
 
-
   @Post('reset-password/:token')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 ao invés de uma mensagem, é uma prática comum.
+  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 em caso de sucesso
   async resetPassword(
     @Param('token') token: string,
     @Body() resetPasswordDto: ResetPasswordDto

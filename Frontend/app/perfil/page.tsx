@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useEffect, useRef } from 'react';
+import { useState, FormEvent, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -10,6 +10,7 @@ import Button from '../components/common/button';
 import { Doacao, Voluntario, Usuario, Adocao, Conquista, UsuarioConquista } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Camera, Clock, ChevronDown, Star, Trophy, Gift, Heart, Clipboard, User, Lock, Home, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import axios from 'axios';
 
 type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos' | 'gamification' | 'login_history';
 
@@ -19,9 +20,8 @@ type UsuarioConquistaComDetalhes = UsuarioConquista & {
 };
 
 // ADICIONE ESTE TIPO PARA O HISTÓRICO DE LOGIN
-type LoginHistory = {
+type LoginHistoryItem = {
   data: Date;
-  pontosGanhos: number;
   status: 'completed' | 'missed';
 };
 
@@ -43,15 +43,14 @@ const ICONS = {
   calendar: <CustomIcon icon={Calendar} className="h-6 w-6" />,
 };
 
-// --- HOOK PARA DADOS DO PERFIL ---
+// --- HOOK PARA DADOS DO PERFIL (VERSÃO CORRIGIDA) ---
 const useProfileData = (user: Usuario | null) => {
   const [profileData, setProfileData] = useState({
     donationCount: 0,
     volunteerStatus: null as string | null,
     pedidos: [] as Adocao[],
     conquistas: [] as UsuarioConquistaComDetalhes[],
-    loginHistory: [] as LoginHistory[], // << ADICIONE AQUI
-    isGamificationActive: false,
+    isGamificationActive: false, // Inicia como falso por segurança
     isLoading: true
   });
 
@@ -60,32 +59,51 @@ const useProfileData = (user: Usuario | null) => {
 
     const fetchProfileData = async () => {
       try {
-        const [donationsRes, volunteerRes, adocoesRes, configRes, conquistasRes] = await Promise.all([
+        // 1. Primeiro, busca a configuração para saber o estado da gamificação
+        const configRes = await api.get<{ gamificacaoAtiva: boolean }>('/configuracao');
+        const gamificacaoAtiva = configRes.data.gamificacaoAtiva;
+
+        // 2. Busca os dados padrão que todos os usuários precisam, em paralelo
+        const [donationsRes, volunteerRes, adocoesRes] = await Promise.all([
           api.get<Doacao[]>('/doacao'),
           api.get<Voluntario | null>('/voluntario/meu-status'),
           api.get<Adocao[]>('/adocoes/meus-pedidos'),
-          api.get('/configuracao'),
-          api.get<UsuarioConquistaComDetalhes[]>('/gamificacao/minhas-conquistas'),
         ]);
 
+        // 3. Busca os dados de gamificação separadamente e SÓ SE NECESSÁRIO
+        let conquistasData: UsuarioConquistaComDetalhes[] = [];
+        if (gamificacaoAtiva) {
+          try {
+            // Esta chamada agora é segura, pois só acontece se a gamificação estiver ativa
+            const conquistasRes = await api.get<UsuarioConquistaComDetalhes[]>('/gamificacao/minhas-conquistas');
+            conquistasData = conquistasRes.data;
+          } catch (gamificationError) {
+             console.error("Aviso: Erro ao buscar dados de gamificação (pode ser um usuário normal sem acesso a uma rota de admin, o que é esperado). O erro não quebrará a página.", gamificationError);
+             // Não faz nada, apenas loga o aviso. A página continuará funcionando.
+          }
+        }
+        
         const userDonations = donationsRes.data.filter(d => d.usuarioId === user.id);
         
-        // GERA HISTÓRICO DE LOGIN BASEADO NA DATA DO ÚLTIMO LOGIN COM PONTOS
-        const loginHistory = generateLoginHistory(user.ultimoLoginComPontos);
-        
+        // 4. Define o estado final com todos os dados coletados
         setProfileData({
           donationCount: userDonations.length,
           volunteerStatus: volunteerRes.data?.status || null,
           pedidos: adocoesRes.data,
-          conquistas: conquistasRes.data,
-          loginHistory, // << ARMAZENE O HISTÓRICO
-          isGamificationActive: configRes.data.gamificacaoAtiva,
+          conquistas: conquistasData,
+          isGamificationActive: gamificacaoAtiva, // Define o estado corretamente para TODOS os usuários
           isLoading: false
         });
-      } catch (error) {
-        console.error("Erro ao buscar dados do perfil:", error);
-        toast.error('Não foi possível carregar todos os dados do perfil.');
-        setProfileData(prev => ({ ...prev, isLoading: false }));
+
+      } catch (error: any) {
+        console.error("Erro crítico ao buscar dados do perfil:", error);
+        
+        // Se o erro for de permissão, não mostramos um toast genérico.
+        if (error.response?.status !== 403) {
+            toast.error('Não foi possível carregar os dados do perfil.');
+        }
+        // Em caso de erro, garante que a gamificação seja desativada na UI
+        setProfileData(prev => ({ ...prev, isLoading: false, isGamificationActive: false }));
       }
     };
 
@@ -93,38 +111,6 @@ const useProfileData = (user: Usuario | null) => {
   }, [user]);
 
   return profileData;
-};
-
-// --- FUNÇÃO PARA GERAR HISTÓRICO DE LOGIN ---
-const generateLoginHistory = (ultimoLoginComPontos: Date | null | undefined): LoginHistory[] => {
-  const history: LoginHistory[] = [];
-  const hoje = new Date();
-  
-  // Gera os últimos 7 dias
-  for (let i = 6; i >= 0; i--) {
-    const data = new Date();
-    data.setDate(hoje.getDate() - i);
-    data.setHours(0, 0, 0, 0);
-    
-    // Verifica se é um dia com login (antes ou igual ao último login com pontos)
-    let isCompleted = false;
-    
-    if (ultimoLoginComPontos) {
-      const ultimoLoginDate = new Date(ultimoLoginComPontos);
-      ultimoLoginDate.setHours(0, 0, 0, 0);
-      
-      // Verifica se a data atual do loop é menor ou igual ao último login
-      isCompleted = data.getTime() <= ultimoLoginDate.getTime();
-    }
-    
-    history.push({
-      data,
-      pontosGanhos: isCompleted ? 5 : 0,
-      status: isCompleted ? 'completed' : 'missed'
-    });
-  }
-  
-  return history;
 };
 
 // --- HOOK PARA VALIDAÇÃO ---
@@ -647,36 +633,141 @@ const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: 
     );
 };
 
-// --- NOVO COMPONENTE: HISTÓRICO DE LOGIN ---
-const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) => {
+// ===================================================================
+// COMPONENTE DE HISTÓRICO DE LOGIN (COM DADOS REAIS)
+// ===================================================================
+
+interface LoginHistoryFromAPI {
+  data: string;
+  status: 'completed' | 'missed';
+}
+
+const HistoricoDeLogin = () => {
+  const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  // 2. A lógica de busca agora é envolvida por 'useCallback'
+  // Isso otimiza a função e permite que a gente a chame de novo facilmente.
+  const fetchLoginHistory = useCallback(async () => {
+    // Garante que a busca só comece se houver um usuário
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true); // Ativa o loading no início da busca
+    setError(null);    // Limpa erros anteriores
+
+    try {
+      // A chamada de API permanece a mesma, usando sua instância 'api'
+      const response = await api.get<LoginHistoryFromAPI[]>('/gamificacao/login-history');
+      
+      const formattedHistory = response.data.map(item => ({
+        ...item,
+        data: new Date(item.data),
+      }));
+
+      setLoginHistory(formattedHistory);
+    } catch (err: any) {
+      console.error("Erro detalhado ao buscar histórico de login:", err);
+      
+      // A lógica de tratamento de erros, que já era boa, foi mantida
+      if (err.response?.status === 401) {
+        setError("Sessão expirada. Por favor, faça login novamente.");
+      } else if (err.response?.status === 403) {
+        setError("Você não tem permissão para ver este conteúdo.");
+      } else if (err.response?.status === 404) {
+        setError("Serviço de histórico não encontrado.");
+      } else if (err.message?.includes('Network Error')) {
+        setError("Erro de conexão. Verifique sua internet.");
+      } else {
+        setError("Não foi possível carregar seu histórico.");
+      }
+    } finally {
+      setIsLoading(false); // Desativa o loading no final, tanto em sucesso quanto em erro
+    }
+  }, [user]); // A função será recriada se o 'user' mudar (login/logout)
+
+  // O useEffect agora apenas chama a função que definimos acima
+  useEffect(() => {
+    fetchLoginHistory();
+  }, [fetchLoginHistory]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 text-center">
+        <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Carregando seu histórico de logins...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <XCircle className="w-8 h-8 text-red-500" />
+        </div>
+        <p className="text-red-500 text-lg font-semibold mb-2">{error}</p>
+        
+        {/* 3. O botão agora chama 'fetchLoginHistory' diretamente, sem recarregar a página */}
+        <button 
+          onClick={fetchLoginHistory}
+          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    );
+  }
+
+  return <LoginHistoryView loginHistory={loginHistory} />;
+};
+
+// Componente de visualização do histórico
+const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistoryItem[] }) => {
     const hoje = new Date();
     const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+    // Lógica de cálculo da sequência (streak) melhorada
     const getStreak = () => {
         let streak = 0;
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        
+        const hojeSemHoras = new Date();
+        hojeSemHoras.setHours(0, 0, 0, 0);
+
         for (let i = loginHistory.length - 1; i >= 0; i--) {
-            const dia = new Date(loginHistory[i].data);
-            dia.setHours(0, 0, 0, 0);
-            
             if (loginHistory[i].status === 'completed') {
-                const diffDias = Math.floor((hoje.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+                const dia = new Date(loginHistory[i].data);
+                dia.setHours(0, 0, 0, 0);
+
+                const diffDias = Math.round((hojeSemHoras.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+                
+                // A diferença de dias deve corresponder à contagem da sequência
                 if (diffDias === streak) {
                     streak++;
                 } else {
-                    break;
+                    break; // Sequência quebrada
                 }
             } else {
-                break;
+                // Se o dia não foi completado, a sequência para aqui,
+                // a menos que a falha seja hoje (a sequência de ontem ainda conta).
+                const dia = new Date(loginHistory[i].data);
+                dia.setHours(0, 0, 0, 0);
+                const diffDias = Math.round((hojeSemHoras.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDias > 0) { // Se a falha foi em um dia anterior a hoje
+                    break;
+                }
             }
         }
         return streak;
     };
 
     const currentStreak = getStreak();
+    const completedLogins = loginHistory.filter(l => l.status === 'completed').length;
+    const totalPoints = completedLogins * 5;
 
     return (
         <motion.div 
@@ -689,7 +780,6 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) =>
                 <p className="text-gray-500 text-lg">Acompanhe sua sequência de logins e ganhe pontos todos os dias!</p>
             </div>
 
-            {/* Estatísticas de Sequência */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div 
                     className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg"
@@ -709,15 +799,12 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) =>
 
                 <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200 text-center">
                     <Star className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                    <h3 className="font-bold text-gray-700 text-lg mb-2">Total do Mês</h3>
-                    <p className="text-2xl font-bold text-amber-600">
-                        {loginHistory.filter(l => l.status === 'completed').length * 5}
-                    </p>
+                    <h3 className="font-bold text-gray-700 text-lg mb-2">Total na Semana</h3>
+                    <p className="text-2xl font-bold text-amber-600">{totalPoints}</p>
                     <p className="text-sm text-gray-500 mt-1">pontos ganhos</p>
                 </div>
             </div>
 
-            {/* Calendário de Logins */}
             <motion.div 
                 className="border-t border-amber-200 pt-6"
                 initial={{ opacity: 0 }}
@@ -735,7 +822,7 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) =>
                         return (
                             <motion.div
                                 key={index}
-                                className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
+                                className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
                                     day.status === 'completed'
                                         ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg'
                                         : 'bg-gray-50 border-gray-200 opacity-60'
@@ -745,63 +832,21 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistory[] }) =>
                                 transition={{ delay: 0.4 + index * 0.1 }}
                                 whileHover={{ scale: 1.05 }}
                             >
-                                <div className={`text-2xl mb-2 ${
-                                    day.status === 'completed' ? 'text-green-600' : 'text-gray-400'
-                                }`}>
+                                <div className={`mb-2 ${day.status === 'completed' ? 'text-green-600' : 'text-gray-400'}`}>
                                     {day.status === 'completed' ? <CheckCircle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
                                 </div>
-                                <p className={`font-semibold text-sm ${
-                                    day.status === 'completed' ? 'text-gray-800' : 'text-gray-400'
-                                }`}>
+                                <p className={`font-semibold text-sm ${day.status === 'completed' ? 'text-gray-800' : 'text-gray-400'}`}>
                                     {diaSemana}
                                 </p>
-                                <p className="text-xs text-gray-500 mb-1">{diaMes} {mes}</p>
-                                <p className={`text-xs font-medium ${
-                                    day.status === 'completed' ? 'text-green-600' : 'text-gray-400'
-                                }`}>
-                                    {day.status === 'completed' ? '+5 pontos' : 'Sem login'}
-                                </p>
+                                <p className="text-xs text-gray-500">{diaMes} {mes}</p>
                                 {isToday && (
-                                    <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full mt-1 font-semibold">
+                                    <span className="absolute -top-2 -right-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full font-semibold">
                                         Hoje
                                     </span>
                                 )}
                             </motion.div>
                         );
                     })}
-                </div>
-            </motion.div>
-
-            {/* Dicas */}
-            <motion.div 
-                className="border-t border-amber-200 pt-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-            >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">💡 Dicas para Manter sua Sequência</h3>
-                <div className="space-y-3 text-gray-600">
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <div className="text-2xl">📱</div>
-                        <div>
-                            <p className="font-semibold">Faça login todos os dias</p>
-                            <p className="text-sm">Mesmo que seja rápido, não quebre a sequência!</p>
-                        </div>
-                    </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <div className="text-2xl">⏰</div>
-                        <div>
-                            <p className="font-semibold">Estabeleça um horário</p>
-                            <p className="text-sm">Escolha um momento do dia para fazer login sempre no mesmo horário</p>
-                        </div>
-                    </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <div className="text-2xl">🎯</div>
-                        <div>
-                            <p className="font-semibold">Ative as notificações</p>
-                            <p className="text-sm">Receba lembretes para não esquecer do login diário</p>
-                        </div>
-                    </motion.div>
                 </div>
             </motion.div>
         </motion.div>
@@ -1009,9 +1054,7 @@ export default function ProfilePage() {
                 )}
 
                 {activeView === 'login_history' && (
-                  <LoginHistoryView 
-                    loginHistory={profileData.loginHistory}
-                  />
+                  <HistoricoDeLogin /> // ← AGORA USA O COMPONENTE QUE BUSCA DADOS REAIS
                 )}
 
                 {activeView === 'edit_profile' && (

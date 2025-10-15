@@ -75,7 +75,6 @@ export class DoacaoController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
   findAll() {
     return this.doacaoService.findAll();
   }

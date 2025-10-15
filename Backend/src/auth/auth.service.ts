@@ -17,30 +17,29 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
     private configService: ConfigService,
-    private gamificacaoService: GamificacaoService, // Serviço de gamificação injetado
+    private gamificacaoService: GamificacaoService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usuarioService.findByEmail(email);
+    // Compara a senha fornecida com o hash armazenado no banco
     if (user && (await bcrypt.compare(pass, user.senha))) {
-      // Retorna o objeto de usuário completo para ser usado no login
-      return user;
+      const { senha, ...result } = user; // Remove a senha do objeto retornado
+      return result;
     }
     return null;
   }
 
-  // --- MÉTODO LOGIN ATUALIZADO E CORRIGIDO ---
-  async login(user: Usuario) {
+  async login(user: Omit<Usuario, 'senha'>) {
     let dailyPointsAwarded = false;
 
-    // 1. Processa o bônus de login diário ANTES de buscar os dados finais
+    // 1. Processa o bônus e registra o login diário
     const bonusResult = await this.processarBonusLoginDiario(user);
     if (bonusResult) {
       dailyPointsAwarded = true;
     }
     
-    // 2. Re-busca o usuário do banco DEPOIS de processar o bônus.
-    // Isso garante que a pontuação retornada para o frontend já esteja atualizada.
+    // 2. Re-busca os dados do usuário para garantir que a pontuação esteja atualizada
     const usuarioAtualizado = await this.prisma.usuario.findUnique({
       where: { id: user.id },
     });
@@ -49,27 +48,13 @@ export class AuthService {
       throw new UnauthorizedException("Usuário não encontrado após a validação.");
     }
 
-    // Constrói manualmente o objeto de resposta para evitar o erro de tipagem
-    // e garantir que a senha seja excluída.
-    const userResponse = {
-        id: usuarioAtualizado.id,
-        nome: usuarioAtualizado.nome,
-        email: usuarioAtualizado.email,
-        role: usuarioAtualizado.role,
-        telefone: usuarioAtualizado.telefone,
-        profileImageUrl: usuarioAtualizado.profileImageUrl,
-        passwordResetToken: usuarioAtualizado.passwordResetToken,
-        passwordResetExpires: usuarioAtualizado.passwordResetExpires,
-        divulgacoes_aprovadas: usuarioAtualizado.divulgacoes_aprovadas,
-        estado: usuarioAtualizado.estado,
-        cidade: usuarioAtualizado.cidade,
-        pontos: usuarioAtualizado.pontos,
-        ultimoLoginComPontos: usuarioAtualizado.ultimoLoginComPontos,
-    };
+    // 3. Remove a senha do objeto final antes de enviar como resposta
+    const { senha, ...userResponse } = usuarioAtualizado;
 
+    // 4. Cria o payload para o token JWT
     const payload = { email: userResponse.email, sub: userResponse.id, role: userResponse.role };
     
-    // 3. Retorna o token, o usuário JÁ ATUALIZADO e a flag de bônus
+    // 5. Retorna o token, os dados do usuário atualizados e a flag de bônus
     return {
       access_token: this.jwtService.sign(payload),
       user: userResponse,
@@ -77,45 +62,55 @@ export class AuthService {
     };
   }
 
-  // --- MÉTODO PRIVADO PARA A LÓGICA DE LOGIN DIÁRIO ---
-  private async processarBonusLoginDiario(user: Usuario): Promise<boolean> {
+  private async processarBonusLoginDiario(user: Omit<Usuario, 'senha'>): Promise<boolean> {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Zera o horário para comparar apenas o dia
+    // Use UTC para evitar problemas com fuso horário
+    hoje.setUTCHours(0, 0, 0, 0);
 
-    const ultimoLogin = user.ultimoLoginComPontos;
+    // Busca o usuário completo com o campo `ultimoLoginComPontos`
+    const usuarioCompleto = await this.prisma.usuario.findUnique({ where: { id: user.id }});
+    const ultimoLogin = usuarioCompleto?.ultimoLoginComPontos;
+
     let ultimoLoginDate: Date | null = null;
     if (ultimoLogin) {
         ultimoLoginDate = new Date(ultimoLogin);
-        ultimoLoginDate.setHours(0, 0, 0, 0); // Zera o horário do último login também
+        ultimoLoginDate.setUTCHours(0, 0, 0, 0);
     }
     
-    // Se o usuário nunca recebeu pontos por login ou se o último foi em um dia anterior
+    // Concede pontos apenas se for o primeiro login do dia
     if (!ultimoLoginDate || ultimoLoginDate.getTime() < hoje.getTime()) {
-      // Concede 5 pontos
+      // Concede 5 pontos de bônus
       await this.gamificacaoService.adicionarPontos(user.id, 5);
       
-      // Atualiza a data do último login para agora, registrando que o bônus foi dado hoje
+      // Atualiza a data do último login com pontos no perfil do usuário
       await this.prisma.usuario.update({
         where: { id: user.id },
         data: { ultimoLoginComPontos: new Date() },
       });
+
+      // --- PONTO CHAVE: Cria um registro no histórico de logins diários ---
+      await this.prisma.loginDiario.create({
+        data: {
+          usuarioId: user.id, // user.id é Int, correspondendo ao schema
+          data: hoje,         // Armazena a data (sem hora) do login
+        },
+      });
       
-      return true; // Retorna true para indicar que os pontos foram concedidos
+      return true; // Informa que os pontos foram concedidos
     }
 
-    return false; // Retorna false se os pontos não foram concedidos (já logou hoje)
+    return false; // Informa que os pontos não foram concedidos (já logou hoje)
   }
-
 
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
-      return;
+      return; // Não revele se o e-mail existe ou não por segurança
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
+    const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
     await this.prisma.usuario.update({
       where: { id: user.id },
@@ -145,6 +140,7 @@ export class AuthService {
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição:", error);
+      // Considere adicionar um log mais robusto aqui
     }
   }
 
@@ -158,7 +154,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException('Link inspirado, por favor solicite um novo.');
+      throw new BadRequestException('Link de redefinição inválido ou expirado.');
     }
   }
 
@@ -186,4 +182,3 @@ export class AuthService {
     });
   }
 }
-

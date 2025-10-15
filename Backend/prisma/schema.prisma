@@ -23,6 +23,7 @@ model Usuario {
   estado          String   @db.VarChar(2) @default("SC")
   cidade          String   @default("Não informado")
   ultimoLoginComPontos    DateTime?
+  loginsDiarios         LoginDiario[]
 
 
   // Relações
@@ -34,6 +35,15 @@ model Usuario {
   // --- Funcionalidade de Gamificação ---
   pontos                Int                @default(0)
   conquistas            UsuarioConquista[]
+}
+
+model LoginDiario {
+  id        String   @id @default(cuid())
+  data      DateTime @db.Date // Armazena apenas a data, sem a hora
+  usuarioId Int      // <<< ALTERADO DE String PARA Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, data]) // Garante que só haja um registro por usuário por dia
 }
 
 model Animal {
