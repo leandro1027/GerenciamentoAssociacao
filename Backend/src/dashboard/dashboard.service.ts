@@ -118,7 +118,7 @@ export class DashboardService {
             name: dayName,
             ...data,
         });
-    }
+    } 
 
     return result;
   }

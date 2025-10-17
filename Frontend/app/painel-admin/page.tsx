@@ -422,6 +422,8 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
     );
 };
 
+
+
 // 4. COMPONENTE PARA GERIR MEMBROS
 const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[], onUserUpdate: (user: Usuario) => void }) => {
     const { user: currentUser } = useAuth();
