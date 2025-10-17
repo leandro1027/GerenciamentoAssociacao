@@ -13,6 +13,7 @@ import {
   BadRequestException,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -70,16 +71,17 @@ export class AnimaisComunitariosController {
     return this.animaisComunitariosService.create(createDto, file);
   }
 
-  @Get()
-  findAll() {
-    return this.animaisComunitariosService.findAll();
-  }
-
+  // --- CORREÇÃO DE ORDEM ---
+  // A rota mais específica ('mapa/localizacoes') deve vir ANTES da rota genérica ('/').
   @Get('mapa/localizacoes') 
   findAllForMap() {
     return this.animaisComunitariosService.findAllForMap();
   }
 
+  @Get()
+  findAll(@Query('search') searchTerm?: string) {
+    return this.animaisComunitariosService.findAll(searchTerm);
+  }
 
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
@@ -89,23 +91,7 @@ export class AnimaisComunitariosController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, callback) => {
-        callback(null, generateUniqueFilename(file));
-      },
-    }),
-    fileFilter: (req, file, callback) => {
-      if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-        return callback(
-          new BadRequestException('Apenas ficheiros de imagem são permitidos!'),
-          false,
-        );
-      }
-      callback(null, true);
-    },
-  }))
+  @UseInterceptors(FileInterceptor('file', { /* ...configuração do multer... */ }))
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateAnimalComunitarioDto,

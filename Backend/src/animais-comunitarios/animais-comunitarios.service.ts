@@ -4,7 +4,7 @@ import { CreateAnimalComunitarioDto } from './dto/create-animais-comunitario.dto
 import { UpdateAnimalComunitarioDto } from './dto/update-animais-comunitario.dto';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
-import { Prisma } from '@prisma/client'; // Importação necessária para o método 'update'
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AnimaisComunitariosService {
@@ -16,7 +16,6 @@ export class AnimaisComunitariosService {
   create(createDto: CreateAnimalComunitarioDto, file: Express.Multer.File) {
     const imageUrl = `/uploads/${file.filename}`;
 
-    // Desestrutura o DTO para criar um objeto limpo para o Prisma
     const { nomeTemporario, enderecoCompleto, latitude, longitude } = createDto;
 
     return this.prisma.animalComunitario.create({
@@ -30,8 +29,33 @@ export class AnimaisComunitariosService {
     });
   }
 
-  findAll() {
+  /**
+   * Busca todos os animais, aplicando um filtro de busca se fornecido.
+   */
+  findAll(searchTerm?: string) {
+    const whereClause: Prisma.AnimalComunitarioWhereInput = {};
+
+    // Se um termo de busca foi enviado pelo frontend, constrói a cláusula de filtro
+    if (searchTerm) {
+      whereClause.OR = [
+        {
+          nomeTemporario: {
+            contains: searchTerm,
+            mode: 'insensitive', // Busca case-insensitive no nome
+          },
+        },
+        {
+          enderecoCompleto: {
+            contains: searchTerm,
+            mode: 'insensitive', // Busca case-insensitive no endereço
+          },
+        },
+      ];
+    }
+
+    // Executa a busca com a cláusula de filtro (que pode estar vazia ou preenchida)
     return this.prisma.animalComunitario.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -54,7 +78,6 @@ export class AnimaisComunitariosService {
     });
   }
 
-
   async findOne(id: string) {
     const animal = await this.prisma.animalComunitario.findUnique({
       where: { id },
@@ -73,14 +96,12 @@ export class AnimaisComunitariosService {
     file?: Express.Multer.File,
   ) {
     const animalAtual = await this.findOne(id);
-
     const data: Prisma.AnimalComunitarioUpdateInput = { ...updateDto };
 
     if (file) {
       data.imageUrl = `/uploads/${file.filename}`;
-
       if (animalAtual.imageUrl) {
-        const oldImagePath = join(process.cwd(), 'public', animalAtual.imageUrl);
+        const oldImagePath = join(process.cwd(), 'uploads', animalAtual.imageUrl.replace('/uploads/', ''));
         try {
           await unlink(oldImagePath);
         } catch (error) {
@@ -100,13 +121,12 @@ export class AnimaisComunitariosService {
 
   async remove(id: string) {
     const animal = await this.findOne(id);
-
     const deletedRecord = await this.prisma.animalComunitario.delete({
       where: { id },
     });
 
     if (animal.imageUrl) {
-      const imagePath = join(process.cwd(), 'public', animal.imageUrl);
+      const imagePath = join(process.cwd(), 'uploads', animal.imageUrl.replace('/uploads/', ''));
       try {
         await unlink(imagePath);
       } catch (error) {
