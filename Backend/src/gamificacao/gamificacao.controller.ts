@@ -46,6 +46,14 @@ export class GamificacaoController {
     return this.gamificacaoService.findConquistasByUsuario(usuarioId);
   }
 
+  @Get('usuario/:userId/conquistas')
+  @ApiOperation({ summary: 'Busca conquistas de um usuário específico' })
+  @ApiResponse({ status: 200, description: 'Conquistas retornadas com sucesso.'})
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.'})
+  findConquistasByUsuario(@Param('userId', ParseIntPipe) userId: number) {
+    return this.gamificacaoService.findConquistasByUsuario(userId);
+  }
+
 
   // ===================================================================
   // ROTAS DE ADMINISTRAÇÃO (Acessíveis apenas por usuários com role 'ADMIN')

@@ -62,57 +62,54 @@ export class AuthService {
     };
   }
     
-    private async processarBonusLoginDiario(user: Omit<Usuario, 'senha'>): Promise<boolean> {
-    // --- INÍCIO DA CORREÇÃO ---
-    // 1. Verifica PRIMEIRO se a gamificação está ativa.
+  private async processarBonusLoginDiario(user: Omit<Usuario, 'senha'>): Promise<boolean> {
     const gamificacaoAtiva = await this.gamificacaoService.isGamificacaoAtiva();
     if (!gamificacaoAtiva) {
-      return false; // Se não estiver ativa, para a função aqui mesmo.
+      return false;
     }
     
+    // --- CORREÇÃO DE FUSO HORÁRIO ---
+    // Pega a data/hora atual no fuso horário do servidor
     const hoje = new Date();
-    // Use UTC para evitar problemas com fuso horário
-    hoje.setUTCHours(0, 0, 0, 0);
+    // Zera a hora para o início do dia NO FUSO HORÁRIO LOCAL do servidor
+    hoje.setHours(0, 0, 0, 0);
 
-    // Busca o usuário completo com o campo `ultimoLoginComPontos`
     const usuarioCompleto = await this.prisma.usuario.findUnique({ where: { id: user.id }});
     const ultimoLogin = usuarioCompleto?.ultimoLoginComPontos;
 
     let ultimoLoginDate: Date | null = null;
     if (ultimoLogin) {
-        ultimoLoginDate = new Date(ultimoLogin);
-        ultimoLoginDate.setUTCHours(0, 0, 0, 0);
+      ultimoLoginDate = new Date(ultimoLogin);
+      // Compara também com base no fuso horário local
+      ultimoLoginDate.setHours(0, 0, 0, 0);
     }
     
-    // Concede pontos apenas se for o primeiro login do dia
     if (!ultimoLoginDate || ultimoLoginDate.getTime() < hoje.getTime()) {
-      // Concede 5 pontos de bônus
       await this.gamificacaoService.adicionarPontos(user.id, 5);
       
-      // Atualiza a data do último login com pontos no perfil do usuário
       await this.prisma.usuario.update({
         where: { id: user.id },
         data: { ultimoLoginComPontos: new Date() },
       });
 
-      // --- PONTO CHAVE: Cria um registro no histórico de logins diários ---
+      // Cria o registro no histórico com a data local zerada
       await this.prisma.loginDiario.create({
         data: {
-          usuarioId: user.id, // user.id é Int, correspondendo ao schema
-          data: hoje,         // Armazena a data (sem hora) do login
+          usuarioId: user.id,
+          data: hoje, 
         },
       });
       
-      return true; // Informa que os pontos foram concedidos
+      return true;
     }
 
-    return false; // Informa que os pontos não foram concedidos (já logou hoje)
+    return false;
   }
 
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
-      return; // Não revele se o e-mail existe ou não por segurança
+      return;
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -147,7 +144,6 @@ export class AuthService {
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição:", error);
-      // Considere adicionar um log mais robusto aqui
     }
   }
 

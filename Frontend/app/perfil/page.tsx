@@ -502,7 +502,7 @@ const OverviewView = ({
   );
 };
 
-// --- COMPONENTE GAMIFICATION ATUALIZADO ---
+// --- COMPONENTE GAMIFICATION COM MEDALHAS LIMPAS ---
 const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: UsuarioConquistaComDetalhes[] }) => {
     const POINTS_PER_LEVEL = 100;
     const level = Math.floor(pontos / POINTS_PER_LEVEL) + 1;
@@ -516,121 +516,200 @@ const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
         >
-            <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Meu Progresso</h2>
-                <p className="text-gray-500 text-lg">Acumule pontos e ajude ainda mais a nossa causa!</p>
+            {/* Cabeçalho */}
+            <div className="text-center">
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Minhas Conquistas</h2>
+                <p className="text-gray-500 text-lg">Cada ação sua faz a diferença! Continue ajudando para desbloquear mais conquistas.</p>
             </div>
 
             {/* Nível e Progresso */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <motion.div 
-                    className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg"
+                    className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-2xl text-white text-center shadow-lg relative overflow-hidden"
                     whileHover={{ scale: 1.02 }}
                 >
-                    <p className="text-sm font-semibold opacity-90">Nível Atual</p>
-                    <p className="text-6xl font-extrabold my-4">{level}</p>
-                    <p className="font-bold text-2xl">{pontos} <span className="text-lg font-medium opacity-90">pontos</span></p>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                    <div className="relative z-10">
+                        <p className="text-sm font-semibold opacity-90">Nível Atual</p>
+                        <p className="text-6xl font-extrabold my-4 drop-shadow-lg">{level}</p>
+                        <div className="flex items-center justify-center gap-2">
+                            <Star className="w-6 h-6 text-amber-300 fill-current" />
+                            <p className="font-bold text-2xl">{pontos} <span className="text-lg font-medium opacity-90">pontos</span></p>
+                        </div>
+                    </div>
                 </motion.div>
 
-                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-200">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-md">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-gray-700 text-lg">Progresso para o Nível {level + 1}</h3>
-                        <p className="text-sm font-semibold text-amber-700">{pointsInCurrentLevel} / {POINTS_PER_LEVEL}</p>
+                        <p className="text-sm font-semibold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+                            {pointsInCurrentLevel}/{POINTS_PER_LEVEL}
+                        </p>
                     </div>
-                    <div className="w-full bg-amber-200 rounded-full h-4 overflow-hidden mb-2">
+                    <div className="w-full bg-amber-200 rounded-full h-4 overflow-hidden mb-3 shadow-inner">
                         <motion.div 
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 h-4 rounded-full shadow-inner"
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 h-4 rounded-full relative shadow-md"
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercentage}%` }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                        />
+                            transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                        </motion.div>
                     </div>
-                    <p className="text-sm text-gray-500 text-center">
-                        {pointsToNextLevel} pontos para o próximo nível
+                    <p className="text-sm text-gray-600 text-center font-medium">
+                        {pointsToNextLevel === POINTS_PER_LEVEL ? 'Comece a ganhar pontos!' : 
+                         `Faltam ${pointsToNextLevel} pontos para o próximo nível`}
                     </p>
                 </div>
             </div>
 
-            {/* Como ganhar pontos */}
+            {/* Conquistas - VERSÃO COM MEDALHAS LIMPAS */}
             <motion.div 
-                className="border-t border-amber-200 pt-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-            >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Como ganhar pontos?</h3>
-                <div className="space-y-3 text-gray-600">
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <span className="text-2xl">🎁</span>
-                        <div>
-                            <p className="font-semibold">+50 pontos</p>
-                            <p className="text-sm">Faça uma doação para a associação</p>
-                        </div>
-                    </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <span className="text-2xl">❤️</span>
-                        <div>
-                            <p className="font-semibold">+100 pontos</p>
-                            <p className="text-sm">Candidate-se e seja aprovado como voluntário</p>
-                        </div>
-                    </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <span className="text-2xl">📝</span>
-                        <div>
-                            <p className="font-semibold">+150 pontos</p>
-                            <p className="text-sm">Complete uma adoção responsável</p>
-                        </div>
-                    </motion.div>
-                    <motion.div className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 border border-amber-200" whileHover={{ x: 5 }}>
-                        <span className="text-2xl">🔐</span>
-                        <div>
-                            <p className="font-semibold">+5 pontos</p>
-                            <p className="text-sm">Login diário</p>
-                        </div>
-                    </motion.div>
-                </div>
-            </motion.div>
-
-            {/* Conquistas */}
-            <motion.div 
-                className="border-t border-amber-200 pt-6"
+                className="border-t border-amber-200 pt-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
             >
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Minhas Conquistas</h3>
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 className="text-2xl font-bold text-gray-800">Minhas Medalhas</h3>
+                        <p className="text-gray-500 mt-1">Suas conquistas na jornada solidária</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-full border border-amber-200">
+                        <Trophy className="w-5 h-5" />
+                        <span className="font-semibold">{conquistas.length} conquistas</span>
+                    </div>
+                </div>
                 
                 {conquistas.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {conquistas.map((userConquista, index) => (
-                      <motion.div
-                        key={userConquista.conquista.id}
-                        title={userConquista.conquista.descricao}
-                        className="flex flex-col items-center gap-3 p-4 rounded-xl text-center border-2 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.6 + index * 0.1 }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <div className="text-3xl">
-                          {userConquista.conquista.icone}
-                        </div>
-                        <p className="font-semibold text-sm text-gray-800">
-                          {userConquista.conquista.nome}
-                        </p>
-                        <p className="text-xs text-green-700 font-medium">
-                          🏆 Conquistada em {new Date(userConquista.dataDeGanho).toLocaleDateString('pt-BR')}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
+                    <motion.div 
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                    >
+                        {conquistas.map((userConquista, index) => (
+                            <motion.div
+                                key={userConquista.conquista.id}
+                                className="group relative"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ 
+                                    delay: 0.6 + index * 0.1,
+                                    type: "spring",
+                                    stiffness: 100
+                                }}
+                                whileHover={{ 
+                                    scale: 1.02,
+                                    y: -2
+                                }}
+                            >
+                                {/* Card da Conquista COM MEDALHA LIMPA */}
+                                <div className="bg-white rounded-2xl p-6 border-2 border-amber-100 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-amber-200 relative overflow-hidden h-full">
+                                    {/* Layout centralizado com medalha em destaque */}
+                                    <div className="flex flex-col items-center text-center">
+                                        {/* MEDALHA GRANDE E LIMPA - SEM FUNDO */}
+                                        <div className="relative mb-6">
+                                            <div className="w-24 h-24 flex items-center justify-center relative">
+                                                {/* Apenas a logo/ícone da medalha - SEM FUNDO LARANJA */}
+                                                <img 
+                                                    src={`/icones-recompensas/${userConquista.conquista.icone}`} 
+                                                    alt={userConquista.conquista.nome}
+                                                    className="w-20 h-20 object-contain filter drop-shadow-lg"
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = `https://via.placeholder.com/80/4a5568/ffffff?text=${userConquista.conquista.nome.charAt(0)}`;
+                                                    }}
+                                                />
+                                            </div>
+                                            
+                                            {/* Badge de conquistada */}
+                                            <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1 shadow-lg border-2 border-white">
+                                                <CheckCircle className="w-4 h-4" />
+                                            </div>
+                                        </div>
+
+                                        {/* Conteúdo textual */}
+                                        <div className="flex-1 w-full">
+                                            <h4 className="font-bold text-gray-800 text-xl mb-3 group-hover:text-gray-900 transition-colors leading-tight">
+                                                {userConquista.conquista.nome}
+                                            </h4>
+                                            
+                                            <p className="text-gray-600 text-sm mb-4 leading-relaxed px-2">
+                                                {userConquista.conquista.descricao}
+                                            </p>
+
+                                            {/* Data de conquista */}
+                                            <div className="flex items-center justify-center gap-2 text-amber-700 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
+                                                <Calendar className="w-4 h-4 flex-shrink-0" />
+                                                <span className="text-sm font-semibold">
+                                                    {new Date(userConquista.dataDeGanho).toLocaleDateString('pt-BR')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Linha divisória sutil */}
+                                    <div className="absolute bottom-16 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-amber-200 to-transparent"></div>
+                                </div>
+
+                                {/* Efeito de brilho sutil no hover */}
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/0 to-orange-500/0 group-hover:from-amber-500/3 group-hover:to-orange-500/5 transition-all duration-300 pointer-events-none"></div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 ) : (
-                  // Mensagem para quando não há conquistas
-                  <div className="text-center py-8 text-gray-500">
-                    <Trophy className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                    <p>Você ainda não desbloqueou nenhuma conquista.</p>
-                    <p className="text-sm">Continue ajudando para ganhar suas primeiras medalhas!</p>
-                  </div>
+                    // Estado vazio melhorado
+                    <motion.div 
+                        className="text-center py-16 bg-gradient-to-br from-gray-50 to-amber-50 rounded-2xl border-2 border-dashed border-amber-200"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                    >
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center shadow-lg">
+                            <Trophy className="w-12 h-12 text-gray-400" />
+                        </div>
+                        <h4 className="text-2xl font-semibold text-gray-600 mb-3">Nenhuma conquista ainda</h4>
+                        <p className="text-gray-500 mb-8 max-w-md mx-auto text-lg">
+                            Suas medalhas aparecerão aqui conforme você for ajudando a causa animal. 
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link 
+                                href="/doacoes"
+                                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                            >
+                                <Gift className="w-5 h-5" />
+                                Fazer Primeira Doação
+                            </Link>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Progresso Geral */}
+                {conquistas.length > 0 && (
+                    <motion.div 
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-200 mt-8 shadow-lg"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <Trophy className="w-6 h-6 text-green-600" />
+                                    Seu Progresso
+                                </h4>
+                                <p className="text-gray-600">
+                                    Você já desbloqueou <span className="font-bold text-green-600">{conquistas.length}</span> medalhas!
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-3xl font-bold text-green-600 bg-white/50 px-4 py-2 rounded-lg border border-green-200">
+                                    {conquistas.length}
+                                </div>
+                                <div className="text-sm text-gray-500 mt-1">medalhas</div>
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
             </motion.div>
         </motion.div>

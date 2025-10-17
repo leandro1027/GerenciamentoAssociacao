@@ -3,13 +3,192 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import { Usuario } from '../../types';
+import { Usuario, UsuarioConquista, Conquista } from '../../types';
+import { Trophy, X, Star, Calendar, CheckCircle } from 'lucide-react';
 
-type RankingUser = Pick<Usuario, 'id' | 'nome' | 'pontos' | 'profileImageUrl'>;
+// CORREÇÃO: Definir RankingUser com id como string
+type RankingUser = {
+  id: string;
+  nome: string;
+  pontos: number;
+  profileImageUrl?: string;
+};
 
 type Configuracao = {
   gamificacaoAtiva: boolean;
 };
+
+type UsuarioConquistaComDetalhes = UsuarioConquista & {
+  conquista: Conquista;
+};
+
+// MODAL DE CONQUISTAS
+function ConquistasModal({ 
+  isOpen, 
+  onClose, 
+  userId,
+  userName 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  userId: string;
+  userName: string;
+}) {
+  const [conquistas, setConquistas] = useState<UsuarioConquistaComDetalhes[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchConquistas = useCallback(async () => {
+    if (!isOpen || !userId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get<UsuarioConquistaComDetalhes[]>(`/gamificacao/usuario/${userId}/conquistas`);
+      setConquistas(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar conquistas:", err);
+      setError("Não foi possível carregar as conquistas deste usuário.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isOpen, userId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchConquistas();
+    }
+  }, [fetchConquistas, isOpen]);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header do Modal */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Conquistas de {userName}</h2>
+                  <p className="text-amber-100 mt-1">Medalhas e reconhecimentos conquistados</p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={onClose}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
+              {isLoading ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Carregando conquistas...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <X className="w-8 h-8 text-red-500" />
+                  </div>
+                  <p className="text-red-500 text-lg font-semibold mb-4">{error}</p>
+                  <button 
+                    onClick={fetchConquistas}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              ) : conquistas.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {conquistas.map((userConquista, index) => (
+                    <motion.div
+                      key={userConquista.conquista.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 text-center border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      {/* Medalha */}
+                      <div className="relative mb-4">
+                        <div className="w-20 h-20 mx-auto flex items-center justify-center">
+                          <img 
+                            src={`/icones-recompensas/${userConquista.conquista.icone}`} 
+                            alt={userConquista.conquista.nome}
+                            className="w-16 h-16 object-contain filter drop-shadow-lg"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://via.placeholder.com/64/4a5568/ffffff?text=${userConquista.conquista.nome.charAt(0)}`;
+                            }}
+                          />
+                        </div>
+                        <div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1 shadow-lg border-2 border-white">
+                          <CheckCircle className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      {/* Informações */}
+                      <h3 className="font-bold text-gray-800 text-lg mb-2">
+                        {userConquista.conquista.nome}
+                      </h3>
+                      
+                      <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+                        {userConquista.conquista.descricao}
+                      </p>
+
+                      {/* Data */}
+                      <div className="flex items-center justify-center gap-2 text-amber-700 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm font-semibold">
+                          {new Date(userConquista.dataDeGanho).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    Nenhuma conquista ainda
+                  </h3>
+                  <p className="text-gray-500">
+                    {userName} ainda não desbloqueou nenhuma conquista.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer do Modal */}
+            <div className="border-t border-amber-200 p-4 bg-amber-50">
+              <div className="flex items-center justify-center gap-2 text-amber-700">
+                <Trophy className="w-5 h-5" />
+                <span className="font-semibold">
+                  {conquistas.length} conquistas desbloqueadas
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 // Componente para a posição no ranking com cores diferenciadas
 function RankPosition({ index }: { index: number }) {
@@ -75,8 +254,16 @@ function UserAvatar({ src, name, index }: { src: string; name: string; index: nu
   );
 }
 
-// Componente para o card de ranking
-function RankingCard({ user, index }: { user: RankingUser; index: number }) {
+// Componente para o card de ranking ATUALIZADO
+function RankingCard({ 
+  user, 
+  index, 
+  onUserClick 
+}: { 
+  user: RankingUser; 
+  index: number;
+  onUserClick: (userId: string, userName: string) => void;
+}) {
   const avatarSrc = user.profileImageUrl
     ? `${api.defaults.baseURL}${user.profileImageUrl}`
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&bold=true`;
@@ -84,13 +271,13 @@ function RankingCard({ user, index }: { user: RankingUser; index: number }) {
   const getCardStyle = () => {
     switch (index) {
       case 0:
-        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-400 shadow-lg';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-400 shadow-lg cursor-pointer';
       case 1:
-        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-300 shadow-md';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-300 shadow-md cursor-pointer';
       case 2:
-        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-200 shadow-md';
+        return 'bg-gradient-to-r from-amber-50/80 to-amber-100/60 border-l-4 border-l-amber-200 shadow-md cursor-pointer';
       default:
-        return 'bg-white hover:bg-amber-50/80 border-l-4 border-l-transparent';
+        return 'bg-white hover:bg-amber-50/80 border-l-4 border-l-transparent cursor-pointer';
     }
   };
 
@@ -110,6 +297,7 @@ function RankingCard({ user, index }: { user: RankingUser; index: number }) {
         transition: { duration: 0.2 }
       }}
       className={`p-6 flex items-center justify-between transition-all duration-300 rounded-xl mb-3 ${getCardStyle()}`}
+      onClick={() => onUserClick(user.id, user.nome)}
     >
       <div className="flex items-center gap-6 flex-1 min-w-0">
         <RankPosition index={index} />
@@ -141,6 +329,13 @@ function RankingCard({ user, index }: { user: RankingUser; index: number }) {
         <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
           {user.pontos} pts
         </span>
+        {/* Ícone de troféu para indicar que é clicável */}
+        <motion.div
+          whileHover={{ rotate: 15 }}
+          className="text-amber-500 opacity-60 hover:opacity-100 transition-opacity"
+        >
+          <Trophy className="w-5 h-5" />
+        </motion.div>
       </motion.div>
     </motion.li>
   );
@@ -262,6 +457,10 @@ export default function RankingPage() {
   const [ranking, setRanking] = useState<RankingUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para o modal de conquistas
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
 
   const fetchRankingData = useCallback(async () => {
     setIsLoading(true);
@@ -274,7 +473,12 @@ export default function RankingPage() {
       
       if (configRes.data.gamificacaoAtiva) {
         const rankingRes = await api.get<RankingUser[]>(`/usuario/ranking?t=${timestamp}`);
-        setRanking(rankingRes.data);
+        // CORREÇÃO: Garantir que os IDs sejam strings
+        const rankingData = rankingRes.data.map(user => ({
+          ...user,
+          id: user.id.toString() // Converter para string
+        }));
+        setRanking(rankingData);
       } else {
         setRanking([]);
       }
@@ -287,9 +491,20 @@ export default function RankingPage() {
     }
   }, []);
 
+  const handleUserClick = (userId: string, userName: string) => {
+    setSelectedUser({ id: userId, name: userName });
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedUser(null);
+  };
+
   useEffect(() => {
     fetchRankingData();
   }, [fetchRankingData]);
+
 
   if (isLoading) {
     return (
@@ -388,79 +603,96 @@ export default function RankingPage() {
   }
 
   return (
-    <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <motion.div 
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
-            🏆 Ranking de Contribuidores
-          </h1>
-          <p className="text-xl text-amber-700 max-w-2xl mx-auto leading-relaxed">
-            Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
-          </p>
-        </motion.div>
+    <>
+      <main className="bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
+              🏆 Ranking de Contribuidores
+            </h1>
+            <p className="text-xl text-amber-700 max-w-2xl mx-auto leading-relaxed">
+              Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
+            </p>
+            <p className="text-amber-600 mt-2 text-sm">
+              Clique em um usuário para ver suas conquistas
+            </p>
+          </motion.div>
 
-        {/* Estatísticas */}
-        <StatisticsCards ranking={ranking} />
+          {/* Estatísticas */}
+          <StatisticsCards ranking={ranking} />
 
-        {/* Ranking */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 overflow-hidden"
-        >
-          <div className="p-8 pb-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-amber-800">Top Contribuidores</h2>
-              <motion.div 
-                className="flex items-center gap-2 text-sm text-amber-700"
-                whileHover={{ scale: 1.05 }}
-              >
-                <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">
-                  {ranking.length} participantes
-                </span>
-              </motion.div>
-            </div>
-            
-            <AnimatePresence mode="popLayout">
-              {ranking.length > 0 ? (
-                <ul className="space-y-4">
-                  {ranking.map((user, index) => (
-                    <RankingCard key={user.id} user={user} index={index} />
-                  ))}
-                </ul>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-12"
+          {/* Ranking */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 overflow-hidden"
+          >
+            <div className="p-8 pb-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-amber-800">Top Contribuidores</h2>
+                <motion.div 
+                  className="flex items-center gap-2 text-sm text-amber-700"
+                  whileHover={{ scale: 1.05 }}
                 >
-                  <div className="text-6xl mb-4">📊</div>
-                  <h3 className="text-2xl font-bold text-amber-700 mb-2">Ranking Vazio</h3>
-                  <p className="text-amber-600 max-w-md mx-auto">
-                    Ainda não há pontuações para exibir. Seja o primeiro a contribuir e entre para o hall da fama!
-                  </p>
+                  <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-semibold">
+                    {ranking.length} participantes
+                  </span>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+              </div>
+              
+              <AnimatePresence mode="popLayout">
+                {ranking.length > 0 ? (
+                  <ul className="space-y-4">
+                    {ranking.map((user, index) => (
+                      <RankingCard 
+                        key={user.id} 
+                        user={user} 
+                        index={index} 
+                        onUserClick={handleUserClick}
+                      />
+                    ))}
+                  </ul>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-12"
+                  >
+                    <div className="text-6xl mb-4">📊</div>
+                    <h3 className="text-2xl font-bold text-amber-700 mb-2">Ranking Vazio</h3>
+                    <p className="text-amber-600 max-w-md mx-auto">
+                      Ainda não há pontuações para exibir. Seja o primeiro a contribuir e entre para o hall da fama!
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
 
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center mt-12 text-amber-600"
-        >
-          <p>Última atualização: {new Date().toLocaleString('pt-BR')}</p>
-        </motion.div>
-      </div>
-    </main>
+          {/* Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="text-center mt-12 text-amber-600"
+          >
+          </motion.div>
+        </div>
+      </main>
+
+      {/* Modal de Conquistas */}
+      <ConquistasModal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        userId={selectedUser?.id || ''}
+        userName={selectedUser?.name || ''}
+      />
+    </>
   );
 }
