@@ -1348,7 +1348,7 @@ const ConteudoManager = () => {
   const handleCreateParceiro = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fileParceiro) {
-      toast.error('Por favor, selecione um logótipo.');
+      toast.error('Por favor, selecione uma logótipo.');
       return;
     }
     setIsLoadingParceiros(true);

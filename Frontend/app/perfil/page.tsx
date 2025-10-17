@@ -43,14 +43,14 @@ const ICONS = {
   calendar: <CustomIcon icon={Calendar} className="h-6 w-6" />,
 };
 
-// --- HOOK PARA DADOS DO PERFIL (VERSÃO CORRIGIDA) ---
+// --- HOOK PARA DADOS DO PERFIL (VERSÃO CORRIGIDA E MAIS ROBUSTA) ---
 const useProfileData = (user: Usuario | null) => {
   const [profileData, setProfileData] = useState({
     donationCount: 0,
     volunteerStatus: null as string | null,
     pedidos: [] as Adocao[],
     conquistas: [] as UsuarioConquistaComDetalhes[],
-    isGamificationActive: false, // Inicia como falso por segurança
+    isGamificationActive: false,
     isLoading: true
   });
 
@@ -59,50 +59,52 @@ const useProfileData = (user: Usuario | null) => {
 
     const fetchProfileData = async () => {
       try {
-        // 1. Primeiro, busca a configuração para saber o estado da gamificação
+        // 1. Busca a configuração primeiro para saber o estado da gamificação
         const configRes = await api.get<{ gamificacaoAtiva: boolean }>('/configuracao');
         const gamificacaoAtiva = configRes.data.gamificacaoAtiva;
 
-        // 2. Busca os dados padrão que todos os usuários precisam, em paralelo
+        // 2. Busca os dados padrão em paralelo
         const [donationsRes, volunteerRes, adocoesRes] = await Promise.all([
           api.get<Doacao[]>('/doacao'),
           api.get<Voluntario | null>('/voluntario/meu-status'),
           api.get<Adocao[]>('/adocoes/meus-pedidos'),
         ]);
 
-        // 3. Busca os dados de gamificação separadamente e SÓ SE NECESSÁRIO
         let conquistasData: UsuarioConquistaComDetalhes[] = [];
+        
+        // --- INÍCIO DA CORREÇÃO ---
         if (gamificacaoAtiva) {
           try {
-            // Esta chamada agora é segura, pois só acontece se a gamificação estiver ativa
+            // Tenta buscar os dados de gamificação
             const conquistasRes = await api.get<UsuarioConquistaComDetalhes[]>('/gamificacao/minhas-conquistas');
             conquistasData = conquistasRes.data;
           } catch (gamificationError) {
-             console.error("Aviso: Erro ao buscar dados de gamificação (pode ser um usuário normal sem acesso a uma rota de admin, o que é esperado). O erro não quebrará a página.", gamificationError);
-             // Não faz nada, apenas loga o aviso. A página continuará funcionando.
+            // Se a busca de conquistas falhar MAS a gamificação estiver ATIVA,
+            // isso é um erro real e devemos notificar o usuário.
+            console.error("ERRO CRÍTICO ao buscar dados de gamificação:", gamificationError);
+            toast.error('Não foi possível carregar suas conquistas e pontuação.');
+            // Deixamos conquistasData como um array vazio, mas o toast informa o problema.
           }
         }
+        // --- FIM DA CORREÇÃO ---
         
         const userDonations = donationsRes.data.filter(d => d.usuarioId === user.id);
         
-        // 4. Define o estado final com todos os dados coletados
         setProfileData({
           donationCount: userDonations.length,
           volunteerStatus: volunteerRes.data?.status || null,
           pedidos: adocoesRes.data,
           conquistas: conquistasData,
-          isGamificationActive: gamificacaoAtiva, // Define o estado corretamente para TODOS os usuários
+          isGamificationActive: gamificacaoAtiva,
           isLoading: false
         });
 
       } catch (error: any) {
         console.error("Erro crítico ao buscar dados do perfil:", error);
         
-        // Se o erro for de permissão, não mostramos um toast genérico.
         if (error.response?.status !== 403) {
             toast.error('Não foi possível carregar os dados do perfil.');
         }
-        // Em caso de erro, garante que a gamificação seja desativada na UI
         setProfileData(prev => ({ ...prev, isLoading: false, isGamificationActive: false }));
       }
     };
@@ -164,11 +166,13 @@ const useFormValidation = () => {
 const ProfileHeader = ({ 
   user, 
   avatarUrl, 
-  onAvatarChange 
+  onAvatarChange,
+  isGamificationActive 
 }: { 
   user: Usuario; 
   avatarUrl: string; 
   onAvatarChange: () => void; 
+  isGamificationActive: boolean;
 }) => {
   return (
     <motion.div 
@@ -225,7 +229,7 @@ const ProfileHeader = ({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {user.pontos > 0 && (
+            {isGamificationActive && user.pontos > 0 && (
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 border border-white/30">
                 <Star className="w-5 h-5 text-amber-300" />
                 <span className="font-semibold">{user.pontos} pontos</span>
@@ -664,15 +668,26 @@ const HistoricoDeLogin = () => {
       // A chamada de API permanece a mesma, usando sua instância 'api'
       const response = await api.get<LoginHistoryFromAPI[]>('/gamificacao/login-history');
       
-      const formattedHistory = response.data.map(item => ({
-        ...item,
-        data: new Date(item.data),
-      }));
+    const formattedHistory = response.data.map(item => {
+        // --- INÍCIO DA CORREÇÃO ---
+        // 1. Extrai apenas a parte da data da string (ex: "2025-10-15")
+        const dateString = item.data.substring(0, 10);
+
+        // 2. Cria um novo objeto Date que o navegador tratará como local,
+        //    evitando a conversão de fuso horário que causava o erro.
+        const dataLocal = new Date(dateString + 'T00:00:00');
+
+        return {
+          ...item,
+          data: dataLocal, // 3. Usa a data corrigida
+        };
+        // --- FIM DA CORREÇÃO ---
+      });
 
       setLoginHistory(formattedHistory);
     } catch (err: any) {
       console.error("Erro detalhado ao buscar histórico de login:", err);
-      
+
       // A lógica de tratamento de erros, que já era boa, foi mantida
       if (err.response?.status === 401) {
         setError("Sessão expirada. Por favor, faça login novamente.");
@@ -1007,7 +1022,8 @@ export default function ProfilePage() {
         <ProfileHeader 
           user={user} 
           avatarUrl={avatarUrl} 
-          onAvatarChange={triggerAvatarUpload} 
+          onAvatarChange={triggerAvatarUpload}
+          isGamificationActive={profileData.isGamificationActive}
         />
 
         <input 

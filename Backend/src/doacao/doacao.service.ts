@@ -13,13 +13,10 @@ export class DoacaoService {
     private readonly gamificacaoService: GamificacaoService,
   ) {}
 
-  // MÉTODO ALTERADO: Agora recebe o arquivo e salva seu caminho
   async create(
     createDoacaoDto: CreateDoacaoDto,
     file: Express.Multer.File,
   ) {
-    // IMPORTANTE: Dados de um FormData vêm como string.
-    // Precisamos convertê-los para os tipos corretos.
     const valorNumerico = parseFloat(createDoacaoDto.valor as any);
     const usuarioIdNumerico = createDoacaoDto.usuarioId
       ? parseInt(createDoacaoDto.usuarioId as any, 10)
@@ -30,7 +27,7 @@ export class DoacaoService {
         ...createDoacaoDto,
         valor: valorNumerico,
         usuarioId: usuarioIdNumerico,
-        comprovanteUrl: file.path, // Salva o caminho do arquivo (ex: 'uploads/comprovante-123.png')
+        comprovanteUrl: file.path,
       },
     });
   }
@@ -63,7 +60,6 @@ export class DoacaoService {
     id: number,
     updateDoacaoStatusDto: UpdateDoacaoStatusDto,
   ) {
-    // Primeiro, busca a doação original para ter os dados
     const doacaoOriginal = await this.findOne(id);
 
     const doacaoAtualizada = await this.prisma.doacao.update({
@@ -71,38 +67,17 @@ export class DoacaoService {
       data: {
         status: updateDoacaoStatusDto.status,
       },
-      include: {
-            usuario: true, // Garante que os dados do usuário relacionado sejam incluídos na resposta
-        },
     });
 
-    // Lógica da Gamificação: acionada apenas na transição para CONFIRMADA
     if (
       doacaoAtualizada.status === StatusDoacao.CONFIRMADA &&
-      doacaoOriginal.status !== StatusDoacao.CONFIRMADA && // Evita adicionar pontos múltiplas vezes
+      doacaoOriginal.status !== StatusDoacao.CONFIRMADA &&
       doacaoAtualizada.usuarioId
     ) {
-      // 1. Atribuir pontos
-      const pontosGanhos = Math.floor(doacaoAtualizada.valor);
-      await this.gamificacaoService.adicionarPontos(
+      await this.gamificacaoService.processarRecompensaPorDoacao(
         doacaoAtualizada.usuarioId,
-        pontosGanhos,
+        doacaoAtualizada.valor,
       );
-
-      // 2. Verificar conquista de primeira doação
-      const totalDoacoesConfirmadas = await this.prisma.doacao.count({
-        where: {
-          usuarioId: doacaoAtualizada.usuarioId,
-          status: StatusDoacao.CONFIRMADA,
-        },
-      });
-
-      if (totalDoacoesConfirmadas === 1) {
-        await this.gamificacaoService.verificarEAdicionarConquista(
-          doacaoAtualizada.usuarioId,
-          'Primeiro Apoiador',
-        );
-      }
     }
 
     return doacaoAtualizada;

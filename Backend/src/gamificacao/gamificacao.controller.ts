@@ -42,7 +42,7 @@ export class GamificacaoController {
   @ApiResponse({ status: 401, description: 'Não autorizado.'})
   findMinhasConquistas(@Request() req) {
     // O @UseGuards aqui era redundante, pois já está definido para a classe inteira.
-    const usuarioId = req.user.sub;
+    const usuarioId = req.user.id;
     return this.gamificacaoService.findConquistasByUsuario(usuarioId);
   }
 

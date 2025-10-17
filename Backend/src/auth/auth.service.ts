@@ -61,8 +61,15 @@ export class AuthService {
       dailyPointsAwarded,
     };
   }
-
-  private async processarBonusLoginDiario(user: Omit<Usuario, 'senha'>): Promise<boolean> {
+    
+    private async processarBonusLoginDiario(user: Omit<Usuario, 'senha'>): Promise<boolean> {
+    // --- INÍCIO DA CORREÇÃO ---
+    // 1. Verifica PRIMEIRO se a gamificação está ativa.
+    const gamificacaoAtiva = await this.gamificacaoService.isGamificacaoAtiva();
+    if (!gamificacaoAtiva) {
+      return false; // Se não estiver ativa, para a função aqui mesmo.
+    }
+    
     const hoje = new Date();
     // Use UTC para evitar problemas com fuso horário
     hoje.setUTCHours(0, 0, 0, 0);

@@ -2,10 +2,8 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateConquistaDto } from './dto/create-conquista.dto';
 import { UpdateConquistaDto } from './dto/update-conquista.dto';
-// CORREÇÃO: Adicionado DivulgacaoStatus para ser usado no novo método
-import { Prisma, StatusAdocao, DivulgacaoStatus } from '@prisma/client';
+import { Prisma, StatusAdocao, StatusDoacao, DivulgacaoStatus } from '@prisma/client';
 
-// Interface para definir o tipo de retorno do histórico de login
 export interface LoginHistoryStatus {
   data: Date;
   status: 'completed' | 'missed';
@@ -17,8 +15,71 @@ export class GamificacaoService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ===================================================================
-  // MÉTODOS DE LÓGICA DE NEGÓCIO
+  // MÉTODOS DE LÓGICA DE NEGÓCIO (REGRAS DE RECOMPENSA)
   // ===================================================================
+
+  async processarRecompensaPorDoacao(
+    usuarioId: number,
+    valorDoacao: number,
+    prisma: Prisma.TransactionClient | PrismaService = this.prisma,
+  ) {
+    if (!(await this.isGamificacaoAtiva())) {
+      this.logger.warn('Gamificação desativada. Recompensa por doação ignorada.');
+      return;
+    }
+    this.logger.log(`[DOAÇÃO] Iniciando processamento para usuário ID: ${usuarioId}`);
+
+    const pontosGanhos = Math.floor(valorDoacao);
+    if (pontosGanhos > 0) {
+      await this.adicionarPontos(usuarioId, pontosGanhos, prisma);
+    }
+
+    // Lógica 1: Verifica a conquista de "Primeiro Apoiador"
+    const totalDoacoesConfirmadas = await prisma.doacao.count({
+      where: {
+        usuarioId: usuarioId,
+        status: StatusDoacao.CONFIRMADA,
+      },
+    });
+    this.logger.log(`[DOAÇÃO] Total de doações confirmadas para o usuário: ${totalDoacoesConfirmadas}`);
+
+    if (totalDoacoesConfirmadas === 1) {
+      this.logger.log('[DOAÇÃO] Condição de primeira doação atendida. Verificando conquista...');
+      await this.verificarEAdicionarConquista(
+        usuarioId,
+        'Primeiro Apoiador',
+        prisma,
+      );
+    } else {
+      this.logger.warn(`[DOAÇÃO] Condição de primeira doação NÃO atendida (Total: ${totalDoacoesConfirmadas}).`);
+    }
+
+    // Lógica 2: Verifica a conquista "Anjo da Guarda"
+    this.logger.log(`[DOAÇÃO] Verificando conquista 'Anjo da Guarda'...`);
+    const agregacaoDoacoes = await prisma.doacao.aggregate({
+      _sum: {
+        valor: true,
+      },
+      where: {
+        usuarioId: usuarioId,
+        status: StatusDoacao.CONFIRMADA,
+      },
+    });
+
+    const valorTotalDoado = agregacaoDoacoes._sum.valor ?? 0;
+    this.logger.log(`[DOAÇÃO] Valor total doado pelo usuário: R$ ${valorTotalDoado}`);
+
+    if (valorTotalDoado >= 200) {
+      this.logger.log(`[DOAÇÃO] Meta de R$200 atingida. Verificando se o usuário já possui a conquista...`);
+      await this.verificarEAdicionarConquista(
+        usuarioId,
+        'Anjo da Guarda',
+        prisma,
+      );
+    } else {
+      this.logger.log(`[DOAÇÃO] Meta de R$200 ainda não atingida.`);
+    }
+  }
 
   async processarRecompensaPorAdocao(
     usuarioId: number,
@@ -28,8 +89,7 @@ export class GamificacaoService {
       return;
     }
     this.logger.log(`Processando recompensas de adoção para o usuário ID: ${usuarioId}`);
-    await this.adicionarPontos(usuarioId, 200, prisma);
-
+    
     const totalAdocoesAprovadas = await prisma.adocao.count({
       where: {
         usuarioId: usuarioId,
@@ -38,7 +98,7 @@ export class GamificacaoService {
     });
 
     if (totalAdocoesAprovadas === 1) {
-      await this.verificarEAdicionarConquista(usuarioId, 'Salvador de Vidas', prisma);
+      await this.verificarEAdicionarConquista(usuarioId, 'Herói dos Peludos', prisma);
     }
   }
 
@@ -50,7 +110,6 @@ export class GamificacaoService {
       return;
     }
     this.logger.log(`Processando recompensas de voluntariado para o usuário ID: ${usuarioId}`);
-    await this.adicionarPontos(usuarioId, 100, prisma);
     await this.verificarEAdicionarConquista(
       usuarioId,
       'Coração Voluntário',
@@ -58,7 +117,6 @@ export class GamificacaoService {
     );
   }
 
-  // --- NOVO MÉTODO ADICIONADO AQUI ---
   async processarRecompensaPorDivulgacaoAprovada(
     usuarioId: number,
     prisma: Prisma.TransactionClient,
@@ -67,14 +125,9 @@ export class GamificacaoService {
       return;
     }
     this.logger.log(`Processando recompensas de divulgação para o usuário ID: ${usuarioId}`);
-    
-    // Adiciona 50 pontos pela aprovação
-    await this.adicionarPontos(usuarioId, 50, prisma);
-
-    // Adiciona a conquista "Bom Coração"
     await this.verificarEAdicionarConquista(
       usuarioId,
-      'Bom Coração',
+      'Voz dos Sem Voz',
       prisma,
     );
   }
@@ -96,7 +149,7 @@ export class GamificacaoService {
     });
   }
 
-  async getLoginHistory(usuarioId: number) {
+  async getLoginHistory(usuarioId: number): Promise<LoginHistoryStatus[]> {
     const seteDiasAtras = new Date();
     seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
     seteDiasAtras.setUTCHours(0, 0, 0, 0);
@@ -105,45 +158,42 @@ export class GamificacaoService {
       where: {
         usuarioId,
         data: {
-          gte: seteDiasAtras
-        }
+          gte: seteDiasAtras,
+        },
       },
       orderBy: {
-        data: 'asc'
-      }
+        data: 'asc',
+      },
     });
 
-    const ultimosSeteDias: { data: Date; status: 'completed' | 'missed' }[] = [];
-    
+    const ultimosSeteDias: LoginHistoryStatus[] = [];
     for (let i = 6; i >= 0; i--) {
       const data = new Date();
       data.setDate(data.getDate() - i);
       data.setUTCHours(0, 0, 0, 0);
-
       const loginDoDia = logins.find(login => {
         const loginDate = new Date(login.data);
         loginDate.setUTCHours(0, 0, 0, 0);
         return loginDate.getTime() === data.getTime();
       });
-
       ultimosSeteDias.push({
         data,
-        status: loginDoDia ? 'completed' : 'missed'
+        status: loginDoDia ? 'completed' : 'missed',
       });
     }
     return ultimosSeteDias;
   }
 
   // ===================================================================
-  // MÉTODOS INTERNOS
+  // MÉTODOS INTERNOS E DE APOIO
   // ===================================================================
 
   async adicionarPontos(
-     usuarioId: number,
-     pontos: number,
-     prismaClient: Prisma.TransactionClient | PrismaService = this.prisma
-   ): Promise<void> {
-    if (!(await this.isGamificacaoAtiva()) || !usuarioId) {
+    usuarioId: number,
+    pontos: number,
+    prismaClient: Prisma.TransactionClient | PrismaService = this.prisma,
+  ): Promise<void> {
+    if (!(await this.isGamificacaoAtiva()) || !usuarioId || pontos <= 0) {
       return;
     }
     this.logger.log(`Adicionando ${pontos} pontos ao usuário ${usuarioId}`);
@@ -156,23 +206,23 @@ export class GamificacaoService {
       },
     });
   }
-
+  
   async verificarEAdicionarConquista(
     usuarioId: number,
     nomeConquista: string,
-    prismaClient: Prisma.TransactionClient | PrismaService = this.prisma
+    prismaClient: Prisma.TransactionClient | PrismaService = this.prisma,
   ): Promise<void> {
-    if (!(await this.isGamificacaoAtiva()) || !usuarioId) {
-      return;
-    }
+    this.logger.log(`[CONQUISTA] Verificando '${nomeConquista}' para usuário ID: ${usuarioId}`);
+
     const conquista = await prismaClient.conquista.findUnique({
       where: { nome: nomeConquista },
     });
 
     if (!conquista) {
-      this.logger.warn(`Conquista "${nomeConquista}" não encontrada.`);
+      this.logger.error(`[CONQUISTA] FALHA: Conquista com nome '${nomeConquista}' NÃO ENCONTRADA no banco. Verifique seu arquivo seed.ts.`);
       return;
     }
+    this.logger.log(`[CONQUISTA] Conquista '${nomeConquista}' encontrada (ID: ${conquista.id})`);
 
     const possuiConquista = await prismaClient.usuarioConquista.findUnique({
       where: {
@@ -183,22 +233,26 @@ export class GamificacaoService {
       },
     });
 
-    if (!possuiConquista) {
-      this.logger.log(`Atribuindo conquista "${nomeConquista}" ao usuário ${usuarioId}`);
-      await prismaClient.usuarioConquista.create({
-        data: {
-          usuarioId: usuarioId,
-          conquistaId: conquista.id,
-        },
-      });
+    if (possuiConquista) {
+      this.logger.warn(`[CONQUISTA] Usuário já possui a conquista '${nomeConquista}'. Ignorando.`);
+      return;
+    }
 
-      if (conquista.pontosBonus > 0) {
-        await this.adicionarPontos(usuarioId, conquista.pontosBonus, prismaClient);
-      }
+    this.logger.log(`[CONQUISTA] Usuário NÃO possui a conquista. Tentando criar o registro...`);
+    await prismaClient.usuarioConquista.create({
+      data: {
+        usuarioId: usuarioId,
+        conquistaId: conquista.id,
+      },
+    });
+    this.logger.log(`[CONQUISTA] SUCESSO: Conquista '${nomeConquista}' salva para o usuário ID: ${usuarioId}`);
+
+    if (conquista.pontosBonus > 0) {
+      await this.adicionarPontos(usuarioId, conquista.pontosBonus, prismaClient);
     }
   }
 
-  private async isGamificacaoAtiva(): Promise<boolean> {
+  public async isGamificacaoAtiva(): Promise<boolean> {
     const config = await this.prisma.configuracao.findUnique({
       where: { id: 1 },
     });
