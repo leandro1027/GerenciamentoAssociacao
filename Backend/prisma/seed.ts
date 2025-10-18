@@ -41,7 +41,7 @@ async function main() {
   ];
 
   // --- INSERÇÃO DAS CONQUISTAS NO BANCO DE DADOS ---
-  console.log('A popular a tabela de Conquistas...');
+  console.log('Inserindo dados na tabela de Conquistas...');
   for (const conquista of conquistas) {
     await prisma.conquista.upsert({
       where: { nome: conquista.nome },
@@ -51,7 +51,7 @@ async function main() {
   }
 
   // --- INICIALIZAÇÃO DA CONFIGURAÇÃO DO SISTEMA ---
-  console.log('A garantir que a configuração padrão existe...');
+  console.log('Adicionando configuração...');
   await prisma.configuracao.upsert({
     where: { id: 1 },
     update: {},
