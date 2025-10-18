@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     try {
       await api.post(`/auth/reset-password/${token}`, { senha });
-      toast.success('Senha redefinida com sucesso! Pode fazer o login.');
+      toast.success('Senha redefinida com sucesso! Você já pode fazer o login.');
       router.push('/login');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Ocorreu um erro. O seu link pode ter expirado.');
