@@ -24,7 +24,7 @@ export class ConteudoHomeService {
             'Conscientização sobre a posse responsável.',
             'Promoção de eventos e feiras de adoção.',
           ]),
-          imagemUrl: '/uploads/default-about.png', // Uma imagem padrão
+          imagemUrl: '/uploads/default-about.png', 
         },
       });
     }
