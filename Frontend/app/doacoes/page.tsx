@@ -172,34 +172,14 @@ export default function DoacoesPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header (sem alterações) */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          {/* ... */}
-           <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-amber-200 mb-6">
-             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-             <span className="text-sm font-semibold text-green-700">Doação 100% Segura</span>
-           </div>
-           <h1 className="text-5xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-4">
-             Faça a Diferença
-           </h1>
-           <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
-             Sua doação transforma vidas. Cada contribuição nos ajuda a oferecer cuidado, 
-             amor e um futuro melhor para nossos amigos de quatro patas.
-           </p>
-        </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Seção Esquerda - Impacto (sem alterações) */}
+          {/* Seção Esquerda */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-8"
           >
-            {/* ... */}
              <div className="relative group">
                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-3xl transform group-hover:scale-105 transition-transform duration-500"></div>
                <img 
@@ -247,14 +227,13 @@ export default function DoacoesPage() {
                 {!qrCodeDataURL ? (
                   <motion.form
                     key="form"
-                    // ... (demais props sem alterações)
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onSubmit={handleGenerateQRCode}
                     className="space-y-6"
                   >
-                   {/* ... (Todo o formulário inicial sem alterações) ... */}
+                   {/*(Todo o formulário inicial) ... */}
                    {isAuthenticated && user && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -352,7 +331,7 @@ export default function DoacoesPage() {
                        <img src={qrCodeDataURL} alt="QR Code PIX" className="w-64 h-64" />
                      </motion.div>
 
-                    {/* 5. NOVA SEÇÃO: Input para upload do comprovante */}
+                    {/*Input para upload do comprovante */}
                     <div className="w-full bg-amber-50 rounded-xl p-4 border-2 border-dashed border-amber-300 text-center">
                         <UploadCloud className="w-8 h-8 mx-auto text-amber-500 mb-2" />
                         <label htmlFor="comprovante-upload" className="block text-sm font-semibold text-amber-800 mb-2">
@@ -391,7 +370,7 @@ export default function DoacoesPage() {
                         </Button>
                       </motion.div>
 
-                      {/* 6. BOTÃO ATUALIZADO: para confirmar e enviar o comprovante */}
+                      {/*para confirmar e enviar o comprovante */}
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button 
                           onClick={handleConfirmDonation} 
@@ -421,7 +400,7 @@ export default function DoacoesPage() {
           </motion.div>
         </div>
 
-        {/* Footer Informativo (sem alterações) */}
+        {/* Footer Informativo ) */}
         <motion.div
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}

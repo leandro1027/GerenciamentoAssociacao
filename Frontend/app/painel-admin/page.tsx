@@ -120,7 +120,7 @@ const Dashboard = ({
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-full">
-            <p className="text-gray-600 text-lg">A carregar dados do dashboard...</p>
+            <p className="text-gray-600 text-lg">Carregando dados da dashboard...</p>
         </div>
     );
   }
@@ -365,6 +365,19 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
           toast.error('Erro ao atualizar o status.');
         }
     };
+    
+    const handleWhatsAppContact = (voluntario: Voluntario) => {
+        if (!voluntario.usuario?.telefone) {
+            toast.error('Este candidato não possui um número de telefone cadastrado.');
+            return;
+        }
+        const numero = voluntario.usuario.telefone.replace(/\D/g, '');
+        const texto = encodeURIComponent(
+            `Olá ${voluntario.usuario.nome}! Somos da associação e recebemos sua candidatura para voluntariado. Gostaríamos de conversar um pouco mais sobre o seu interesse em nos ajudar!`
+        );
+        
+        window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
+    };
 
     const getStatusClass = (status: StatusVoluntario) => {
         switch (status) {
@@ -398,19 +411,19 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
                                   <td className="px-6 py-4 text-center">
                                       <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(voluntario.status)}`}>{voluntario.status}</span>
                                   </td>
-                                  <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
-                                      {voluntario.status === 'pendente' && (
-                                          <>
-                                              <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Aprovar</button>
-                                              <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
-                                          </>
-                                      )}
-                                      {voluntario.status === 'aprovado' && (
-                                          <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Alterar para Recusado</button>
-                                      )}
-                                      {voluntario.status === 'recusado' && (
-                                          <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-green-600 hover:text-green-900">Alterar para Aprovado</button>
-                                      )}
+                                  <td className="px-6 py-4 text-center text-sm font-medium space-x-4 whitespace-nowrap">
+                                    {voluntario.status === 'pendente' && (
+                                        <>
+                                            <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800">Mensagem</button>
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-blue-600 hover:text-blue-900">Aprovar</button>
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
+                                        </>
+                                    )}
+                                    {(voluntario.status === 'aprovado' || voluntario.status === 'recusado') && (
+                                        <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800">
+                                            Chamar no WhatsApp
+                                        </button>
+                                    )}
                                   </td>
                               </tr>
                           ))}
@@ -421,7 +434,6 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
         </section>
     );
 };
-
 
 
 // 4. COMPONENTE PARA GERIR MEMBROS
@@ -1042,7 +1054,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t space-y-4 sm:space-y-0">
                             <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.001 2C5.582 2 2 5.582 2 10.001c0 1.511.413 2.925 1.15 4.156l-1.15 4.156 4.296-1.13c1.21.69 2.598 1.093 4.054 1.093 4.418 0 8-3.582 8-8.001 0-4.418-3.582-8-8-8zm4.134 9.478c-.23.645-.854 1.11-1.48 1.228-.51.1-.926.04-1.37-.158-.58-.26-1.18-.59-1.73-.99-1.12-0.8-1.88-1.88-2.08-2.22-.2-.34-.48-.59-.48-.96 0-.37.23-.59.48-.79.25-.2.53-.26.73-.26h.3c.23 0 .45.03.65.34.2.31.68.82.73.88.05.06.1.12.01.23-.09.11-.14.17-.26.31-.12.14-.23.28-.34.39-.12.12-.23.26-.11.48.11.22.53.88 1.12 1.44.79.79 1.41 1.02 1.63 1.12.22.1.34.09.48-.06.14-.15.59-.68.73-.88.14-.2.31-.23.53-.23.2 0 .48.01.68.03.2.02.31.01.45.14.14.13.23.29.26.48.03.19.03.91-.2 1.556z" /></svg>
-                                Contactar Candidato
+                                Chamar no Whatsapp
                             </Button>
                             <div className="flex space-x-3 w-full sm:w-auto">
                                 {selectedAdoption.status === StatusAdocao.SOLICITADA ? (
@@ -1468,13 +1480,18 @@ const ConteudoManager = () => {
   );
 };
 
-// --- COMPONENTE PARA GERIR RELATÓRIOS ---
-const ReportsManager = () => {
 
+// --- COMPONENTE PARA GERIR RELATÓRIOS DO SISTEMA ---
+const ReportsManager = () => {
   // Função genérica para lidar com o download de qualquer relatório
   const handleExport = async (format: 'csv' | 'pdf', reportType: string, fileName: string) => {
     const endpoint = `/reports/${reportType}/${format}`;
-    const toastId = toast.loading(`A gerar o seu relatório ${format.toUpperCase()}...`);
+    const toastId = toast.loading(
+      <div className="flex items-center gap-3">
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-600 border-t-transparent"></div>
+        <span>Gerando seu relatório {format.toUpperCase()}...</span>
+      </div>
+    );
 
     try {
       const response = await api.get(endpoint, {
@@ -1494,11 +1511,29 @@ const ReportsManager = () => {
       }
       
       toast.dismiss(toastId);
-      toast.success('Download do relatório iniciado.');
+      toast.success(
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          Download do relatório iniciado!
+        </div>
+      );
 
     } catch (error) {
       toast.dismiss(toastId);
-      toast.error(`Ocorreu um erro ao gerar o relatório ${format.toUpperCase()}.`);
+      toast.error(
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          Erro ao gerar o relatório {format.toUpperCase()}
+        </div>
+      );
       console.error(`Erro na exportação de ${format.toUpperCase()}:`, error);
     }
   };
@@ -1509,36 +1544,95 @@ const ReportsManager = () => {
     reportType: string;
     csvFileName: string;
     pdfFileName: string;
+    icon: React.ReactNode;
+    color: string;
   };
 
   // Componente para o cartão de cada relatório
-  const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName }: ReportCardProps) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-      <p className="text-sm text-gray-600 mt-1 mb-4">{description}</p>
-      <div className="flex items-center space-x-3">
-        <Button onClick={() => handleExport('csv', reportType, csvFileName)}>
-          Exportar CSV
+  const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName, icon, color }: ReportCardProps) => (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6 transition-all duration-300 hover:shadow-2xl hover:scale-105 group">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-3 rounded-xl ${color} transition-transform duration-300 group-hover:scale-110`}>
+          {icon}
+        </div>
+        <div className="flex gap-1">
+          <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+            CSV
+          </span>
+          <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
+            PDF
+          </span>
+        </div>
+      </div>
+      
+      <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-amber-700 transition-colors">
+        {title}
+      </h3>
+      <p className="text-gray-600 leading-relaxed mb-6 text-sm">
+        {description}
+      </p>
+      
+      <div className="flex gap-3">
+        <Button 
+          onClick={() => handleExport('csv', reportType, csvFileName)}
+          className="flex-1 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            CSV
+          </div>
         </Button>
-        <Button onClick={() => handleExport('pdf', reportType, pdfFileName)} className="bg-red-700 hover:bg-red-800">
-          Exportar PDF
+        <Button 
+          onClick={() => handleExport('pdf', reportType, pdfFileName)}
+          className="flex-1 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            PDF
+          </div>
         </Button>
       </div>
     </div>
   );
 
+  // Ícones para os diferentes tipos de relatório
+  const ReportIcons = {
+    donations: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ),
+    animals: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 5a2 2 0 10-4 0 2 2 0 004 0z" /></svg> ),
+    adoptions: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg> ),
+    users: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg> ),
+    volunteers: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg> ),
+    financial: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0h6m-3-7h.01" /></svg> ),
+  };
+  
+  // Array de configuração para os relatórios
+  const reportsData = [
+    { title: "Relatório de Doações", description: "Exporte uma lista completa de todas as doações recebidas com valores, datas e doadores.", reportType: "donations", icon: ReportIcons.donations },
+    { title: "Relatório de Animais", description: "Lista de todos os animais cadastrados.", reportType: "animals", icon: ReportIcons.animals },
+    { title: "Relatório de Adoções", description: "Histórico completo de processos de adoção, status e informações dos adotantes.", reportType: "adoptions", icon: ReportIcons.adoptions },
+    { title: "Relatório de Usuários", description: "Dados dos usuários cadastrados no sistema.", reportType: "users", icon: ReportIcons.users },
+    { title: "Relatório de Voluntários", description: "Informações sobre voluntários.", reportType: "volunteers", icon: ReportIcons.volunteers },
+  ];
+
   return (
-    <section className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Central de Relatórios</h2>
+    <section className="p-4 sm:p-6 lg:p-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <ReportCard 
-          title="Relatório de Doações"
-          description="Exporte uma lista completa de todas as doações recebidas."
-          reportType="donations"
-          csvFileName="relatorio_doacoes.csv"
-          pdfFileName="relatorio_doacoes.pdf"
-        />
-        {/* Adicione mais cartões de relatório aqui conforme necessário */}
+        {reportsData.map((report) => (
+          <ReportCard 
+            key={report.reportType}
+            title={report.title}
+            description={report.description}
+            reportType={report.reportType}
+            csvFileName={`relatorio_${report.reportType}.csv`}
+            pdfFileName={`relatorio_${report.reportType}.pdf`}
+            icon={report.icon}
+            color="bg-gradient-to-br from-amber-600 to-orange-700"
+          />
+        ))}
       </div>
     </section>
   );
@@ -1927,75 +2021,194 @@ export default function AdminPanelPage() {
   }
 
 const Sidebar = () => (
-  <aside className={`bg-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0'}`}>
+  <aside className={`bg-gradient-to-b from-stone-800 to-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0'} overflow-hidden shadow-2xl border-r border-stone-700`}>
     <div className="flex flex-col flex-1 overflow-hidden">
-      <div className="p-4 flex-shrink-0">
-        <h2 className="text-2xl font-bold whitespace-nowrap">Painel Admin</h2>
+      {/* Header */}
+      <div className="p-6 flex-shrink-0 border-b border-stone-700">
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-amber-200 to-orange-200 bg-clip-text text-transparent">Painel Admin</h2>
+            <p className="text-stone-400 text-xs">Centro de Controle</p>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 custom-scrollbar">
-        <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'dashboard' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>📊</span>
-          <span>Dashboard</span>
-        </button>
-        <button onClick={() => setActiveView('slides')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'slides' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>📝</span>
-          <span>Gerir Slides</span>
-        </button>
-        <button onClick={() => setActiveView('animais')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animais' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>🐾</span>
-          <span>Gerir Animais</span>
-        </button>
-        <button onClick={() => setActiveView('animaisComunitarios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'animaisComunitarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>🏘️</span>
-          <span>Animais Comunitários</span>
-        </button>
-        <button onClick={() => setActiveView('adocoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'adocoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>❤️</span>
-          <span>Gerir Adoções</span>
-        </button>
-        <button onClick={() => setActiveView('divulgacoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'divulgacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>📢</span>
-          <span>Gerir Divulgações</span>
-        </button>
-        <button onClick={() => setActiveView('voluntarios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'voluntarios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>🤝</span>
-          <span>Gerir Voluntários</span>
-        </button>
-        <button onClick={() => setActiveView('membros')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'membros' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>👥</span>
-          <span>Gerir Membros</span>
-        </button>
-        <button onClick={() => setActiveView('doacoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'doacoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>💰</span>
-          <span>Histórico de Doações</span>
-        </button>
-        <button onClick={() => setActiveView('conteudo')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'conteudo' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>📄</span>
-          <span>Gerir Conteúdo</span>
-        </button>
-        <button onClick={() => setActiveView('relatórios')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'relatórios' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>📈</span>
-          <span>Gerar Relatórios</span>
-        </button>
-        <button onClick={() => setActiveView('configuracoes')} className={`w-full flex items-center gap-3 text-left p-3 rounded-lg transition-colors whitespace-nowrap ${activeView === 'configuracoes' ? 'bg-stone-700' : 'hover:bg-stone-700'}`}>
-          <span>⚙️</span>
-          <span>Configurações</span>
-        </button>
+      {/* Navigation */}
+      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-1 custom-scrollbar py-4">
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          }
+          label="Dashboard"
+          active={activeView === 'dashboard'}
+          onClick={() => setActiveView('dashboard')}
+        />
+
+        <NavSection title="Conteúdo" />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          }
+          label="Slides"
+          active={activeView === 'slides'}
+          onClick={() => setActiveView('slides')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          }
+          label="Conteúdo"
+          active={activeView === 'conteudo'}
+          onClick={() => setActiveView('conteudo')}
+        />
+
+        <NavSection title="Animais" />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          label="Animais"
+          active={activeView === 'animais'}
+          onClick={() => setActiveView('animais')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          }
+          label="Animais Comunitários"
+          active={activeView === 'animaisComunitarios'}
+          onClick={() => setActiveView('animaisComunitarios')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+          }
+          label="Divulgações"
+          active={activeView === 'divulgacoes'}
+          onClick={() => setActiveView('divulgacoes')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          }
+          label="Adoções"
+          active={activeView === 'adocoes'}
+          onClick={() => setActiveView('adocoes')}
+        />
+
+        <NavSection title="Pessoas" />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          }
+          label="Voluntários"
+          active={activeView === 'voluntarios'}
+          onClick={() => setActiveView('voluntarios')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          }
+          label="Membros"
+          active={activeView === 'membros'}
+          onClick={() => setActiveView('membros')}
+        />
+
+        <NavSection title="Financeiro" />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          label="Doações"
+          active={activeView === 'doacoes'}
+          onClick={() => setActiveView('doacoes')}
+        />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
+          label="Relatórios"
+          active={activeView === 'relatórios'}
+          onClick={() => setActiveView('relatórios')}
+        />
+        
+
+        <NavSection title="Sistema" />
+        <NavItem 
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          }
+          label="Configurações"
+          active={activeView === 'configuracoes'}
+          onClick={() => setActiveView('configuracoes')}
+        />
       </nav>
 
-      <div className="p-4 flex-shrink-0">
-        <Link href="/" className="flex items-center justify-center gap-3 text-center p-3 rounded-lg bg-stone-700 hover:bg-stone-600 transition-colors whitespace-nowrap">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+      {/* Footer */}
+      <div className="p-4 flex-shrink-0 border-t border-stone-700">
+        <Link href="/" className="flex items-center justify-center gap-3 text-center p-3 rounded-xl bg-gradient-to-r from-stone-700 to-stone-600 hover:from-stone-600 hover:to-stone-500 transition-all duration-200 group shadow-lg">
+          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span>Sair do Painel</span>
+          <span className="font-medium">Voltar ao Site</span>
         </Link>
       </div>
     </div>
   </aside>
 );
 
+// Componente auxiliar para itens de navegação
+const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 text-left p-3 rounded-xl transition-all duration-200 whitespace-nowrap group ${
+      active 
+        ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-200 border-r-2 border-amber-500 shadow-lg' 
+        : 'text-stone-300 hover:bg-stone-700/50 hover:text-white hover:shadow-md'
+    }`}
+  >
+    <div className={`transition-colors duration-200 ${active ? 'text-amber-400' : 'text-stone-400 group-hover:text-amber-300'}`}>
+      {icon}
+    </div>
+    <span className="font-medium text-sm">{label}</span>
+    {active && (
+      <div className="ml-auto w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+    )}
+  </button>
+);
+
+// Componente auxiliar para seções
+const NavSection = ({ title }: { title: string }) => (
+  <div className="px-3 py-2">
+    <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">{title}</span>
+  </div>
+);
 const MainContent = () => {
   const viewTitles: Record<AdminView, string> = {
     dashboard: 'Dashboard',

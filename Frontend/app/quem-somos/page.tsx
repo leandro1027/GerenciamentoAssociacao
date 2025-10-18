@@ -92,8 +92,8 @@ export default function QuemSomosPage() {
         <div className="absolute inset-0">
           <img 
             src="/SobreNossaCausa.avif" 
-            alt="Gato a ser acariciado" 
-            className="w-full h-full object-cover opacity-20"
+            alt="Gato" 
+            className="w-full h-full object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-amber-900/90 to-orange-900/90"></div>
         </div>
@@ -118,8 +118,6 @@ export default function QuemSomosPage() {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/20 mb-6"
           >
-            <Star className="w-5 h-5 text-amber-300" fill="currentColor" />
-            <span className="text-amber-100 font-semibold">Desde 2017 Transformando Vidas</span>
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6">
