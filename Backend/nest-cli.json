@@ -3,5 +3,6 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
+    "outDir": "Backend/dist"
   }
 }
