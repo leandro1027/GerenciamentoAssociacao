@@ -83,7 +83,15 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 // --- SEÇÃO SOBRE NÓS ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
   if (!conteudo) return null;
-  const itensList = JSON.parse(conteudo.itens || '[]');
+  
+  // Corrigido: Verificação segura para parsing do JSON
+  let itensList: string[] = [];
+  try {
+    itensList = JSON.parse(conteudo.itens || '[]');
+  } catch (error) {
+    console.error('Erro ao fazer parse dos itens:', error);
+    itensList = [];
+  }
 
   return (
     <section className="bg-white py-20">
@@ -148,7 +156,7 @@ const ParallaxCtaSection = () => (
 
 // --- PARCEIROS ---
 const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
-  if (partners.length === 0) return null;
+  if (!partners || partners.length === 0) return null;
   const extendedPartners = [...partners, ...partners];
 
   return (
@@ -201,19 +209,29 @@ export default function HomePage() {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
+        setLoading(true);
         const [animaisRes, conteudoRes, parceirosRes] = await Promise.all([
-          // ATUALIZADO: A chamada agora é mais limpa. O backend já sabe que /animais deve retornar 
-          // apenas os animais para adoção padrão (não comunitários e disponíveis).
           api.get<Animal[]>('/animais'),
           api.get<ConteudoHome>('/conteudo-home'),
           api.get<Parceiro[]>('/parceiros'),
         ]);
-        setAnimais(animaisRes.data.slice(0, 8));
+
+        // CORREÇÃO: Garantir que animais seja sempre um array
+        const animaisData = Array.isArray(animaisRes.data) ? animaisRes.data : [];
+        setAnimais(animaisData.slice(0, 8));
+        
         setConteudoHome(conteudoRes.data);
-        setParceiros(parceirosRes.data);
+        
+        // CORREÇÃO: Garantir que parceiros seja sempre um array
+        const parceirosData = Array.isArray(parceirosRes.data) ? parceirosRes.data : [];
+        setParceiros(parceirosData);
+        
       } catch (err) {
         console.error("Erro ao buscar dados da página inicial:", err);
         setError('Não foi possível carregar a página.');
+        // Garantir que os estados sejam arrays vazios em caso de erro
+        setAnimais([]);
+        setParceiros([]);
       } finally {
         setLoading(false);
       }
@@ -242,8 +260,9 @@ export default function HomePage() {
           {error && <p className="text-center text-red-600">{error}</p>}
           {!loading && !error && (
             <>
+              {/* CORREÇÃO: Verificação adicional para garantir que animais é um array */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {animais.map(animal => (
+                {Array.isArray(animais) && animais.map(animal => (
                   <AnimalCard key={animal.id} animal={animal} />
                 ))}
               </div>
