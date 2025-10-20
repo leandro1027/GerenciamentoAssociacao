@@ -5,9 +5,10 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { AnimalModule } from 'src/animal/animal.module';
 import { AnimalService } from 'src/animal/animal.service';
 import { GamificacaoModule } from 'src/gamificacao/gamificacao.module';
+import { UploadModule } from 'src/uploads-s3/upload.module';
 
 @Module({
-  imports: [PrismaModule, AnimalModule, GamificacaoModule],
+  imports: [PrismaModule, AnimalModule, GamificacaoModule, UploadModule],
   controllers: [DivulgacaoController],
   providers: [DivulgacaoService, AnimalService],
 })

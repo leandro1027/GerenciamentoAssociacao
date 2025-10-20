@@ -1,32 +1,26 @@
 import { Controller, Post, Body, UseInterceptors, UploadedFile, BadRequestException, Get, UseGuards, Request, Param, ParseUUIDPipe, Patch, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { DivulgacaoService } from './divulgacao.service';
 import { CreateDivulgacaoDto } from './dto/create-divulgacao.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UpdateAnimalDivulgacaoDto } from 'src/animal/dto/update-animal-divulgacao.dto';
-import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto'; // <-- Importado o DTO que criamos
+import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto';
+import { UploadService } from 'src/uploads-s3/upload.service';
+
 
 @Controller('divulgacao')
 export class DivulgacaoController {
-  constructor(private readonly divulgacaoService: DivulgacaoService) {}
+  constructor(
+    private readonly divulgacaoService: DivulgacaoService,
+    private readonly uploadsService: UploadService, 
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
-      },
-    }),
-  }))
-
-  create(
+  @UseInterceptors(FileInterceptor('file')) // MODIFICADO
+  async create( // MODIFICADO
     @Body() createDivulgacaoDto: CreateDivulgacaoDto,
     @UploadedFile() file: Express.Multer.File,
     @Request() req,
@@ -35,7 +29,11 @@ export class DivulgacaoController {
       throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
     const userId = req.user.id;
-    return this.divulgacaoService.create(createDivulgacaoDto, file, userId);
+    
+    // MODIFICADO: Delega o upload para o serviço central
+    const imageUrl = await this.uploadsService.uploadArquivo(file);
+
+    return this.divulgacaoService.create(createDivulgacaoDto, imageUrl, userId);
   }
 
   @Get()
@@ -55,15 +53,13 @@ export class DivulgacaoController {
     return this.divulgacaoService.updateStatus(id, updateAnimalDivulgacaoDto.status);
   }
 
-  // --- MÉTODO ATUALIZADO ---
   @Post(':id/convert-to-animal')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   convertToAnimal(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() convertDto: ConvertDivulgacaoDto, // <-- 1. Recebe os dados do formulário
+    @Body() convertDto: ConvertDivulgacaoDto,
   ) {
-    // 2. Passa os dados para o serviço
     return this.divulgacaoService.convertToAnimal(id, convertDto);
   }
 
