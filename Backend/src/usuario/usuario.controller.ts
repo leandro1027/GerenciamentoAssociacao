@@ -11,6 +11,7 @@ import {
   Request,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -21,13 +22,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { editFileName, imageFileFilter } from 'src/utils/file-upload.utils';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 @Controller('usuario')
 export class UsuarioController {
-  constructor(private readonly usuarioService: UsuarioService) {}
+  constructor(
+    private readonly usuarioService: UsuarioService,
+    private readonly uploadsService: UploadsService, // ADICIONADO
+  ) {}
 
   @Post()
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
@@ -49,15 +52,14 @@ export class UsuarioController {
 
   @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({ destination: './uploads', filename: editFileName }),
-      fileFilter: imageFileFilter,
-    }),
-  )
-  uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
-    const imageUrl = `/uploads/${file.filename}`;
-    return this.usuarioService.updateAvatar(req.user.id, imageUrl);
+  @UseInterceptors(FileInterceptor('file')) // MODIFICADO
+  async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) { // MODIFICADO
+    if (!file) {
+      throw new BadRequestException('Ficheiro de imagem é obrigatório.');
+    }
+    // MODIFICADO: Delega o upload para o serviço central
+    const avatarFileName = await this.uploadsService.uploadArquivo(file);
+    return this.usuarioService.updateAvatar(req.user.id, avatarFileName);
   }
 
   // --- RANKING (ROTA PÚBLICA) ---
