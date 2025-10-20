@@ -1,5 +1,3 @@
-// Em: Backend/src/conteudo-home/conteudo-home.service.ts
-
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateConteudoHomeDto } from './dto/update-conteudo-home.dto';
@@ -24,18 +22,20 @@ export class ConteudoHomeService {
             'Conscientização sobre a posse responsável.',
             'Promoção de eventos e feiras de adoção.',
           ]),
-          imagemUrl: '/uploads/default-about.png', 
+          // Mantemos uma imagem padrão caso nenhuma seja enviada
+          imagemUrl: 'default-about.png', 
         },
       });
     }
     return conteudo;
   }
 
-  async update(dto: UpdateConteudoHomeDto, file?: Express.Multer.File) {
+  async update(dto: UpdateConteudoHomeDto, imagemFileName?: string) {
     const data: any = { ...dto };
 
-    if (file) {
-      data.imagemUrl = `/uploads/${file.filename}`;
+    // MODIFICADO: Se um novo nome de arquivo foi passado, ele é salvo no banco
+    if (imagemFileName) {
+      data.imagemUrl = imagemFileName;
     }
     
     return this.prisma.conteudoHome.update({
