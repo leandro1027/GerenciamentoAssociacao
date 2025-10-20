@@ -20,61 +20,42 @@ import { UpdateAnimalDto } from './dto/update-animal.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { Especie, Porte, Sexo } from '@prisma/client';
 import { FindComunitariosDto } from './dto/find-comunitarios.dto';
+import { UploadService } from 'src/uploads-s3/upload.service';
 
-// Helper para gerar nomes de arquivo únicos
-const generateUniqueFilename = (file: Express.Multer.File) => {
-  const name = file.originalname.split('.')[0];
-  const fileExtName = extname(file.originalname);
-  const randomName = Array(4)
-    .fill(null)
-    .map(() => Math.round(Math.random() * 16).toString(16))
-    .join('');
-  return `${name}-${randomName}${fileExtName}`;
-};
+
+// REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
+// const generateUniqueFilename = (file: Express.Multer.File) => { ... };
 
 @Controller('animais')
 export class AnimalController {
-  constructor(private readonly animalService: AnimalService) {}
+  constructor(
+    private readonly animalService: AnimalService,
+    private readonly uploadsService: UploadService, // ADICIONADO: Injeta o serviço de upload
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {
-          callback(null, generateUniqueFilename(file));
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return callback(
-            new Error('Apenas ficheiros de imagem são permitidos!'),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
-  create(
+  // MODIFICADO: Interceptor simplificado para usar a memória
+  @UseInterceptors(FileInterceptor('file'))
+  async create( // ADICIONADO: 'async'
     @Body() createAnimalDto: CreateAnimalDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException(
-        'O ficheiro da imagem do animal é obrigatório.',
-      );
+      throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
-    return this.animalService.create(createAnimalDto, file);
+
+    // MODIFICADO: Delega o upload para o serviço central
+    const animalImageUrl = await this.uploadsService.uploadArquivo(file);
+
+    // Passa apenas o nome do arquivo para o serviço de negócio
+    return this.animalService.create(createAnimalDto, animalImageUrl);
   }
 
-  // Rota pública para a página de adoção
+  // --- NENHUMA ALTERAÇÃO NECESSÁRIA NAS ROTAS 'GET' ---
   @Get()
   findAll(
     @Query('especie') especie?: Especie,
@@ -99,11 +80,21 @@ export class AnimalController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  update(
+  // ADICIONADO: Funcionalidade de upload na atualização
+  @UseInterceptors(FileInterceptor('file'))
+  async update( // ADICIONADO: 'async'
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAnimalDto: UpdateAnimalDto,
+    @UploadedFile() file?: Express.Multer.File, // ADICIONADO: Recebe arquivo opcional
   ) {
-    return this.animalService.update(id, updateAnimalDto);
+    let animalImageUrl: string | undefined = undefined;
+
+    // ADICIONADO: Se um novo arquivo for enviado, faz o upload
+    if (file) {
+      animalImageUrl = await this.uploadsService.uploadArquivo(file);
+    }
+    
+    return this.animalService.update(id, updateAnimalDto, animalImageUrl);
   }
 
   @Delete(':id')
