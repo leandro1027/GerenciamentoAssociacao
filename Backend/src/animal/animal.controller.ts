@@ -22,7 +22,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Especie, Porte, Sexo } from '@prisma/client';
 import { FindComunitariosDto } from './dto/find-comunitarios.dto';
-import { UploadService } from 'src/uploads-s3/upload.service';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
 // REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
@@ -32,7 +32,7 @@ import { UploadService } from 'src/uploads-s3/upload.service';
 export class AnimalController {
   constructor(
     private readonly animalService: AnimalService,
-    private readonly uploadsService: UploadService, // ADICIONADO: Injeta o serviço de upload
+    private readonly uploadsService: UploadsService, // ADICIONADO: Injeta o serviço de upload
   ) {}
 
   @Post()

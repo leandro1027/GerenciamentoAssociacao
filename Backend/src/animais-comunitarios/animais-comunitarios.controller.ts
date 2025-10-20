@@ -23,7 +23,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { AnimaisComunitariosService } from './animais-comunitarios.service';
 import { CreateAnimalComunitarioDto } from './dto/create-animais-comunitario.dto';
 import { UpdateAnimalComunitarioDto } from './dto/update-animais-comunitario.dto';
-import { UploadService } from 'src/uploads-s3/upload.service';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
 // REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
@@ -33,7 +33,7 @@ import { UploadService } from 'src/uploads-s3/upload.service';
 export class AnimaisComunitariosController {
   constructor(
     private readonly animaisComunitariosService: AnimaisComunitariosService,
-    private readonly uploadsService: UploadService, // ADICIONADO: Injeta o serviço de upload
+    private readonly uploadsService: UploadsService, // ADICIONADO: Injeta o serviço de upload
   ) {}
 
   @Post()

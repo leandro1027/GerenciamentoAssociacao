@@ -5,7 +5,7 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateConteudoHomeDto } from './dto/update-conteudo-home.dto';
-import { UploadService } from 'src/uploads-s3/upload.service';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
 // REMOVIDO: 'diskStorage' e 'extname' não são mais necessários aqui
@@ -14,7 +14,7 @@ import { UploadService } from 'src/uploads-s3/upload.service';
 export class ConteudoHomeController {
   constructor(
     private readonly conteudoHomeService: ConteudoHomeService,
-    private readonly uploadsService: UploadService, // ADICIONADO: Injeta o serviço de upload
+    private readonly uploadsService: UploadsService, // ADICIONADO: Injeta o serviço de upload
   ) {}
 
   @Get()

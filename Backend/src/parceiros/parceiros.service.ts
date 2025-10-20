@@ -1,32 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateParceiroDto } from './dto/create-parceiro.dto';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 @Injectable()
 export class ParceirosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
-  create(createParceiroDto: CreateParceiroDto, file: Express.Multer.File) {
-    const logoUrl = `/uploads/${file.filename}`;
+  create(createParceiroDto: CreateParceiroDto, logoFileName: string) {
     return this.prisma.parceiro.create({
       data: {
         nome: createParceiroDto.nome,
-        logoUrl,
+        logoUrl: logoFileName,
       },
     });
   }
 
   findAll() {
     return this.prisma.parceiro.findMany({
-        orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
   }
 
   async remove(id: number) {
-    const parceiro = await this.prisma.parceiro.findUnique({ where: { id } });
-    if (!parceiro) {
-      throw new NotFoundException(`Parceiro com ID ${id} não encontrado.`);
-    }
+    const parceiro = await this.prisma.parceiro.findUniqueOrThrow({ where: { id } });
+
+    await this.uploadsService.deletarArquivo(parceiro.logoUrl);
+
     return this.prisma.parceiro.delete({ where: { id } });
   }
 }

@@ -22,7 +22,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UpdateDoacaoStatusDto } from './dto/update-doacao-status.dto';
-import { UploadService } from 'src/uploads-s3/upload.service';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
 // REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
@@ -32,7 +32,7 @@ import { UploadService } from 'src/uploads-s3/upload.service';
 export class DoacaoController {
   constructor(
     private readonly doacaoService: DoacaoService,
-    private readonly uploadsService: UploadService, // ADICIONADO
+    private readonly uploadsService: UploadsService, // ADICIONADO
   ) {}
 
   @Post()

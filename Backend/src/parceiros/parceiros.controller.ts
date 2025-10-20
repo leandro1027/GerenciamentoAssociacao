@@ -1,5 +1,3 @@
-// Em: src/parceiros/parceiros.controller.ts
-
 import {
   Controller,
   Get,
@@ -19,56 +17,30 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { UploadsService } from 'src/uploads-s3/upload.service';
+
 
 @Controller('parceiros')
 export class ParceirosController {
-  constructor(private readonly parceirosService: ParceirosService) {}
+  constructor(
+    private readonly parceirosService: ParceirosService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, cb) => {
-        const randomName = Array(32).fill(null).map(() => Math.round(Math.random() * 16).toString(16)).join('');
-        return cb(null, `${randomName}${extname(file.originalname)}`);
-      },
-    }),
-  }))
-  create(
-    @Body() body: any, // Recebemos o body como 'any' para o diagnóstico
+  @UseInterceptors(FileInterceptor('file'))
+  async create(
+    @Body() createParceiroDto: CreateParceiroDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    // --- INÍCIO DO DIAGNÓSTICO ---
-    console.log('--------------------------------------------------');
-    console.log('ROTA DE CRIAÇÃO DE PARCEIRO ATIVADA');
-    console.log(`Timestamp: ${new Date().toISOString()}`);
-    console.log('BODY COMPLETO RECEBIDO PELO CONTROLLER:', body);
-    console.log('TIPO DO BODY:', typeof body);
-    console.log('VALOR DO CAMPO "nome":', body.nome);
-    console.log('FICHEIRO RECEBIDO:', file ? { filename: file.filename, mimetype: file.mimetype, size: file.size } : 'NENHUM FICHEIRO RECEBIDO');
-    console.log('--------------------------------------------------');
-    // --- FIM DO DIAGNÓSTICO ---
-
     if (!file) {
       throw new BadRequestException('O ficheiro do logótipo é obrigatório.');
     }
 
-    // Validação manual para garantir que o campo 'nome' existe e é válido
-    if (!body.nome || typeof body.nome !== 'string' || body.nome.trim() === '') {
-      console.error('ERRO: Validação manual falhou. O campo "nome" está em falta ou é inválido.');
-      throw new BadRequestException('O campo "nome" é obrigatório e não pode estar vazio.');
-    }
-
-    // Criamos o DTO manualmente para passar ao service
-    const createParceiroDto: CreateParceiroDto = {
-      nome: body.nome.trim(),
-    };
-
-    return this.parceirosService.create(createParceiroDto, file);
+    const logoFileName = await this.uploadsService.uploadArquivo(file);
+    return this.parceirosService.create(createParceiroDto, logoFileName);
   }
 
   @Get()

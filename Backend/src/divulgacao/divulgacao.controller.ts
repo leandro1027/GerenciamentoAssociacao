@@ -7,14 +7,14 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UpdateAnimalDivulgacaoDto } from 'src/animal/dto/update-animal-divulgacao.dto';
 import { ConvertDivulgacaoDto } from './dto/convert-divulgacao.dto';
-import { UploadService } from 'src/uploads-s3/upload.service';
+import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
 @Controller('divulgacao')
 export class DivulgacaoController {
   constructor(
     private readonly divulgacaoService: DivulgacaoService,
-    private readonly uploadsService: UploadService, 
+    private readonly uploadsService: UploadsService, 
   ) {}
 
   @Post()
