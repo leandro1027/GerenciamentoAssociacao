@@ -13,13 +13,13 @@ import { AdocoesModule } from './adocoes/adocoes.module';
 import { DivulgacaoModule } from './divulgacao/divulgacao.module';
 import { ConteudoHomeModule } from './conteudo-home/conteudo-home.module';
 import { ParceirosModule } from './parceiros/parceiros.module';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { GamificacaoModule } from './gamificacao/gamificacao.module';
 import { ConfiguracaoModule } from './configuracao/configuracao.module';
 import { AnimaisComunitariosModule } from './animais-comunitarios/animais-comunitarios.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
+import { UploadModule } from './uploads-s3/upload.module';
 
 
 @Module({
@@ -36,13 +36,13 @@ import { GeocodingModule } from './geocoding/geocoding.module';
     DivulgacaoModule,
     ConteudoHomeModule,
     ParceirosModule,
-    CloudinaryModule,
     DashboardModule,
     ReportsModule,
     GamificacaoModule,
     ConfiguracaoModule,
     AnimaisComunitariosModule,
     GeocodingModule,
+    UploadModule
   ],
   controllers: [AppController],
   providers: [AppService],

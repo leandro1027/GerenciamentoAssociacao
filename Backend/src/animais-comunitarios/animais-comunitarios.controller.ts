@@ -16,63 +16,49 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+// REMOVIDO: 'diskStorage' e 'extname' não são mais necessários aqui
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { AnimaisComunitariosService } from './animais-comunitarios.service';
 import { CreateAnimalComunitarioDto } from './dto/create-animais-comunitario.dto';
 import { UpdateAnimalComunitarioDto } from './dto/update-animais-comunitario.dto';
+import { UploadService } from 'src/uploads-s3/upload.service';
 
-const generateUniqueFilename = (file: Express.Multer.File) => {
-  const name = file.originalname.split('.')[0].replace(/\s/g, '-');
-  const fileExtName = extname(file.originalname);
-  const randomName = Array(4)
-    .fill(null)
-    .map(() => Math.round(Math.random() * 16).toString(16))
-    .join('');
-  return `${name}-${randomName}${fileExtName}`;
-};
+
+// REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
+// const generateUniqueFilename = (file: Express.Multer.File) => { ... };
 
 @Controller('animais-comunitarios')
 export class AnimaisComunitariosController {
-  constructor(private readonly animaisComunitariosService: AnimaisComunitariosService) {}
+  constructor(
+    private readonly animaisComunitariosService: AnimaisComunitariosService,
+    private readonly uploadsService: UploadService, // ADICIONADO: Injeta o serviço de upload
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads', 
-        filename: (req, file, callback) => {
-          callback(null, generateUniqueFilename(file));
-        },
-      }),
-      fileFilter: (req, file, callback) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-          return callback(
-            new BadRequestException('Apenas ficheiros de imagem são permitidos!'),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
-  create(
+  // MODIFICADO: O FileInterceptor agora usa armazenamento em memória, sem configurações complexas.
+  @UseInterceptors(FileInterceptor('file'))
+  async create( // ADICIONADO: 'async' pois agora aguardamos o upload
     @Body() createDto: CreateAnimalComunitarioDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
       throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
-    return this.animaisComunitariosService.create(createDto, file);
+
+    // MODIFICADO: A lógica de upload é delegada ao serviço central
+    const fotoFileName = await this.uploadsService.uploadArquivo(file);
+
+    // Passamos apenas o nome do arquivo para o serviço de negócio
+    return this.animaisComunitariosService.create(createDto, fotoFileName);
   }
 
-  // --- CORREÇÃO DE ORDEM ---
-  // A rota mais específica ('mapa/localizacoes') deve vir ANTES da rota genérica ('/').
+  // --- NENHUMA ALTERAÇÃO NECESSÁRIA ABAIXO DESTE PONTO NO CONTROLLER ---
+  // (Exceto no método 'update' que também lida com arquivos)
+
   @Get('mapa/localizacoes') 
   findAllForMap() {
     return this.animaisComunitariosService.findAllForMap();
@@ -91,13 +77,21 @@ export class AnimaisComunitariosController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @UseInterceptors(FileInterceptor('file', { /* ...configuração do multer... */ }))
-  update(
+  // MODIFICADO: Interceptor simplificado, igual ao do 'create'
+  @UseInterceptors(FileInterceptor('file'))
+  async update( // ADICIONADO: 'async'
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateAnimalComunitarioDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.animaisComunitariosService.update(id, updateDto, file);
+    let fotoFileName: string | undefined = undefined;
+
+    // MODIFICADO: Se um novo arquivo for enviado, faz o upload
+    if (file) {
+      fotoFileName = await this.uploadsService.uploadArquivo(file);
+    }
+    
+    return this.animaisComunitariosService.update(id, updateDto, fotoFileName);
   }
 
   @Delete(':id')
