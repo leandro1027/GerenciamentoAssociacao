@@ -13,9 +13,10 @@ export class DoacaoService {
     private readonly gamificacaoService: GamificacaoService,
   ) {}
 
+  // MODIFICADO: A assinatura do método agora espera uma string 'comprovanteFileName'
   async create(
     createDoacaoDto: CreateDoacaoDto,
-    file: Express.Multer.File,
+    comprovanteFileName: string,
   ) {
     const valorNumerico = parseFloat(createDoacaoDto.valor as any);
     const usuarioIdNumerico = createDoacaoDto.usuarioId
@@ -27,19 +28,15 @@ export class DoacaoService {
         ...createDoacaoDto,
         valor: valorNumerico,
         usuarioId: usuarioIdNumerico,
-        comprovanteUrl: file.path,
+        comprovanteUrl: comprovanteFileName, // Salva o nome do arquivo vindo da Cloudflare
       },
     });
   }
 
   findAll() {
     return this.prisma.doacao.findMany({
-      include: {
-        usuario: true,
-      },
-      orderBy: {
-        data: 'desc',
-      },
+      include: { usuario: true },
+      orderBy: { data: 'desc' },
     });
   }
 
@@ -48,25 +45,17 @@ export class DoacaoService {
       where: { id },
       include: { usuario: true },
     });
-
     if (!doacao) {
       throw new NotFoundException(`Doação com id ${id} não encontrada.`);
     }
-
     return doacao;
   }
 
-  async updateStatus(
-    id: number,
-    updateDoacaoStatusDto: UpdateDoacaoStatusDto,
-  ) {
+  async updateStatus(id: number, updateDoacaoStatusDto: UpdateDoacaoStatusDto) {
     const doacaoOriginal = await this.findOne(id);
-
     const doacaoAtualizada = await this.prisma.doacao.update({
       where: { id },
-      data: {
-        status: updateDoacaoStatusDto.status,
-      },
+      data: { status: updateDoacaoStatusDto.status },
     });
 
     if (
@@ -79,7 +68,6 @@ export class DoacaoService {
         doacaoAtualizada.valor,
       );
     }
-
     return doacaoAtualizada;
   }
 
@@ -93,6 +81,7 @@ export class DoacaoService {
 
   async remove(id: number) {
     await this.findOne(id);
+    // TODO: Antes de deletar, buscar o nome do comprovante no DB para deletá-lo da Cloudflare R2
     return this.prisma.doacao.delete({
       where: { id },
     });
