@@ -6,6 +6,41 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types';
 
+// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 ---
+const buildImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
+  }
+  
+  // Se já for uma URL completa do R2, retorna como está
+  if (imagePath.includes('r2.dev')) {
+    return imagePath;
+  }
+  
+  // Se for uma URL do backend (localhost ou render), extrai o nome do arquivo
+  if (imagePath.includes('localhost') || imagePath.includes('render.com')) {
+    const fileName = imagePath.split('/').pop(); // pega o nome do arquivo
+    if (fileName) {
+      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+      return r2Domain ? `${r2Domain}/${fileName}` : `https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+R2`;
+    }
+  }
+  
+  // Se for apenas um nome de arquivo (UUID.jpg), constrói URL do R2
+  if (/^[a-f0-9-]+\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
+    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+    if (r2Domain) {
+      return `${r2Domain}/${imagePath}`;
+    } else {
+      console.error('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
+      return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+Config';
+    }
+  }
+  
+  // Fallback: retorna como está
+  return imagePath;
+};
+
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
   titulo: string;
@@ -33,8 +68,8 @@ const AnimalFeatureTag = ({ icon, text }: { icon: React.ReactNode, text: string 
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal || !animal.animalImageUrl) return null;
 
-  const apiBaseUrl = api.defaults.baseURL;
-  const imageUrl = `${apiBaseUrl}${animal.animalImageUrl}`;
+  // CORREÇÃO: Usar buildImageUrl em vez da URL da API
+  const imageUrl = buildImageUrl(animal.animalImageUrl);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
@@ -93,6 +128,9 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     itensList = [];
   }
 
+  // CORREÇÃO: Usar buildImageUrl para a imagem do conteúdo
+  const imageUrl = buildImageUrl(conteudo.imagemUrl);
+
   return (
     <section className="bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -115,9 +153,12 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
         </div>
         <div className="relative rounded-xl overflow-hidden shadow-2xl">
           <img 
-            src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} 
+            src={imageUrl} 
             alt="Imagem sobre a associação"
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Sem+Imagem';
+            }}
           />
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
             <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
@@ -184,10 +225,14 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
           <div className="flex w-max scrolling-wrapper">
             {extendedPartners.map((partner, index) => (
               <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
+                {/* CORREÇÃO: Usar buildImageUrl para logos dos parceiros */}
                 <img 
-                  src={`${api.defaults.baseURL}${partner.logoUrl}`} 
+                  src={buildImageUrl(partner.logoUrl)} 
                   alt={partner.nome}
                   className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale hover:grayscale-0 transition"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://placehold.co/128x128/e2e8f0/cbd5e0?text=Logo';
+                  }}
                 />
               </div>
             ))}
