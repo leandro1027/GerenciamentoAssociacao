@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Especie, Sexo, Porte, StatusAnimal, Prisma } from '@prisma/client';
 import { FindComunitariosDto } from './dto/find-comunitarios.dto';
 import { UploadsService } from 'src/uploads-s3/upload.service';
-import { ConfigService } from '@nestjs/config'; // ADICIONE ESTA IMPORT
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AnimalService {
@@ -14,7 +14,7 @@ export class AnimalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadsService: UploadsService,
-    private readonly configService: ConfigService, // ADICIONE ESTA INJEÇÃO
+    private readonly configService: ConfigService, // ADICIONADO
   ) {
     // Obtém o domínio público do R2 do environment
     this.r2PublicDomain = this.configService.get<string>('R2_PUBLIC_DOMAIN') || '';

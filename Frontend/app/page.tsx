@@ -14,14 +14,24 @@ interface ConteudoHome {
   imagemUrl: string;
 }
 
-// --- FUNÇÃO SIMPLIFICADA - AGORA SÓ LIDA COM FALLBACK ---
+const R2_PUBLIC_DOMAIN = 'https://pub-c5a813e903524beb8500fe1fd3de9efe.r2.dev';
+
 const getImageUrl = (imageUrl: string | null | undefined): string => {
+  // 1. Se não houver imagem, retorna o placeholder
   if (!imageUrl) {
     return 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Imagem';
   }
   
-  // O backend já retorna URLs completas do R2, então podemos usar diretamente
-  return imageUrl;
+  // 2. Se a URL já for completa (começa com http), retorna ela mesma
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // 3. Se for um caminho relativo, constrói a URL completa do R2
+  // (Garante que não haja barras duplicadas, ex: "https://...//upload")
+  const path = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+  
+  return `${R2_PUBLIC_DOMAIN}/${path}`;
 };
 
 // --- COMPONENTES AUXILIARES ---
