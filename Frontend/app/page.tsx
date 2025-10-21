@@ -6,28 +6,29 @@ import Carousel from './components/layout/carousel'; // Verifique se o caminho e
 import api from './services/api'; // Verifique se o caminho está correto
 import { Animal, Parceiro, Sexo, ConteudoHome } from '../types'; // Importe ConteudoHome de 'types'
 
-// --- VARIÁVEL DE AMBIENTE E FALLBACK ---
+// --- VARIÁVEL DE AMBIENTE E FALLBACKs ---
 const R2_PUBLIC_DOMAIN = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN || '';
 const FALLBACK_IMAGE_URL = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
 const FALLBACK_LOGO_URL = 'https://placehold.co/128x128/e2e8f0/cbd5e0?text=Logo';
 const FALLBACK_ABOUT_URL = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Sem+Imagem';
 
+// --- FUNÇÃO HELPER PARA CONSTRUIR URLS DO R2 ---
 const buildImageUrl = (imagePath: string | null | undefined, fallback: string = FALLBACK_IMAGE_URL): string => {
-  // Se não houver caminho ou domínio R2, retorna o fallback imediatamente.
-  if (!imagePath || !R2_PUBLIC_DOMAIN) {
-    return fallback;
+  if (imagePath && R2_PUBLIC_DOMAIN) {
+    // Remove qualquer prefixo '/uploads/' que possa ter ficado no DB
+    const cleanPath = imagePath.replace(/^uploads\//, '');
+    // Garante que o domínio não termine com '/' e o caminho não comece com '/'
+    const domain = R2_PUBLIC_DOMAIN.replace(/\/$/, '');
+    const path = cleanPath.replace(/^\//, '');
+    return `${domain}/${path}`;
   }
-  
-  // Remove qualquer '/uploads/' que esteja NO INÍCIO do caminho.
-  const cleanPath = imagePath.replace(/^uploads\//, ''); 
-  
-  // Garante que o domínio não termine com '/' e o caminho não comece com '/'
-  // para evitar barras duplicadas na URL final.
-  const domain = R2_PUBLIC_DOMAIN.replace(/\/$/, '');
-  const path = cleanPath.replace(/^\//, '');
-
-  return `${domain}/${path}`; // Monta a URL final e correta.
+  // Se não houver R2_PUBLIC_DOMAIN configurado, loga um aviso no console (apenas em desenvolvimento)
+  if (process.env.NODE_ENV === 'development' && !R2_PUBLIC_DOMAIN && imagePath) {
+    console.warn(`[buildImageUrl] Variável de ambiente NEXT_PUBLIC_R2_PUBLIC_DOMAIN não definida para a imagem: ${imagePath}`);
+  }
+  return fallback; // Retorna placeholder
 };
+
 // --- COMPONENTES AUXILIARES ---
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -60,12 +61,13 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 
   return (
     <div className="group flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-      <div className="relative h-56 overflow-hidden">
-        <img 
+      <div className="relative h-56 overflow-hidden bg-gray-100"> {/* Fundo placeholder */}
+        <img
           src={imageUrl}
           alt={`Foto de ${animal.nome}`}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           onError={handleImageError}
+          loading="lazy" // Adiciona lazy loading
         />
       </div>
       <div className="p-4 flex flex-col flex-1">
@@ -76,8 +78,8 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           <AnimalFeatureTag icon={<span>🧬</span>} text={animal.raca} />
         </div>
         <div className="mt-auto pt-4">
-          <Link 
-            href={`/adote/${animal.id}`} 
+          <Link
+            href={`/adote/${animal.id}`}
             className="block w-full text-center bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-4 py-2.5 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all"
           >
             Quero Adotar
@@ -91,16 +93,13 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 // --- SEÇÃO SOBRE NÓS ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
   if (!conteudo) return null; // Retorna nulo se não houver conteúdo
-  
+
   let itensList: string[] = [];
   try {
     // Tenta parsear, mas define como array vazio se falhar ou for nulo
-    itensList = JSON.parse(conteudo.itens || '[]'); 
+    itensList = JSON.parse(conteudo.itens || '[]');
     if (!Array.isArray(itensList)) itensList = []; // Garante que seja um array
-  } catch (error) { 
-    console.error('Erro ao fazer parse dos itens:', error);
-    itensList = [];
-  }
+  } catch (error) { console.error('Erro ao fazer parse dos itens:', error); }
 
   const imageUrl = buildImageUrl(conteudo.imagemUrl, FALLBACK_ABOUT_URL); // Usa a função helper
 
@@ -115,9 +114,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
           <p className="mt-4 text-lg leading-relaxed">{conteudo.subtitulo || 'Descrição padrão sobre a associação.'}</p>
           {itensList.length > 0 && (
             <ul className="mt-6 space-y-3 list-disc list-inside text-gray-600">
-              {itensList.map((item: string, index: number) => (
-                <li key={index}>{item}</li>
-              ))}
+              {itensList.map((item: string, index: number) => ( <li key={index}>{item}</li> ))}
             </ul>
           )}
           <div className="mt-8">
@@ -126,12 +123,13 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
             </Link>
           </div>
         </div>
-        <div className="relative rounded-xl overflow-hidden shadow-2xl aspect-w-16 aspect-h-10 md:aspect-h-11"> {/* Ajuste no aspect ratio */}
-          <img 
-            src={imageUrl} 
+        <div className="relative rounded-xl overflow-hidden shadow-2xl aspect-w-16 aspect-h-10 md:aspect-h-11 bg-gray-100"> {/* Fundo placeholder */}
+          <img
+            src={imageUrl}
             alt="Imagem sobre a associação"
             className="w-full h-full object-cover"
             onError={(e) => { e.currentTarget.src = FALLBACK_ABOUT_URL; }}
+            loading="lazy"
           />
         </div>
       </div>
@@ -141,56 +139,54 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
 
 // --- SEÇÃO CTA COM PARALLAX ---
 const ParallaxCtaSection = () => (
-  <section 
-    className="relative bg-cover bg-center bg-fixed py-20 sm:py-24" 
-    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')" }}
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-black/70"></div>
-    <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-        Junte-se a nós e faça parte desta história.
-      </h2>
-      <p className="mt-4 text-lg leading-7 text-amber-100 mb-8">
-        A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
-      </p>
-      <Link href="/voluntario" className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-lg text-amber-800 bg-white font-semibold shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all">
-        Quero Ajudar
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-      </Link>
-    </div>
-  </section>
+    <section
+        className="relative bg-cover bg-center bg-fixed py-20 sm:py-24"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')" }} // Imagem de exemplo
+    >
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-black/70"></div>
+        <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+                Junte-se a nós e faça parte desta história.
+            </h2>
+            <p className="mt-4 text-lg leading-7 text-amber-100 mb-8">
+                A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
+            </p>
+            <Link href="/voluntario" className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-lg text-amber-800 bg-white font-semibold shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all">
+                Quero Ajudar
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </Link>
+        </div>
+    </section>
 );
 
 // --- PARCEIROS ---
 const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
-  // Retorna nulo se não houver parceiros ou se a lista não for um array
   if (!Array.isArray(partners) || partners.length === 0) return null;
-  
-  // Duplica para efeito de scroll infinito apenas se houver parceiros
   const extendedPartners = partners.length > 0 ? [...partners, ...partners] : [];
 
   return (
     <section id="parceiros" className="bg-gray-50 py-16 sm:py-20">
-      <style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .scrolling-wrapper { animation: scroll 30s linear infinite; } .scrolling-container:hover .scrolling-wrapper { animation-play-state: paused; }`}</style>
+      <style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .scrolling-wrapper { animation: scroll 40s linear infinite; } .scrolling-container:hover .scrolling-wrapper { animation-play-state: paused; }`}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">Parceiros que confiam em nós</h2>
           <p className="mt-4 text-lg text-gray-600">Agradecemos a todos que nos ajudam a continuar o nosso trabalho.</p>
         </div>
-        <div className="w-full overflow-hidden relative scrolling-container group"> {/* Adicionado group */}
+        <div className="w-full overflow-hidden relative scrolling-container group">
           <div className="flex w-max scrolling-wrapper">
             {extendedPartners.map((partner, index) => (
-              <div key={`${partner.id}-${index}`} className="flex-shrink-0 mx-6 sm:mx-8 flex items-center justify-center"> {/* Ajustado espaçamento */}
-                <img 
-                  src={buildImageUrl(partner.logoUrl, FALLBACK_LOGO_URL)} // Usa a função helper com fallback específico
+              <div key={`${partner.id}-${index}`} className="flex-shrink-0 mx-6 sm:mx-8 flex items-center justify-center py-4">
+                <img
+                  src={buildImageUrl(partner.logoUrl, FALLBACK_LOGO_URL)} // Usa a função helper
                   alt={partner.nome}
-                  className="w-24 h-24 sm:w-32 sm:h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale group-hover:grayscale-0 transition duration-300" // Removido hover individual
+                  title={partner.nome} // Tooltip
+                  className="w-24 h-24 sm:w-32 sm:h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale group-hover:grayscale-0 transition duration-300 hover:!grayscale-0 hover:scale-105"
                   onError={(e) => { e.currentTarget.src = FALLBACK_LOGO_URL; }}
+                  loading="lazy"
                 />
               </div>
             ))}
           </div>
-          {/* Opcional: Adicionar gradientes nas laterais para suavizar */}
           <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-gray-50 to-transparent pointer-events-none"></div>
           <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
         </div>
@@ -212,43 +208,28 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        // Usa Promise.allSettled para lidar com falhas parciais
         const results = await Promise.allSettled([
           api.get('/animais'),
           api.get('/conteudo-home'),
           api.get('/parceiros'),
         ]);
 
-        // Processa resultado dos animais
-        if (results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)) {
-          setAnimais(results[0].value.data.slice(0, 8));
-        } else {
-          console.warn("API de animais falhou ou não retornou array:", results[0]);
-          setAnimais([]); // Define array vazio em caso de falha ou formato incorreto
-        }
+        const animaisData = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data) ? results[0].value.data : [];
+        setAnimais(animaisData.slice(0, 8));
 
-        // Processa resultado do conteúdo home
-        if (results[1].status === 'fulfilled') {
-          setConteudoHome(results[1].value.data);
-        } else {
-          console.warn("API de conteudo-home falhou:", results[1]);
-          setConteudoHome(null); // Define como nulo em caso de falha
-        }
+        const conteudoData = results[1].status === 'fulfilled' ? results[1].value.data : null;
+        setConteudoHome(conteudoData);
 
-        // Processa resultado dos parceiros
-        if (results[2].status === 'fulfilled' && Array.isArray(results[2].value.data)) {
-          setParceiros(results[2].value.data);
-        } else {
-          console.warn("API de parceiros falhou ou não retornou array:", results[2]);
-          setParceiros([]); // Define array vazio em caso de falha ou formato incorreto
-        }
+        const parceirosData = results[2].status === 'fulfilled' && Array.isArray(results[2].value.data) ? results[2].value.data : [];
+        setParceiros(parceirosData);
 
-        // Define erro geral se *alguma* chamada falhar (opcional, pode ser mais granular)
         if (results.some(r => r.status === 'rejected')) {
-          setError('Alguns dados não puderam ser carregados. Tente recarregar.');
+          console.error("Uma ou mais chamadas falharam:", results.filter(r => r.status === 'rejected'));
+          // Mantém um erro genérico, mas poderia ser mais específico se necessário
+          setError('Alguns dados não puderam ser carregados. A página pode estar incompleta.');
         }
 
-      } catch (err) { // Captura erros inesperados no processo
+      } catch (err) {
         console.error("Erro inesperado ao buscar dados da página inicial:", err);
         setError('Ocorreu um erro inesperado. Tente recarregar a página.');
         setAnimais([]);
@@ -259,7 +240,7 @@ export default function HomePage() {
       }
     };
     fetchAllData();
-  }, []); // Array de dependências vazio executa apenas na montagem inicial
+  }, []); // Executa apenas na montagem
 
   return (
     <>
@@ -283,7 +264,14 @@ export default function HomePage() {
             Anjinhos esperando por um lar
           </h2>
           
-          {loading && <div className="text-center py-10"><div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status"></div><p className="mt-2 text-gray-600">A carregar...</p></div>}
+          {loading && (
+             <div className="text-center py-10">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent align-[-0.125em]" role="status"></div>
+                <p className="mt-2 text-gray-600">A carregar animais...</p>
+             </div>
+          )}
+          
+          {/* Mostra erro apenas se não estiver carregando */}
           {error && !loading && <p className="text-center text-red-600 font-semibold py-10">{error}</p>}
           
           {!loading && !error && (
