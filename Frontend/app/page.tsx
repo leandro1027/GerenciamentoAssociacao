@@ -12,17 +12,22 @@ const FALLBACK_IMAGE_URL = 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+
 const FALLBACK_LOGO_URL = 'https://placehold.co/128x128/e2e8f0/cbd5e0?text=Logo';
 const FALLBACK_ABOUT_URL = 'https://placehold.co/600x400/e2e8f0/cbd5e0?text=Sem+Imagem';
 
-
-// --- FUNÇÃO HELPER PARA CONSTRUIR URLS DO R2 ---
 const buildImageUrl = (imagePath: string | null | undefined, fallback: string = FALLBACK_IMAGE_URL): string => {
-  if (imagePath && R2_PUBLIC_DOMAIN) {
-    // Remove qualquer prefixo '/uploads/' que possa ter ficado no DB
-    const cleanPath = imagePath.replace(/^uploads\//, '');
-    return `${R2_PUBLIC_DOMAIN.replace(/\/$/, '')}/${cleanPath}`; // Garante que não haja barras duplicadas
+  // Se não houver caminho ou domínio R2, retorna o fallback imediatamente.
+  if (!imagePath || !R2_PUBLIC_DOMAIN) {
+    return fallback;
   }
-  return fallback; // Retorna placeholder se não houver imagem ou domínio
-};
+  
+  // Remove qualquer '/uploads/' que esteja NO INÍCIO do caminho.
+  const cleanPath = imagePath.replace(/^uploads\//, ''); 
+  
+  // Garante que o domínio não termine com '/' e o caminho não comece com '/'
+  // para evitar barras duplicadas na URL final.
+  const domain = R2_PUBLIC_DOMAIN.replace(/\/$/, '');
+  const path = cleanPath.replace(/^\//, '');
 
+  return `${domain}/${path}`; // Monta a URL final e correta.
+};
 // --- COMPONENTES AUXILIARES ---
 const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
