@@ -9,6 +9,7 @@ import Button from '@/app/components/common/button';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import PawPrintOverlay from '@/app/components/common/PawPrintOverlay';
+import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
 
 // --- Ícones ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -101,9 +102,11 @@ const OtherAnimalCard = ({ animal }: { animal: Animal }) => (
     <Link href={`/adote/${animal.id}`} className="group block space-y-2">
         <div className="aspect-square rounded-xl overflow-hidden shadow-md">
             <img
-                src={animal.animalImageUrl ? `${api.defaults.baseURL}${animal.animalImageUrl}` : 'https://placehold.co/300x300/e2e8f0/cbd5e0?text=Sem+Foto'}
+                // src={animal.animalImageUrl ? `${api.defaults.baseURL}${animal.animalImageUrl}` : '...'} // <-- 2. CÓDIGO ANTIGO REMOVIDO
+                src={buildImageUrl(animal.animalImageUrl)} // <-- 3. USANDO buildImageUrl AQUI
                 alt={animal.nome}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.currentTarget.src = 'https://placehold.co/300x300/e2e8f0/cbd5e0?text=Sem+Foto' }}
             />
         </div>
         <h3 className="font-bold text-base text-gray-800 group-hover:text-amber-800 transition-colors">{animal.nome}</h3>
@@ -115,11 +118,9 @@ const AnimalDetailSkeleton = () => (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
         <div className="h-5 w-48 bg-gray-200 rounded-md mb-8"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            {/* Esqueleto da Imagem Principal (sem miniaturas) */}
             <div>
                 <div className="aspect-square rounded-2xl bg-gray-200"></div>
             </div>
-            {/* Esqueleto dos Detalhes */}
             <div className="bg-white p-6 rounded-2xl shadow-sm space-y-6">
                 <div className="h-6 w-32 bg-gray-200 rounded-full mb-2"></div>
                 <div className="h-10 w-4/5 bg-gray-200 rounded-md"></div>
@@ -148,7 +149,6 @@ const AnimalDetailSkeleton = () => (
                 </div>
             </div>
         </div>
-        {/* Esqueleto da seção "Outros Amigos" */}
         <div className="mt-16">
             <div className="h-9 w-64 mx-auto bg-gray-200 rounded-md mb-8"></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -173,7 +173,7 @@ export default function AnimalDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasPendingAdoption, setHasPendingAdoption] = useState(false);
-    
+
     const id = params.id as string;
 
     useEffect(() => {
@@ -186,7 +186,7 @@ export default function AnimalDetailPage() {
                         api.get<Animal>(`/animais/${id}`),
                         api.get<Animal[]>(`/animais?status=DISPONIVEL&limit=5`)
                     ]);
-                    
+
                     setAnimal(animalResponse.data);
                     setOtherAnimals(othersResponse.data.filter(a => a.id !== id).slice(0, 4));
 
@@ -235,7 +235,7 @@ export default function AnimalDetailPage() {
             toast.error(err.response?.data?.message || 'Não foi possível enviar o pedido.');
         }
     };
-    
+
     if (loading) return <main className="bg-gray-50 pt-12 pb-24"><AnimalDetailSkeleton /></main>;
     if (error) return <div className="flex justify-center items-center h-screen"><p className="text-red-500">{error}</p></div>;
     if (!animal) return null;
@@ -282,14 +282,16 @@ export default function AnimalDetailPage() {
                     </nav>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 bg-white rounded-2xl shadow-xl p-6 md:p-8">
-                        
-                        {/* Imagem Principal (sem galeria) */}
+
+                        {/* Imagem Principal */}
                         <div>
                             <div className="aspect-square rounded-xl overflow-hidden shadow-lg">
-                                <img 
-                                    src={animal.animalImageUrl ? `${api.defaults.baseURL}${animal.animalImageUrl}` : 'https://placehold.co/600x600/e2e8f0/cbd5e0?text=Sem+Foto'} 
-                                    alt={`Foto de ${animal.nome}`} 
-                                    className="w-full h-full object-cover" 
+                                <img
+                                    // src={animal.animalImageUrl ? `${api.defaults.baseURL}${animal.animalImageUrl}` : '...'} // <-- 2. CÓDIGO ANTIGO REMOVIDO
+                                    src={buildImageUrl(animal.animalImageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+                                    alt={`Foto de ${animal.nome}`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x600/e2e8f0/cbd5e0?text=Sem+Foto' }}
                                 />
                             </div>
                         </div>
