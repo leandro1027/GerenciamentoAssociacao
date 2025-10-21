@@ -6,39 +6,32 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types';
 
-// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 ---
+// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 --- CORRIGIDA ---
 const buildImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {
     return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   }
   
-  // Se já for uma URL completa do R2, retorna como está
-  if (imagePath.includes('r2.dev')) {
+  // Se já for uma URL completa, retorna como está
+  if (imagePath.startsWith('http')) {
     return imagePath;
   }
   
-  // Se for uma URL do backend (localhost ou render), extrai o nome do arquivo
-  if (imagePath.includes('localhost') || imagePath.includes('render.com')) {
-    const fileName = imagePath.split('/').pop(); // pega o nome do arquivo
-    if (fileName) {
-      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-      return r2Domain ? `${r2Domain}/${fileName}` : `https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+R2`;
-    }
+  // Remove a barra inicial se existir para evitar dupla barra
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Constrói a URL usando o domínio público do R2
+  const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+  
+  if (!r2Domain) {
+    console.warn('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
+    // Fallback: se não tiver R2 configurado, usa placeholder
+    return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+Config';
   }
   
-  // Se for apenas um nome de arquivo (UUID.jpg), constrói URL do R2
-  if (/^[a-f0-9-]+\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
-    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-    if (r2Domain) {
-      return `${r2Domain}/${imagePath}`;
-    } else {
-      console.error('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
-      return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+Config';
-    }
-  }
-  
-  // Fallback: retorna como está
-  return imagePath;
+  // Garante que a URL seja construída corretamente sem barras duplas
+  const baseUrl = r2Domain.endsWith('/') ? r2Domain.slice(0, -1) : r2Domain;
+  return `${baseUrl}/${cleanPath}`;
 };
 
 // --- Interface para o conteúdo da Home ---
