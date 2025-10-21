@@ -24,13 +24,6 @@ async function bootstrap() {
     whitelist: true,
   }));
 
-  // 📁 Servir pasta uploads
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
-  });
-
-  console.log('Uploads servidos de:', join(process.cwd(), 'uploads'));
-
   await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();
