@@ -6,34 +6,48 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types';
 
-// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 --- CORRIGIDA ---
+// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 --- CORRIGIDA PARA LIDAR COM O PROBLEMA ---
 const buildImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {
     return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   }
   
-  // Se já for uma URL completa, retorna como está
-  if (imagePath.startsWith('http')) {
+  // Se já for uma URL completa do R2, retorna como está
+  if (imagePath.includes('r2.dev')) {
     return imagePath;
   }
   
-  // Remove a barra inicial se existir para evitar dupla barra
-  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-  
-  // Constrói a URL usando o domínio público do R2
-  const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-  
-  if (!r2Domain) {
-    console.warn('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
-    // Fallback: se não tiver R2 configurado, usa placeholder
-    return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+Config';
+  // CORREÇÃO: Se contém "uploads/" mas tem UUID no nome, extrai apenas o UUID
+  if (imagePath.includes('uploads/')) {
+    // Tenta extrair UUID do formato: uploads/nome-arquivo-UUID.extensao
+    const uuidMatch = imagePath.match(/([a-f0-9-]{36})\.(jpg|jpeg|png|webp|gif)/i);
+    if (uuidMatch) {
+      const fileName = uuidMatch[0]; // Pega o UUID + extensão
+      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+      if (r2Domain) {
+        return `${r2Domain.replace(/\/$/, '')}/${fileName}`;
+      }
+    }
   }
   
-  // Garante que a URL seja construída corretamente sem barras duplas
-  const baseUrl = r2Domain.endsWith('/') ? r2Domain.slice(0, -1) : r2Domain;
-  return `${baseUrl}/${cleanPath}`;
+  // Se for apenas um nome de arquivo com UUID, constrói URL do R2
+  if (/^[a-f0-9-]{36}\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
+    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+    if (r2Domain) {
+      return `${r2Domain.replace(/\/$/, '')}/${imagePath}`;
+    }
+  }
+  
+  // Fallback: tenta usar como está (para casos onde o nome é diferente)
+  const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+  if (r2Domain) {
+    // Remove "uploads/" se existir
+    const cleanPath = imagePath.replace(/^uploads\//, '');
+    return `${r2Domain.replace(/\/$/, '')}/${cleanPath}`;
+  }
+  
+  return 'https://placehold.co/400x400/e2e8f0/cbd5e0?text=Erro+URL';
 };
-
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
   titulo: string;
