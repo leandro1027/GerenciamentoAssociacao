@@ -9,6 +9,14 @@ export interface Usuario {
   pontos:number
   ultimoLoginComPontos?: Date | null;
 }
+export interface ConteudoHome {
+  id: number; // Geralmente o ID vem da API
+  titulo: string;
+  subtitulo: string;
+  itens: string; // Vem como string JSON da API
+  imagemUrl: string | null; // A URL da imagem (ou null se não houver)
+  updatedAt: string; // Data geralmente vem como string ISO
+}
 
 export type StatusVoluntario = 'pendente' | 'aprovado' | 'recusado';
 
