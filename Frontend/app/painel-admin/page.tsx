@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import dynamic from 'next/dynamic';
 import { Check, X, ExternalLink, Loader2 } from 'lucide-react';
+import { buildImageUrl } from '@/utils/helpers';
 
 
 
@@ -333,7 +334,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
             {slides.map(slide => (
               <div key={slide.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
                 <div className="flex items-center space-x-4">
-                  <img src={`${api.defaults.baseURL}${slide.imageUrl}`} alt={slide.title} className="w-20 h-12 object-cover rounded-md" />
+                  <img src={buildImageUrl(slide.imageUrl)} alt={slide.title} className="w-20 h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Erro'; }} />
                   <div>
                     <p className="font-semibold text-gray-900">{slide.title}</p>
                     <p className="text-sm text-gray-500">{slide.subtitle}</p>
@@ -886,7 +887,7 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
                 animals.map(animal => (
                   <tr key={animal.id}>
                     <td className="px-6 py-4">
-                      <img src={`${api.defaults.baseURL}${animal.animalImageUrl}`} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" />
+                      <img src={buildImageUrl(animal.animalImageUrl)} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/48x48?text=Erro'; }} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
@@ -1258,7 +1259,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
           {divulgacoesToShow.map((divulgacao) => (
             <div key={divulgacao.id} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-transform hover:scale-105 border">
               <div className="relative">
-                <img src={`${api.defaults.baseURL}${divulgacao.imageUrl}`} alt={divulgacao.raca} className="w-full h-56 object-cover cursor-pointer" onClick={() => setSelectedImage(`${api.defaults.baseURL}${divulgacao.imageUrl}`)} />
+               <img src={buildImageUrl(divulgacao.imageUrl)} alt={divulgacao.raca} className="w-full h-56 object-cover cursor-pointer" onClick={() => setSelectedImage(buildImageUrl(divulgacao.imageUrl))} onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x224?text=Erro'; }} />
                 <div className="absolute top-2 right-2"><StatusBadge status={divulgacao.status} /></div>
               </div>
               
@@ -1435,7 +1436,7 @@ const ConteudoManager = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Imagem da Secção</label>
                         <input type="file" onChange={e => setFileSobre(e.target.files ? e.target.files[0] : null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
-                        {conteudo.imagemUrl && <img src={`${api.defaults.baseURL}${conteudo.imagemUrl}`} alt="Preview" className="mt-4 w-48 h-auto rounded-lg" />}
+                        {conteudo.imagemUrl && <img src={buildImageUrl(conteudo.imagemUrl)} alt="Preview" className="mt-4 w-48 h-auto rounded-lg" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
                     </div>
                     <div className="flex justify-end">
                         <Button type="submit" isLoading={isLoadingSobre} className="bg-amber-800 hover:bg-amber-900">Guardar Alterações do Conteúdo</Button>
@@ -1463,7 +1464,7 @@ const ConteudoManager = () => {
                         {parceiros.map(parceiro => (
                             <div key={parceiro.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
                             <div className="flex items-center space-x-4">
-                                <img src={`${api.defaults.baseURL}${parceiro.logoUrl}`} alt={parceiro.nome} className="w-20 h-12 object-contain rounded-md bg-gray-100 p-1" />
+                                <img src={buildImageUrl(parceiro.logoUrl)} alt={parceiro.nome} className="w-20 h-12 object-contain rounded-md bg-gray-100 p-1" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Logo'; }}/>
                                 <div>
                                 <p className="font-semibold text-gray-900">{parceiro.nome}</p>
                                 </div>
@@ -1927,7 +1928,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                                 animais.map(animal => (
                                     <tr key={animal.id}>
                                         <td className="px-6 py-4">
-                                            <img src={`${api.defaults.baseURL}${animal.imageUrl}`} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" />
+                                          <img src={buildImageUrl(animal.imageUrl)} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64x64?text=Erro'; }}/>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.enderecoCompleto || 'Não informado'}</td>
