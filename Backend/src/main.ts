@@ -11,7 +11,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000', // Durante o desenvolvimento local
-      'https://gerenciamentoassociacao2025.onrender.com',
+      'https://gerenciamento-associacao.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
