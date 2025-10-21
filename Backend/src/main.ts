@@ -7,15 +7,24 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors();
+  // 🔧 Configuração completa de CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000', // Durante o desenvolvimento local
+      'https://gerenciamento-associacao.vercel.app/', // ⚠️ substitua pelo domínio real do Render
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true, // necessário se usar cookies ou headers personalizados
+  });
 
-  
+  // 🔒 Pipes globais de validação
   app.useGlobalPipes(new ValidationPipe({
-    transform: true, // Ativa a transformação automática de tipos
-    whitelist: true, // Remove campos que não estão no DTO
+    transform: true,
+    whitelist: true,
   }));
 
-  // Serve a pasta uploads direto da raiz do projeto
+  // 📁 Servir pasta uploads
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',
   });
