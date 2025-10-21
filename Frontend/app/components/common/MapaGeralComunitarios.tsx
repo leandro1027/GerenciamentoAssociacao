@@ -6,10 +6,11 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { AnimalComunitario } from '@/types';
 import { useEffect } from 'react';
+import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
 
 // Componente interno para ajustar o mapa (sem alterações)
 const MapUpdater = ({ animais }: { animais: AnimalComunitario[] }) => {
-  const map = useMap(); 
+  const map = useMap();
 
   useEffect(() => {
     setTimeout(() => {
@@ -19,7 +20,7 @@ const MapUpdater = ({ animais }: { animais: AnimalComunitario[] }) => {
     if (animais.length === 0) return;
 
     const bounds = L.latLngBounds(animais.map(animal => [animal.latitude, animal.longitude]));
-    
+
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -34,7 +35,7 @@ interface MapaGeralProps {
 
 export default function MapaGeralComunitarios({ animais }: MapaGeralProps) {
   return (
-    <MapContainer 
+    <MapContainer
       style={{ height: '100%', width: '100%', borderRadius: '12px' }}
       className="z-0"
     >
@@ -45,26 +46,28 @@ export default function MapaGeralComunitarios({ animais }: MapaGeralProps) {
 
       {animais.map((animal) => {
         const customIcon = new L.Icon({
-          iconUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`,
+          // iconUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`, // <-- 2. CÓDIGO ANTIGO REMOVIDO
+          iconUrl: buildImageUrl(animal.imageUrl), // <-- 3. USANDO buildImageUrl AQUI
           iconSize: [45, 45],
           iconAnchor: [22, 45],
           popupAnchor: [0, -45],
-          className: 'mapa-animal-icon'
+          className: 'mapa-animal-icon' // Classe para estilização customizada se necessário
         });
 
         return (
-          <Marker 
-            key={animal.id} 
+          <Marker
+            key={animal.id}
             position={[animal.latitude, animal.longitude]}
             icon={customIcon}
           >
-            {/* --- CONTEÚDO DO POPUP ADICIONADO AQUI --- */}
             <Popup>
               <div style={{ textAlign: 'center', width: '150px' }}>
-                <img 
-                  src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`} 
+                <img
+                  // src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
+                  src={buildImageUrl(animal.imageUrl)} // <-- 3. USANDO buildImageUrl AQUI
                   alt={animal.nomeTemporario}
                   style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', margin: '0 auto' }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150x100?text=Foto'; }}
                 />
                 <h4 style={{ margin: '8px 0 0 0', fontWeight: 'bold', fontSize: '16px' }}>
                   {animal.nomeTemporario}

@@ -1,20 +1,29 @@
-// Ficheiro: /components/common/MapaDetalheAnimal.tsx
 'use client';
 
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+// Importação manual dos ícones do marcador (workaround para o Next.js)
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-let DefaultIcon = L.icon({
-    iconUrl: icon.src,
-    shadowUrl: iconShadow.src,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+// Correção para os caminhos dos ícones do Leaflet em ambientes com bundlers (Webpack/Next.js)
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon.src,
+  iconRetinaUrl: markerIcon2x.src,
+  shadowUrl: markerShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+  shadowSize: [41, 41],
 });
-L.Marker.prototype.options.icon = DefaultIcon;
+
 
 interface MapaDetalheProps {
   latitude: number;
@@ -24,15 +33,18 @@ interface MapaDetalheProps {
 export default function MapaDetalheAnimal({ latitude, longitude }: MapaDetalheProps) {
   const position: [number, number] = [latitude, longitude];
 
+  // A chave 'key' no MapContainer força a re-renderização se a posição mudar,
+  // o que é útil dentro de um modal.
   return (
-    <MapContainer 
-      center={position} 
-      zoom={16} // --- ATUALIZADO: Zoom mais próximo ---
-      style={{ height: '100%', width: '100%', borderRadius: '12px' }}
+    <MapContainer
+      key={`${latitude}-${longitude}`} 
+      center={position}
+      zoom={16}
+      style={{ height: '100%', width: '100%', borderRadius: 'inherit' }} // Herda o border-radius do container
       scrollWheelZoom={false}
       dragging={false}
       zoomControl={false}
-      className="z-0" // Adicionado para garantir que não sobreponha outros elementos
+      className="z-0"
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
