@@ -25,6 +25,31 @@ type LoginHistoryItem = {
   status: 'completed' | 'missed';
 };
 
+// --- FUNÇÃO AUXILIAR PARA CONSTRUIR URLS DE IMAGEM --- CORRIGIDA ---
+const buildImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return 'https://via.placeholder.com/150/4a5568/ffffff?text=Sem+Imagem';
+  }
+  
+  // Se já for uma URL completa, retorna como está
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Remove a barra inicial se existir
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+  
+  // Constrói a URL usando o domínio público do R2
+  const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+  
+  if (!r2Domain) {
+    console.warn('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
+    return 'https://via.placeholder.com/150/4a5568/ffffff?text=Erro+Config';
+  }
+  
+  // Garante que a URL seja construída corretamente
+  return `${r2Domain.replace(/\/$/, '')}/${cleanPath}`;
+}; 
 // --- ÍCONES PERSONALIZADOS ---
 const CustomIcon = ({ icon: Icon, className = "h-6 w-6" }: { icon: any; className?: string }) => (
   <Icon className={className} />
@@ -608,12 +633,11 @@ const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: 
                                 <div className="bg-white rounded-2xl p-6 border-2 border-amber-100 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:border-amber-200 relative overflow-hidden h-full">
                                     {/* Layout centralizado com medalha em destaque */}
                                     <div className="flex flex-col items-center text-center">
-                                        {/* MEDALHA GRANDE E LIMPA - SEM FUNDO */}
+                                        {/* MEDALHA GRANDE E LIMPA - USANDO A FUNÇÃO buildImageUrl */}
                                         <div className="relative mb-6">
                                             <div className="w-24 h-24 flex items-center justify-center relative">
-                                                {/* Apenas a logo/ícone da medalha - SEM FUNDO LARANJA */}
                                                 <img 
-                                                    src={`/icones-recompensas/${userConquista.conquista.icone}`} 
+                                                    src={buildImageUrl(userConquista.conquista.icone)}
                                                     alt={userConquista.conquista.nome}
                                                     className="w-20 h-20 object-contain filter drop-shadow-lg"
                                                     onError={(e) => {
@@ -969,18 +993,19 @@ export default function ProfilePage() {
   const { errors, validateProfile, validatePassword } = useFormValidation();
 
   useEffect(() => {
-    if (user) {
-      setNome(user.nome);
-      setEmail(user.email);
-      setTelefone(user.telefone || '');
+  if (user) {
+    setNome(user.nome);
+    setEmail(user.email);
+    setTelefone(user.telefone || '');
 
-      if (user.profileImageUrl) {
-        setAvatarUrl(`${api.defaults.baseURL}${user.profileImageUrl}?t=${new Date().getTime()}`);
-      } else {
-        setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&size=128&bold=true`);
-      }
+    // CORREÇÃO: Usar buildImageUrl para o avatar também
+    if (user.profileImageUrl) {
+      setAvatarUrl(buildImageUrl(user.profileImageUrl));
+    } else {
+      setAvatarUrl(`https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&size=128&bold=true`);
     }
-  }, [user]);
+  }
+}, [user]);   
 
   const handleProfileUpdate = async (e: FormEvent) => {
     e.preventDefault();
@@ -1046,7 +1071,8 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       updateUser(response.data);
-      setAvatarUrl(`${api.defaults.baseURL}${response.data.profileImageUrl}?t=${new Date().getTime()}`);
+      // USANDO A FUNÇÃO buildImageUrl PARA ATUALIZAR O AVATAR
+      setAvatarUrl(buildImageUrl(response.data.profileImageUrl));
       toast.success('Foto de perfil atualizada! ✨', { id: toastId });
     } catch {
       toast.error('Erro ao enviar a foto.', { id: toastId });
@@ -1302,7 +1328,8 @@ export default function ProfilePage() {
                             >
                               <div className="flex items-center space-x-4">
                                 <img 
-                                  src={`${api.defaults.baseURL}${pedido.animal.animalImageUrl}`} 
+                                  // USANDO A FUNÇÃO buildImageUrl PARA IMAGENS DE ANIMAIS
+                                  src={buildImageUrl(pedido.animal.animalImageUrl)} 
                                   alt={pedido.animal.nome}
                                   className="w-20 h-20 object-cover rounded-xl shadow-md border border-amber-200"
                                   onError={(e) => { e.currentTarget.src = 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Sem+Foto'; }}
