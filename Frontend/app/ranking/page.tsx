@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { Usuario, UsuarioConquista, Conquista } from '../../types';
 import { Trophy, X, Star, Calendar, CheckCircle } from 'lucide-react';
+import { buildImageUrl } from '@/utils/helpers';
 
 // CORREÇÃO: Definir RankingUser com id como string
 type RankingUser = {
@@ -247,9 +248,10 @@ function UserAvatar({ src, name, index }: { src: string; name: string; index: nu
       src={src}
       alt={`Foto de ${name}`}
       className={`w-14 h-14 rounded-full object-cover bg-amber-100 transition-all duration-300 ${getBorderStyle()}`}
-      onError={(e) => {
-        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f59e0b&color=fff&bold=true&size=128`;
-      }}
+     onError={(e) => {
+      e.currentTarget.src = `https://via.placeholder.com/150/f59e0b/ffffff?text=${encodeURIComponent(name.charAt(0))}`;
+      e.currentTarget.alt = `Avatar de ${name}`; // Atualiza o alt text
+    }}
     />
   );
 }
@@ -264,9 +266,7 @@ function RankingCard({
   index: number;
   onUserClick: (userId: string, userName: string) => void;
 }) {
-  const avatarSrc = user.profileImageUrl
-    ? `${api.defaults.baseURL}${user.profileImageUrl}`
-    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome)}&background=f59e0b&color=fff&bold=true`;
+ const avatarSrc = buildImageUrl(user.profileImageUrl);
 
   const getCardStyle = () => {
     switch (index) {
