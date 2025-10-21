@@ -142,6 +142,7 @@ export class AuthService {
 
     try {
       await transporter.sendMail(mailOptions);
+      console.log(`[AuthService] E-mail enviado com sucesso para: ${user.email}`);
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição:", error);
     }
