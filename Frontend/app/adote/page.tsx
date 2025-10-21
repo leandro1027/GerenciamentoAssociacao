@@ -6,6 +6,7 @@ import api from '../services/api';
 import { Animal, Especie, Sexo, Porte } from '../../types';
 import { useDebounce } from 'use-debounce';
 import Link from 'next/link';
+import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
 
 // --- Ícone ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -35,12 +36,16 @@ const FilterPill = ({ label, value, activeValue, onClick }: { label: string, val
 // --- Card de animal ---
 const AnimalCard = ({ animal }: { animal: Animal }) => (
   <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all">
-    {/* CORRIGIDO 2: Adicionado 'overflow-hidden' para conter a imagem no hover */}
     <div className="relative overflow-hidden">
       <img
-        src={`${api.defaults.baseURL}${animal.animalImageUrl}`}
+        // src={`${api.defaults.baseURL}${animal.animalImageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
+        src={buildImageUrl(animal.animalImageUrl)} // <-- 3. USANDO buildImageUrl AQUI
         alt={`Foto de ${animal.nome}`}
         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+        onError={(e) => {
+           e.currentTarget.src = 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
+           e.currentTarget.alt = 'Imagem indisponível';
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
       <div className="absolute bottom-4 left-4">
@@ -89,6 +94,7 @@ export default function AdotePage() {
 
       const res = await api.get<Animal[]>(`/animais?${params.toString()}`);
       setAnimais(res.data);
+      setError(null); // Limpa o erro em caso de sucesso
     } catch (err) {
       console.error("Erro ao buscar animais:", err);
       setError('Não foi possível carregar os animais.');
@@ -130,18 +136,18 @@ export default function AdotePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
             {/* busca */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pesquisar</label>
+              <label htmlFor="search-animal" className="block text-sm font-medium text-gray-700 mb-1">Pesquisar</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                  {/* CORRIGIDO 1: Path completo do ícone */}
+                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
                   <Icon path="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" className="w-5 h-5" />
                 </span>
                 <input
+                  id="search-animal"
                   type="text"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
                   placeholder="Nome do animal..."
-                  className="w-full pl-10 rounded-md border-gray-300 focus:ring-amber-800 focus:border-amber-800 text-gray-900 placeholder-gray-500"
+                  className="w-full pl-10 rounded-md border-gray-300 shadow-sm focus:ring-amber-800 focus:border-amber-800 text-gray-900 placeholder-gray-500"
                 />
               </div>
             </div>
@@ -156,29 +162,36 @@ export default function AdotePage() {
             </div>
 
             {/* sexo + porte */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex gap-2">
-                <FilterPill label="Macho" value={Sexo.MACHO} activeValue={sexo} onClick={setSexo} />
-                <FilterPill label="Fêmea" value={Sexo.FEMEA} activeValue={sexo} onClick={setSexo} />
-              </div>
-              <div className="flex gap-2">
-                <FilterPill label="P" value={Porte.PEQUENO} activeValue={porte} onClick={setPorte} />
-                <FilterPill label="M" value={Porte.MEDIO} activeValue={porte} onClick={setPorte} />
-                <FilterPill label="G" value={Porte.GRANDE} activeValue={porte} onClick={setPorte} />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                  <div className="flex gap-2">
+                     <FilterPill label="Macho" value={Sexo.MACHO} activeValue={sexo} onClick={setSexo} />
+                     <FilterPill label="Fêmea" value={Sexo.FEMEA} activeValue={sexo} onClick={setSexo} />
+                  </div>
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Porte</label>
+                  <div className="flex gap-2">
+                     <FilterPill label="P" value={Porte.PEQUENO} activeValue={porte} onClick={setPorte} />
+                     <FilterPill label="M" value={Porte.MEDIO} activeValue={porte} onClick={setPorte} />
+                     <FilterPill label="G" value={Porte.GRANDE} activeValue={porte} onClick={setPorte} />
+                  </div>
+               </div>
             </div>
+
           </div>
 
-          <div className="flex justify-end mt-3">
-            <button onClick={handleResetFilters} className="text-sm font-medium text-amber-700 hover:text-amber-900">
+          <div className="flex justify-end mt-4">
+            <button onClick={handleResetFilters} className="text-sm font-medium text-amber-700 hover:text-amber-900 hover:underline transition-colors">
               Limpar filtros
             </button>
           </div>
         </div>
 
-        {/* lista */}
-        {loading && <p className="text-center text-gray-500">Carregando animais...</p>}
-        {error && <p className="text-center text-red-600">{error}</p>}
+        {/* lista de animais */}
+        {loading && <p className="text-center py-16 text-gray-500 font-medium">Carregando animais...</p>}
+        {error && <p className="text-center py-16 text-red-600 font-medium">{error}</p>}
         {!loading && !error && (
           animais.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -188,10 +201,9 @@ export default function AdotePage() {
             </div>
           ) : (
             <div className="text-center py-16 bg-white rounded-lg shadow-md border border-gray-100">
-               {/* CORRIGIDO 1: Path completo do ícone */}
               <Icon path="M15.182 16.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 9.75h.008v.008H9v-.008zm6 0h.008v.008H15v-.008z" className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-4 text-gray-700 font-semibold">Nenhum animal encontrado.</p>
-              <p className="text-gray-500">Tente ajustar sua pesquisa ou limpar os filtros.</p>
+              <p className="mt-4 text-gray-700 font-semibold text-lg">Nenhum animal encontrado.</p>
+              <p className="text-gray-500 mt-1">Tente ajustar sua pesquisa ou limpar os filtros.</p>
             </div>
           )
         )}
