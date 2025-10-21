@@ -5,7 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import * as nodemailer from 'nodemailer';
+// import * as nodemailer from 'nodemailer'; // <-- REMOVIDO
+import * as sgMail from '@sendgrid/mail'; // <-- ADICIONADO
 import { ConfigService } from '@nestjs/config';
 import { GamificacaoService } from 'src/gamificacao/gamificacao.service';
 import { Usuario } from '@prisma/client';
@@ -18,7 +19,12 @@ export class AuthService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private gamificacaoService: GamificacaoService,
-  ) {}
+  ) {
+    // --- ADICIONADO ---
+    // Configura o SendGrid com a API Key das variáveis de ambiente
+    sgMail.setApiKey(this.configService.get<string>('SENDGRID_API_KEY')!);
+    // ------------------
+  }
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usuarioService.findByEmail(email);
@@ -69,9 +75,7 @@ export class AuthService {
     }
     
     // --- CORREÇÃO DE FUSO HORÁRIO ---
-    // Pega a data/hora atual no fuso horário do servidor
     const hoje = new Date();
-    // Zera a hora para o início do dia NO FUSO HORÁRIO LOCAL do servidor
     hoje.setHours(0, 0, 0, 0);
 
     const usuarioCompleto = await this.prisma.usuario.findUnique({ where: { id: user.id }});
@@ -80,7 +84,6 @@ export class AuthService {
     let ultimoLoginDate: Date | null = null;
     if (ultimoLogin) {
       ultimoLoginDate = new Date(ultimoLogin);
-      // Compara também com base no fuso horário local
       ultimoLoginDate.setHours(0, 0, 0, 0);
     }
     
@@ -92,7 +95,6 @@ export class AuthService {
         data: { ultimoLoginComPontos: new Date() },
       });
 
-      // Cria o registro no histórico com a data local zerada
       await this.prisma.loginDiario.create({
         data: {
           usuarioId: user.id,
@@ -106,48 +108,67 @@ export class AuthService {
     return false;
   }
 
+  // --- MÉTODO forgotPassword ATUALIZADO PARA USAR SENDGRID ---
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
+      // Retorna silenciosamente para não revelar se o e-mail existe
       return;
     }
 
+    // Geração do Token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
+    // Salva o token no usuário
     await this.prisma.usuario.update({
       where: { id: user.id },
       data: { passwordResetToken, passwordResetExpires },
     });
 
-    const emailUser = this.configService.get<string>('EMAIL_USER');
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // Obriga o uso de SSL na porta 465
-      auth: {
-        user: emailUser,
-        pass: this.configService.get<string>('EMAIL_PASS'), 
-      },
-    });
-
+    // Monta a URL de redefinição
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const resetURL = `${frontendUrl}/redefinir-senha/${resetToken}`;
     
-    const mailOptions = {
-      to: user.email,
-      from: `Associação <${emailUser}>`,
+    // --- SUBSTITUIÇÃO DO NODEMAILER PELO SENDGRID ---
+
+    // IMPORTANTE: Você precisa de um e-mail verificado no SendGrid.
+    // Vá ao painel do SendGrid -> Settings -> Sender Authentication
+    // e verifique um "Single Sender". Use esse e-mail verificado aqui.
+    // Pode ser o seu 'leandrobalaban78@gmail.com', desde que verificado lá.
+    const VERIFIED_SENDER_EMAIL = 'leandrobalaban78@gmail.com'; // <-- MUDE SE FOR OUTRO
+
+    const msg = {
+      to: user.email, // O e-mail do usuário que pediu a redefinição
+      from: {
+        name: 'Associação Fabiana Forte Huergo', // O nome que o usuário verá
+        email: VERIFIED_SENDER_EMAIL, // O e-mail verificado no SendGrid
+      },
       subject: 'Redefinição de Senha da Sua Conta',
+      // Corpo em texto plano
       text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 10 minutos.\n`,
+      html: `
+        <p>Olá!</p>
+        <p>Você solicitou a redefinição da sua senha para sua conta na Associação.</p>
+        <p>Clique no link abaixo para completar o processo:</p>
+        <p><a href="${resetURL}" target="_blank" style="color: #ffffff; background-color: #E68A00; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Redefinir Minha Senha</a></p>
+        <p>Este link irá expirar em 10 minutos.</p>
+        <p>Se você não solicitou isso, por favor, ignore este e-mail.</p>
+      `,
     };
 
     try {
-      await transporter.sendMail(mailOptions);
-      console.log(`[AuthService] E-mail enviado com sucesso para: ${user.email}`);
+      await sgMail.send(msg);
+      console.log(`[AuthService] E-mail de redefinição (SendGrid) enviado para: ${user.email}`);
     } catch (error) {
-      console.error("Erro ao enviar e-mail de redefinição:", error);
+      console.error("Erro ao enviar e-mail de redefinição (SendGrid):", error);
+      if (error.response) {
+        // Log detalhado do erro da API do SendGrid
+        console.error(error.response.body);
+      }
     }
+    // --- FIM DA SUBSTITUIÇÃO ---
   }
 
   async validateResetToken(token: string): Promise<void> {
