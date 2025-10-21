@@ -8,6 +8,41 @@ import { usePathname } from 'next/navigation';
 import api from '@/app/services/api';
 import { User, LogOut, Settings, PawPrint, Trophy } from 'lucide-react';
 
+// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 ---
+const buildImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) {
+    return 'https://via.placeholder.com/150/4a5568/ffffff?text=Sem+Imagem';
+  }
+  
+  // Se já for uma URL completa do R2, retorna como está
+  if (imagePath.includes('r2.dev')) {
+    return imagePath;
+  }
+  
+  // Se for uma URL do backend (localhost ou render), extrai o nome do arquivo
+  if (imagePath.includes('localhost') || imagePath.includes('render.com')) {
+    const fileName = imagePath.split('/').pop(); // pega o nome do arquivo
+    if (fileName) {
+      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+      return r2Domain ? `${r2Domain}/${fileName}` : `https://via.placeholder.com/150/4a5568/ffffff?text=Erro+R2`;
+    }
+  }
+  
+  // Se for apenas um nome de arquivo (UUID.jpg), constrói URL do R2
+  if (/^[a-f0-9-]+\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
+    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
+    if (r2Domain) {
+      return `${r2Domain}/${imagePath}`;
+    } else {
+      console.error('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
+      return 'https://via.placeholder.com/150/4a5568/ffffff?text=Erro+Config';
+    }
+  }
+  
+  // Fallback: retorna como está
+  return imagePath;
+};
+
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const pathname = usePathname();
@@ -68,8 +103,6 @@ const Navbar = () => {
   }, []);
 
   if (pathname.startsWith('/painel-admin')) return null;
-
-  const apiBaseUrl = api.defaults.baseURL;
 
   const renderNavLinks = (isMobile = false) =>
     navLinks.map(link => {
@@ -157,7 +190,6 @@ const Navbar = () => {
           <div className="hidden lg:flex lg:items-center lg:space-x-1 flex-1 justify-center">
             {renderNavLinks()}
             {renderRankingLink()}
-            {/* O Link do Painel Admin foi MOVIDO daqui */}
           </div>
 
           {/* Ações e Autenticação (Direita) */}
@@ -184,8 +216,9 @@ const Navbar = () => {
                    <div className="relative">
                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
                        {user?.profileImageUrl ? (
+                         // CORREÇÃO: Usar buildImageUrl para o avatar
                          <img 
-                           src={`${apiBaseUrl}${user.profileImageUrl}`} 
+                           src={buildImageUrl(user.profileImageUrl)} 
                            alt="Avatar" 
                            className="w-full h-full object-cover" 
                          />
@@ -274,7 +307,7 @@ const Navbar = () => {
           </div>
 
           {/* Menu Mobile Button */}
-          <div className="flex lg:hidden items-center gap-2"> {/* Alterado de md:hidden para lg:hidden */}
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               type="button"
@@ -297,7 +330,6 @@ const Navbar = () => {
       </div>
       
       {/* Painel Mobile */}
-      {/* O código do painel mobile continua o mesmo */}
       {isMobileMenuOpen && (
          <div className="lg:hidden animate-slide-in-top bg-white/95 backdrop-blur-sm border-t border-amber-100 shadow-2xl">
            <div className="px-4 pt-4 pb-3 space-y-1">
