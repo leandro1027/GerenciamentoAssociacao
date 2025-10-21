@@ -123,10 +123,12 @@ export class AuthService {
 
     const emailUser = this.configService.get<string>('EMAIL_USER');
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Obriga o uso de SSL na porta 465
       auth: {
         user: emailUser,
-        pass: this.configService.get<string>('EMAIL_PASS'),
+        pass: this.configService.get<string>('EMAIL_PASS'), 
       },
     });
 
