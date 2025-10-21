@@ -1,48 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types';
+import { buildImageUrl } from '@/utils/helpers';
 
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
   titulo: string;
   subtitulo: string;
-  itens: string; 
+  itens: string;
   imagemUrl: string;
 }
 
-const R2_PUBLIC_DOMAIN = 'https://pub-c5a813e903524beb8500fe1fd3de9efe.r2.dev';
-
-const getImageUrl = (imageUrl: string | null | undefined): string => {
-  // 1. Se não houver imagem, retorna o placeholder
-  if (!imageUrl) {
-    return 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Imagem';
-  }
-  
-  // 2. Se a URL já for completa (começa com http), retorna ela mesma
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  
-  // 3. Se for um caminho relativo, constrói a URL completa do R2
-  // (Garante que não haja barras duplicadas, ex: "https://...//upload")
-  const path = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
-  
-  return `${R2_PUBLIC_DOMAIN}/${path}`;
-};
+// const R2_PUBLIC_DOMAIN = '...'; // <-- REMOVIDO
+// const getImageUrl = (...) => { ... }; // <-- REMOVIDO
 
 // --- COMPONENTES AUXILIARES ---
 
-const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+const Icon = ({
+  path,
+  className = 'w-12 h-12',
+}: {
+  path: string;
+  className?: string;
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
     <path strokeLinecap="round" strokeLinejoin="round" d={path} />
   </svg>
 );
 
-const AnimalFeatureTag = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
+const AnimalFeatureTag = ({
+  icon,
+  text,
+}: {
+  icon: React.ReactNode;
+  text: string;
+}) => (
   <div className="flex items-center gap-1.5 bg-amber-50 text-amber-800 text-xs font-medium px-2.5 py-1 rounded-full shadow-sm">
     {icon}
     <span>{text}</span>
@@ -53,26 +56,48 @@ const AnimalFeatureTag = ({ icon, text }: { icon: React.ReactNode, text: string 
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal) return null;
 
-  const imageUrl = getImageUrl(animal.animalImageUrl);
+  const imageUrl = buildImageUrl(animal.animalImageUrl); // <-- ATUALIZADO
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.src = 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    e.currentTarget.src =
+      'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
   };
 
-  const genderIcon = animal.sexo === Sexo.MACHO ? (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.034a5.95 5.95 0 013.377 1.35l.866-.5a1 1 0 111 1.732l-.866.5A5.95 5.95 0 0117 10h1.034a1 1 0 110 2H17a5.95 5.95 0 01-1.35 3.377l.5.866a1 1 0 11-1.732 1l-.5-.866A5.95 5.95 0 0110 17v1.034a1 1 0 11-2 0V17a5.95 5.95 0 01-3.377-1.35l-.866.5a1 1 0 11-1-1.732l.866-.5A5.95 5.95 0 013 12H1.966a1 1 0 110-2H3a5.95 5.95 0 011.35-3.377l-.5-.866a1 1 0 111.732-1l.5.866A5.95 5.95 0 018 3.034V2a1 1 0 012 0zm0 4a4 4 0 100 8 4 4 0 000-8z" clipRule="evenodd" />
-    </svg>
-  ) : (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z" clipRule="evenodd" />
-    </svg>
-  );
+  const genderIcon =
+    animal.sexo === Sexo.MACHO ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-3.5 w-3.5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 2a1 1 0 011 1v1.034a5.95 5.95 0 013.377 1.35l.866-.5a1 1 0 111 1.732l-.866.5A5.95 5.95 0 0117 10h1.034a1 1 0 110 2H17a5.95 5.95 0 01-1.35 3.377l.5.866a1 1 0 11-1.732 1l-.5-.866A5.95 5.95 0 0110 17v1.034a1 1 0 11-2 0V17a5.95 5.95 0 01-3.377-1.35l-.866.5a1 1 0 11-1-1.732l.866-.5A5.95 5.95 0 013 12H1.966a1 1 0 110-2H3a5.95 5.95 0 011.35-3.377l-.5-.866a1 1 0 111.732-1l.5.866A5.95 5.95 0 018 3.034V2a1 1 0 012 0zm0 4a4 4 0 100 8 4 4 0 000-8z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-3.5 w-3.5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4z"
+          clipRule="evenodd"
+        />
+      </svg>
+    );
 
   return (
     <div className="group flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="relative h-56 overflow-hidden">
-        <img 
+        <img
           src={imageUrl}
           alt={`Foto de ${animal.nome}`}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -87,8 +112,8 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           <AnimalFeatureTag icon={<span>📍</span>} text={animal.raca} />
         </div>
         <div className="mt-auto pt-4">
-          <Link 
-            href={`/adote/${animal.id}`} 
+          <Link
+            href={`/adote/${animal.id}`}
             className="block w-full text-center bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-4 py-2.5 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all"
           >
             Quero Adotar
@@ -102,7 +127,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
 // --- SEÇÃO SOBRE NÓS ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
   if (!conteudo) return null;
-  
+
   let itensList: string[] = [];
   try {
     itensList = JSON.parse(conteudo.itens || '[]');
@@ -111,7 +136,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     itensList = [];
   }
 
-  const imageUrl = getImageUrl(conteudo.imagemUrl);
+  const imageUrl = buildImageUrl(conteudo.imagemUrl); // <-- ATUALIZADO
 
   return (
     <section className="bg-white py-20">
@@ -128,23 +153,30 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
             ))}
           </ul>
           <div className="mt-8">
-            <Link href="/quem-somos" className="inline-block bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 transition-all">
+            <Link
+              href="/quem-somos"
+              className="inline-block bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 transition-all"
+            >
               Saiba Mais
             </Link>
           </div>
         </div>
         <div className="relative rounded-xl overflow-hidden shadow-2xl">
-          <img 
+          <img
             src={imageUrl}
             alt="Imagem sobre a associação"
             className="w-full h-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = 'https://via.placeholder.com/600x400/e2e8f0/cbd5e0?text=Imagem+Não+Encontrada';
+              e.currentTarget.src =
+                'https://via.placeholder.com/600x400/e2e8f0/cbd5e0?text=Imagem+Não+Encontrada';
             }}
           />
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
             <button className="bg-white/30 backdrop-blur-sm p-4 rounded-full text-white hover:bg-white/50 transition-colors">
-              <Icon path="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" className="w-10 h-10" />
+              <Icon
+                path="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z"
+                className="w-10 h-10"
+              />
             </button>
           </div>
         </div>
@@ -155,9 +187,12 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
 
 // --- SEÇÃO CTA COM PARALLAX ---
 const ParallaxCtaSection = () => (
-  <section 
-    className="relative bg-cover bg-center bg-fixed" 
-    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')" }}
+  <section
+    className="relative bg-cover bg-center bg-fixed"
+    style={{
+      backgroundImage:
+        "url('https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop')",
+    }}
   >
     <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-black/70"></div>
     <div className="relative max-w-4xl mx-auto text-center py-24 px-6">
@@ -165,12 +200,27 @@ const ParallaxCtaSection = () => (
         Junte-se a nós e faça parte desta história.
       </h2>
       <p className="mt-4 text-lg leading-7 text-amber-100">
-        A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos permite continuar.
+        A sua ajuda, seja através de doações, voluntariado ou adoção, é o que nos
+        permite continuar.
       </p>
-      <Link href="/voluntario" className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-lg text-amber-800 bg-white font-semibold shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all">
+      <Link
+        href="/voluntario"
+        className="mt-8 inline-flex items-center gap-2 px-8 py-3 rounded-lg text-amber-800 bg-white font-semibold shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all"
+      >
         Quero Ajudar
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </Link>
     </div>
@@ -186,33 +236,41 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
     <section id="parceiros" className="bg-gray-50 py-20">
       <style>
         {`
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .scrolling-wrapper {
-            animation: scroll 30s linear infinite;
-          }
-          .scrolling-container:hover .scrolling-wrapper {
-            animation-play-state: paused;
-          }
-        `}
+          @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .scrolling-wrapper {
+            animation: scroll 30s linear infinite;
+          }
+          .scrolling-container:hover .scrolling-wrapper {
+            animation-play-state: paused;
+          }
+        `}
       </style>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">Parceiros que confiam em nós</h2>
-          <p className="mt-4 text-lg text-gray-600">Agradecemos a todos que nos ajudam a continuar o nosso trabalho.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
+            Parceiros que confiam em nós
+          </h2>
+          <p className="mt-4 text-lg text-gray-600">
+            Agradecemos a todos que nos ajudam a continuar o nosso trabalho.
+          </p>
         </div>
         <div className="w-full overflow-hidden relative scrolling-container">
           <div className="flex w-max scrolling-wrapper">
             {extendedPartners.map((partner, index) => (
-              <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
-                <img 
-                  src={getImageUrl(partner.logoUrl)}
+              <div
+                key={index}
+                className="flex-shrink-0 mx-8 flex items-center justify-center"
+              >
+                <img
+                  src={buildImageUrl(partner.logoUrl)} // <-- ATUALIZADO
                   alt={partner.nome}
                   className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale hover:grayscale-0 transition"
                   onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/128x128/e2e8f0/cbd5e0?text=Logo';
+                    e.currentTarget.src =
+                      'https://via.placeholder.com/128x128/e2e8f0/cbd5e0?text=Logo';
                   }}
                 />
               </div>
@@ -243,17 +301,20 @@ export default function HomePage() {
         ]);
 
         // CORREÇÃO: Garantir que animais seja sempre um array
-        const animaisData = Array.isArray(animaisRes.data) ? animaisRes.data : [];
+        const animaisData = Array.isArray(animaisRes.data)
+          ? animaisRes.data
+          : [];
         setAnimais(animaisData.slice(0, 8));
-        
+
         setConteudoHome(conteudoRes.data);
-        
+
         // CORREÇÃO: Garantir que parceiros seja sempre um array
-        const parceirosData = Array.isArray(parceirosRes.data) ? parceirosRes.data : [];
+        const parceirosData = Array.isArray(parceirosRes.data)
+          ? parceirosRes.data
+          : [];
         setParceiros(parceirosData);
-        
       } catch (err) {
-        console.error("Erro ao buscar dados da página inicial:", err);
+        console.error('Erro ao buscar dados da página inicial:', err);
         setError('Não foi possível carregar a página.');
         // Garantir que os estados sejam arrays vazios em caso de erro
         setAnimais([]);
@@ -268,19 +329,25 @@ export default function HomePage() {
   // DEBUG: Adicione isto temporariamente para verificar as URLs
   useEffect(() => {
     if (animais.length > 0) {
-      console.log('URLs dos animais:', animais.map(a => ({
-        nome: a.nome,
-        imageUrl: a.animalImageUrl
-      })));
+      console.log(
+        'URLs dos animais:',
+        animais.map((a) => ({
+          nome: a.nome,
+          imageUrl: a.animalImageUrl,
+        })),
+      );
     }
     if (conteudoHome) {
       console.log('URL do conteúdo home:', conteudoHome.imagemUrl);
     }
     if (parceiros.length > 0) {
-      console.log('URLs dos parceiros:', parceiros.map(p => ({
-        nome: p.nome,
-        logoUrl: p.logoUrl
-      })));
+      console.log(
+        'URLs dos parceiros:',
+        parceiros.map((p) => ({
+          nome: p.nome,
+          logoUrl: p.logoUrl,
+        })),
+      );
     }
   }, [animais, conteudoHome, parceiros]);
 
@@ -290,10 +357,16 @@ export default function HomePage() {
 
       <main className="bg-white">
         <section className="max-w-7xl mx-auto py-16 px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Link href="/adote" className="block text-center bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-4 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all">
+          <Link
+            href="/adote"
+            className="block text-center bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-4 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all"
+          >
             Quero Adotar
           </Link>
-          <Link href="/divulgar-animal" className="block text-center bg-white border border-amber-800 text-amber-800 font-semibold px-8 py-4 rounded-lg shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all">
+          <Link
+            href="/divulgar-animal"
+            className="block text-center bg-white border border-amber-800 text-amber-800 font-semibold px-8 py-4 rounded-lg shadow-md hover:bg-amber-50 hover:scale-[1.02] active:scale-95 transition-all"
+          >
             Quero divulgar um animal
           </Link>
         </section>
@@ -301,18 +374,24 @@ export default function HomePage() {
 
       <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto py-20 px-6">
-          {loading && <p className="text-center text-gray-600">A carregar...</p>}
+          {loading && (
+            <p className="text-center text-gray-600">A carregar...</p>
+          )}
           {error && <p className="text-center text-red-600">{error}</p>}
           {!loading && !error && (
             <>
               {/* CORREÇÃO: Verificação adicional para garantir que animais é um array */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                {Array.isArray(animais) && animais.map(animal => (
-                  <AnimalCard key={animal.id} animal={animal} />
-                ))}
+                {Array.isArray(animais) &&
+                  animais.map((animal) => (
+                    <AnimalCard key={animal.id} animal={animal} />
+                  ))}
               </div>
               <div className="mt-12 text-center">
-                <Link href="/adote" className="inline-block bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all">
+                <Link
+                  href="/adote"
+                  className="inline-block bg-gradient-to-r from-amber-700 to-amber-900 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:from-amber-800 hover:to-amber-950 hover:scale-[1.02] active:scale-95 transition-all"
+                >
                   Ver todos os animais
                 </Link>
               </div>
