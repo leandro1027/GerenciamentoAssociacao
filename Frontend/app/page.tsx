@@ -14,39 +14,14 @@ interface ConteudoHome {
   imagemUrl: string;
 }
 
-// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 (MESMO PADRÃO DO NAVBAR) ---
-const buildImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) {
+// --- FUNÇÃO SIMPLIFICADA - AGORA SÓ LIDA COM FALLBACK ---
+const getImageUrl = (imageUrl: string | null | undefined): string => {
+  if (!imageUrl) {
     return 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Imagem';
   }
   
-  // Se já for uma URL completa do R2, retorna como está
-  if (imagePath.includes('r2.dev')) {
-    return imagePath;
-  }
-  
-  // Se for uma URL do backend (localhost ou render), extrai o nome do arquivo
-  if (imagePath.includes('localhost') || imagePath.includes('render.com')) {
-    const fileName = imagePath.split('/').pop(); // pega o nome do arquivo
-    if (fileName) {
-      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-      return r2Domain ? `${r2Domain}/${fileName}` : `https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Erro+R2`;
-    }
-  }
-  
-  // Se for apenas um nome de arquivo (UUID.jpg), constrói URL do R2
-  if (/^[a-f0-9-]+\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
-    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-    if (r2Domain) {
-      return `${r2Domain}/${imagePath}`;
-    } else {
-      console.error('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
-      return 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Erro+Config';
-    }
-  }
-  
-  // Fallback: retorna como está
-  return imagePath;
+  // O backend já retorna URLs completas do R2, então podemos usar diretamente
+  return imageUrl;
 };
 
 // --- COMPONENTES AUXILIARES ---
@@ -68,7 +43,7 @@ const AnimalFeatureTag = ({ icon, text }: { icon: React.ReactNode, text: string 
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal) return null;
 
-  const imageUrl = buildImageUrl(animal.animalImageUrl);
+  const imageUrl = getImageUrl(animal.animalImageUrl);
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
@@ -126,7 +101,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     itensList = [];
   }
 
-  const imageUrl = buildImageUrl(conteudo.imagemUrl);
+  const imageUrl = getImageUrl(conteudo.imagemUrl);
 
   return (
     <section className="bg-white py-20">
@@ -223,7 +198,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
             {extendedPartners.map((partner, index) => (
               <div key={index} className="flex-shrink-0 mx-8 flex items-center justify-center">
                 <img 
-                  src={buildImageUrl(partner.logoUrl)}
+                  src={getImageUrl(partner.logoUrl)}
                   alt={partner.nome}
                   className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale hover:grayscale-0 transition"
                   onError={(e) => {
@@ -279,6 +254,25 @@ export default function HomePage() {
     };
     fetchAllData();
   }, []);
+
+  // DEBUG: Adicione isto temporariamente para verificar as URLs
+  useEffect(() => {
+    if (animais.length > 0) {
+      console.log('URLs dos animais:', animais.map(a => ({
+        nome: a.nome,
+        imageUrl: a.animalImageUrl
+      })));
+    }
+    if (conteudoHome) {
+      console.log('URL do conteúdo home:', conteudoHome.imagemUrl);
+    }
+    if (parceiros.length > 0) {
+      console.log('URLs dos parceiros:', parceiros.map(p => ({
+        nome: p.nome,
+        logoUrl: p.logoUrl
+      })));
+    }
+  }, [animais, conteudoHome, parceiros]);
 
   return (
     <>
