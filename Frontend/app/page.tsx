@@ -15,11 +15,6 @@ interface ConteudoHome {
   imagemUrl: string;
 }
 
-// const R2_PUBLIC_DOMAIN = '...'; // <-- REMOVIDO
-// const getImageUrl = (...) => { ... }; // <-- REMOVIDO
-
-// --- COMPONENTES AUXILIARES ---
-
 const Icon = ({
   path,
   className = 'w-12 h-12',
@@ -56,7 +51,7 @@ const AnimalFeatureTag = ({
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal) return null;
 
-  const imageUrl = buildImageUrl(animal.animalImageUrl); // <-- ATUALIZADO
+  const imageUrl = buildImageUrl(animal.animalImageUrl);
 
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>,
@@ -136,7 +131,7 @@ const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
     itensList = [];
   }
 
-  const imageUrl = buildImageUrl(conteudo.imagemUrl); // <-- ATUALIZADO
+  const imageUrl = buildImageUrl(conteudo.imagemUrl);
 
   return (
     <section className="bg-white py-20">
@@ -236,17 +231,17 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
     <section id="parceiros" className="bg-gray-50 py-20">
       <style>
         {`
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .scrolling-wrapper {
-            animation: scroll 30s linear infinite;
-          }
-          .scrolling-container:hover .scrolling-wrapper {
-            animation-play-state: paused;
-          }
-        `}
+       @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+        .scrolling-wrapper {
+            animation: scroll 30s linear infinite;
+          }
+          .scrolling-container:hover .scrolling-wrapper {
+           animation-play-state: paused;
+        }
+     `}
       </style>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
@@ -265,7 +260,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
                 className="flex-shrink-0 mx-8 flex items-center justify-center"
               >
                 <img
-                  src={buildImageUrl(partner.logoUrl)} // <-- ATUALIZADO
+                  src={buildImageUrl(partner.logoUrl)}
                   alt={partner.nome}
                   className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale hover:grayscale-0 transition"
                   onError={(e) => {
@@ -299,8 +294,6 @@ export default function HomePage() {
           api.get<ConteudoHome>('/conteudo-home'),
           api.get<Parceiro[]>('/parceiros'),
         ]);
-
-        // CORREÇÃO: Garantir que animais seja sempre um array
         const animaisData = Array.isArray(animaisRes.data)
           ? animaisRes.data
           : [];
@@ -308,7 +301,6 @@ export default function HomePage() {
 
         setConteudoHome(conteudoRes.data);
 
-        // CORREÇÃO: Garantir que parceiros seja sempre um array
         const parceirosData = Array.isArray(parceirosRes.data)
           ? parceirosRes.data
           : [];
@@ -316,7 +308,6 @@ export default function HomePage() {
       } catch (err) {
         console.error('Erro ao buscar dados da página inicial:', err);
         setError('Não foi possível carregar a página.');
-        // Garantir que os estados sejam arrays vazios em caso de erro
         setAnimais([]);
         setParceiros([]);
       } finally {
@@ -326,7 +317,6 @@ export default function HomePage() {
     fetchAllData();
   }, []);
 
-  // DEBUG: Adicione isto temporariamente para verificar as URLs
   useEffect(() => {
     if (animais.length > 0) {
       console.log(
@@ -374,13 +364,9 @@ export default function HomePage() {
 
       <div className="bg-gray-50">
         <div className="max-w-7xl mx-auto py-20 px-6">
-          {loading && (
-            <p className="text-center text-gray-600">A carregar...</p>
-          )}
           {error && <p className="text-center text-red-600">{error}</p>}
           {!loading && !error && (
             <>
-              {/* CORREÇÃO: Verificação adicional para garantir que animais é um array */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                 {Array.isArray(animais) &&
                   animais.map((animal) => (
