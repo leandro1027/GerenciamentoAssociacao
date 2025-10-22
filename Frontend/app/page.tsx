@@ -265,7 +265,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
             100% { transform: translateX(-50%); }
           }
         .scrolling-wrapper {
-            animation: scroll 30s linear infinite;
+            animation: scroll 20s linear infinite;
           }
           .scrolling-container:hover .scrolling-wrapper {
            animation-play-state: paused;
@@ -291,7 +291,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
                 <img
                   src={buildImageUrl(partner.logoUrl)}
                   alt={partner.nome}
-                  className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md filter grayscale hover:grayscale-0 transition"
+                  className="w-32 h-32 object-contain rounded-full bg-white p-2 shadow-md"
                   onError={(e) => {
                     e.currentTarget.src =
                       'https://via.placeholder.com/128x128/e2e8f0/cbd5e0?text=Logo';
