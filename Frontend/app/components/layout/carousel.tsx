@@ -39,7 +39,6 @@ const SlideGallery = () => {
       <div className="relative w-full h-[80vh] bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-amber-700 font-semibold">Carregando slides...</p>
         </div>
       </div>
     );
