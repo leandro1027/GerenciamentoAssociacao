@@ -1265,7 +1265,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
                 </div>
                 {divulgacao.descricao && <p className="text-sm text-gray-600 mb-4 flex-1 line-clamp-2">"{divulgacao.descricao}"</p>}
                 <div className="mt-auto pt-4 border-t border-gray-200 space-y-2">
-                  <Button variant="primary" onClick={() => handleWhatsAppContact(divulgacao)} className="w-full bg-green-500 hover:bg-green-600 text-sm">Contactar via WhatsApp</Button>
+                  <Button variant="primary" onClick={() => handleWhatsAppContact(divulgacao)} className="w-full bg-green-500 hover:bg-green-600 text-sm">Chamar no WhatsApp</Button>
                   {divulgacao.status === 'PENDENTE' && (
                     <div className="flex flex-col space-y-2">
                       <Button variant="success" onClick={() => handleOpenApprovalModal(divulgacao)} isLoading={loadingStates[`convert-${divulgacao.id}`]} className="text-sm">Aprovar e Listar</Button>
