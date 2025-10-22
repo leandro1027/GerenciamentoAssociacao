@@ -6,7 +6,7 @@ import Carousel from './components/layout/carousel';
 import api from './services/api';
 import { Animal, Parceiro, Sexo } from '../types'; // Certifique-se que Animal tem isFromDivulgacao
 import { buildImageUrl } from '@/utils/helpers';
-import Image from 'next/image'; // <-- ADICIONADO para a logo
+import Image from 'next/image'; // Import necessário para a logo
 
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
@@ -48,7 +48,7 @@ const AnimalFeatureTag = ({
   </div>
 );
 
-// --- CARD DE ANIMAL
+// --- CARD DE ANIMAL (ATUALIZADO) ---
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal) return null;
 
@@ -102,17 +102,17 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           onError={handleImageError}
         />
-        {/* Mostra selo se VEIO de divulgação */}
+        {/* Mostra selo se VEIO de divulgação (com estilo amber) */}
         {originouDeDivulgacao && (
-          <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full shadow z-10">
+          <span className="absolute top-2 left-2 bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full shadow z-10">
             Divulgado
           </span>
         )}
-        {/* --- ADICIONADO: Mostra logo se NÃO VEIO de divulgação --- */}
+        {/* Mostra logo se NÃO VEIO de divulgação */}
         {!originouDeDivulgacao && (
           <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white p-1 shadow z-10">
             <Image
-              src="/logo.png" // Certifique-se que este é o caminho correto para sua logo
+              src="/logo.png" // Verifique se '/logo.png' é o caminho correto na pasta 'public'
               alt="Logo da Associação"
               width={24}
               height={24}
@@ -128,10 +128,10 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           <AnimalFeatureTag icon={<span>🐶</span>} text={animal.porte} />
           <AnimalFeatureTag icon={<span>📍</span>} text={animal.raca} />
         </div>
-        {/* Pode adicionar um texto extra */}
+        {/* Texto adicional se veio de divulgação (menor, sem itálico) */}
         {originouDeDivulgacao && (
-          <p className="text-xs text-gray-500 mt-1 mb-2 italic">
-            (Originalmente reportado pela comunidade)
+          <p className="text-[11px] text-gray-500 mt-1 mb-2"> {/* Mudanças aqui: text-[11px] e remoção de italic */}
+            Divulgado pela comunidade
           </p>
         )}
         <div className="mt-auto pt-4">
