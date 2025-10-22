@@ -107,6 +107,7 @@ export interface Animal {
   updatedAt: string;
   comunitario: boolean;
   localizacaoComunitaria: string;
+  isFromDivulgacao?: boolean | null;
 }
 
 export enum StatusAdocao {

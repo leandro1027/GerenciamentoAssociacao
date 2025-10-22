@@ -40,7 +40,7 @@ model Usuario {
 model LoginDiario {
   id        String   @id @default(cuid())
   data      DateTime @db.Date // Armazena apenas a data, sem a hora
-  usuarioId Int      // <<< ALTERADO DE String PARA Int
+  usuarioId Int     
   usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioId, data]) // Garante que só haja um registro por usuário por dia
@@ -63,6 +63,7 @@ model Animal {
   updatedAt        DateTime     @updatedAt
   comunitario      Boolean      @default(false)
   localizacaoComunitaria String?
+  isFromDivulgacao Boolean @default(false) // Indica se o animal foi originado de uma divulgação
 
 
   // Relações
@@ -111,7 +112,6 @@ model Doacao {
   data      DateTime     @default(now())
   status    StatusDoacao @default(PENDENTE)
   comprovanteUrl String?
-
 
   // Relação opcional para permitir doações anónimas
   usuarioId Int?

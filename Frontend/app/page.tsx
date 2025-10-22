@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Carousel from './components/layout/carousel';
 import api from './services/api';
-import { Animal, Parceiro, Sexo } from '../types';
+import { Animal, Parceiro, Sexo } from '../types'; // Certifique-se que Animal tem isFromDivulgacao
 import { buildImageUrl } from '@/utils/helpers';
+import Image from 'next/image'; // <-- ADICIONADO para a logo
 
 // --- Interface para o conteúdo da Home ---
 interface ConteudoHome {
@@ -47,7 +48,7 @@ const AnimalFeatureTag = ({
   </div>
 );
 
-// --- CARD DE ANIMAL ---
+// --- CARD DE ANIMAL
 const AnimalCard = ({ animal }: { animal: Animal }) => {
   if (!animal) return null;
 
@@ -89,6 +90,9 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
       </svg>
     );
 
+  // --- A VERIFICAÇÃO ---
+  const originouDeDivulgacao = animal.isFromDivulgacao === true;
+
   return (
     <div className="group flex flex-col bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
       <div className="relative h-56 overflow-hidden">
@@ -98,6 +102,24 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           onError={handleImageError}
         />
+        {/* Mostra selo se VEIO de divulgação */}
+        {originouDeDivulgacao && (
+          <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full shadow z-10">
+            Divulgado
+          </span>
+        )}
+        {/* --- ADICIONADO: Mostra logo se NÃO VEIO de divulgação --- */}
+        {!originouDeDivulgacao && (
+          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white p-1 shadow z-10">
+            <Image
+              src="/logo.png" // Certifique-se que este é o caminho correto para sua logo
+              alt="Logo da Associação"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
+          </div>
+        )}
       </div>
       <div className="p-4 flex flex-col flex-1">
         <h3 className="text-xl font-bold text-gray-800">{animal.nome}</h3>
@@ -106,6 +128,12 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
           <AnimalFeatureTag icon={<span>🐶</span>} text={animal.porte} />
           <AnimalFeatureTag icon={<span>📍</span>} text={animal.raca} />
         </div>
+        {/* Pode adicionar um texto extra */}
+        {originouDeDivulgacao && (
+          <p className="text-xs text-gray-500 mt-1 mb-2 italic">
+            (Originalmente reportado pela comunidade)
+          </p>
+        )}
         <div className="mt-auto pt-4">
           <Link
             href={`/adote/${animal.id}`}
@@ -118,6 +146,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => {
     </div>
   );
 };
+
 
 // --- SEÇÃO SOBRE NÓS ---
 const AboutSection = ({ conteudo }: { conteudo: ConteudoHome | null }) => {
@@ -231,7 +260,7 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
     <section id="parceiros" className="bg-gray-50 py-20">
       <style>
         {`
-       @keyframes scroll {
+        @keyframes scroll {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
           }
@@ -240,8 +269,8 @@ const PartnersSection = ({ partners }: { partners: Parceiro[] }) => {
           }
           .scrolling-container:hover .scrolling-wrapper {
            animation-play-state: paused;
-        }
-     `}
+         }
+      `}
       </style>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
@@ -392,3 +421,4 @@ export default function HomePage() {
     </>
   );
 }
+

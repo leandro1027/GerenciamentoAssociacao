@@ -25,20 +25,16 @@ import { FindComunitariosDto } from './dto/find-comunitarios.dto';
 import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
-// REMOVIDO: A função de gerar nome de arquivo agora é responsabilidade do UploadsService
-// const generateUniqueFilename = (file: Express.Multer.File) => { ... };
-
 @Controller('animais')
 export class AnimalController {
   constructor(
     private readonly animalService: AnimalService,
-    private readonly uploadsService: UploadsService, // ADICIONADO: Injeta o serviço de upload
+    private readonly uploadsService: UploadsService, 
   ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  // MODIFICADO: Interceptor simplificado para usar a memória
   @UseInterceptors(FileInterceptor('file'))
   async create( // ADICIONADO: 'async'
     @Body() createAnimalDto: CreateAnimalDto,
