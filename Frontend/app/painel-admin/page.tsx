@@ -604,10 +604,6 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
     const formatDate = (dateString: string | Date) => { // Date para evitar erros
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
-
-    // URL base da sua API para montar o link do comprovante
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3333';
-
     return (
         <section>
             <div className="bg-white rounded-xl shadow p-6">
@@ -642,14 +638,16 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                        {/* --- CORREÇÃO AQUI --- */}
                                         <a
-                                            href={`${API_BASE_URL}/${doacao.comprovanteUrl}`}
+                                            href={buildImageUrl(doacao.comprovanteUrl)} // Usa buildImageUrl
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-amber-600 hover:text-amber-800 inline-flex items-center gap-1 font-semibold"
                                         >
                                             Visualizar <ExternalLink size={14} />
                                         </a>
+                                        {/* --- FIM DA CORREÇÃO --- */}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                         {loadingId === doacao.id ? (
