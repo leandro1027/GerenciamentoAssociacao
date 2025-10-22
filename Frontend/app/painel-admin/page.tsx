@@ -12,10 +12,8 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import dynamic from 'next/dynamic';
-import { Check, X, ExternalLink, Loader2 } from 'lucide-react';
+import { Check, X, ExternalLink, Loader2, Menu, Home, Users, PawPrint, Heart, MessageCircle, Settings, FileText, Image, Shield } from 'lucide-react';
 import { buildImageUrl } from '@/utils/helpers';
-
-
 
 // --- COMPONENTE REUTILIZÁVEL DE MODAL ---
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; children: React.ReactNode }) => {
@@ -34,7 +32,6 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { is
     </div>
   );
 };
-
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
 type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes' | 'animaisComunitarios';
@@ -104,13 +101,13 @@ const Dashboard = ({
   }, []);
 
   const StatCard = ({ title, value, icon, description }: { title: string; value: number; icon: React.ReactNode; description: string }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-start justify-between">
         <div className="flex flex-col">
           <p className="text-sm font-semibold text-gray-500">{title}</p>
-          <p className="text-4xl font-bold text-gray-800 mt-2">{value}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-gray-800 mt-2">{value}</p>
         </div>
-        <div className="p-3 bg-amber-100 rounded-full">
+        <div className="p-2 sm:p-3 bg-amber-100 rounded-full">
           {icon}
         </div>
       </div>
@@ -121,6 +118,7 @@ const Dashboard = ({
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-full">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
         </div>
     );
   }
@@ -130,45 +128,45 @@ const Dashboard = ({
   }
 
   return (
-    <section className="space-y-8">
-      <div className="relative p-8 bg-stone-900 rounded-2xl shadow-lg overflow-hidden">
+    <section className="space-y-6 sm:space-y-8">
+      <div className="relative p-6 sm:p-8 bg-stone-900 rounded-2xl shadow-lg overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-stone-900 to-transparent z-10"></div>
         <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=1974&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-30" alt="Cão feliz"/>
         <div className="relative z-20">
-            <h1 className="text-3xl font-bold text-white">Bem-vindo, {user?.nome?.split(' ')[0]}!</h1>
-            <p className="text-stone-300 mt-1">O seu trabalho faz toda a diferença. Vamos ver as novidades.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Bem-vindo, {user?.nome?.split(' ')[0]}!</h1>
+            <p className="text-stone-300 mt-1 text-sm sm:text-base">O seu trabalho faz toda a diferença. Vamos ver as novidades.</p>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           title="Adoções Pendentes"
           value={stats.pedidosPendentes}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>}
+          icon={<Heart className="h-5 w-5 sm:h-6 sm:w-6 text-amber-800" />}
           description="Pedidos aguardando a sua análise."
         />
         <StatCard
           title="Divulgações Pendentes"
           value={stats.divulgacoesPendentes}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.236 9.168-5.514M15 11L11 17l4 6" /></svg>}
+          icon={<MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-amber-800" />}
           description="Novos casos da comunidade para revisar."
         />
         <StatCard
           title="Animais Disponíveis"
           value={stats.animaisDisponiveis}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>}
+          icon={<PawPrint className="h-5 w-5 sm:h-6 sm:w-6 text-amber-800" />}
           description="Animais aguardando um novo lar."
         />
         <StatCard
           title="Total de Membros"
           value={stats.totalMembros}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+          icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-amber-800" />}
           description="Usuários registados na plataforma."
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividade na Última Semana</h2>
             <div style={{ width: '100%', height: 300 }}>
                 <ResponsiveContainer>
@@ -185,21 +183,25 @@ const Dashboard = ({
             </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-lg">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Atividades Recentes</h2>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-80 overflow-y-auto">
                 {recentActivities.adocoes.length === 0 && recentActivities.voluntarios.length === 0 && (
                     <p className="text-sm text-gray-500">Nenhuma atividade recente.</p>
                 )}
                 {recentActivities.adocoes.map(adocao => (
                     <div key={adocao.id} className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></div>
+                        <div className="p-2 bg-blue-100 rounded-full">
+                          <Heart className="h-4 w-4 text-blue-800" />
+                        </div>
                         <p className="text-sm text-gray-700"><span className="font-semibold">{adocao.usuario?.nome || 'Utilizador'}</span> quer adotar <span className="font-semibold">{adocao.animal?.nome || 'um animal'}</span>.</p>
                     </div>
                 ))}
                 {recentActivities.voluntarios.map(voluntario => (
                     <div key={voluntario.id} className="flex items-center gap-3">
-                         <div className="p-2 bg-green-100 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-2a4 4 0 00-4-4H9M15 21a2 2 0 002-2v-3.354" /></svg></div>
+                         <div className="p-2 bg-green-100 rounded-full">
+                           <Users className="h-4 w-4 text-green-800" />
+                         </div>
                         <p className="text-sm text-gray-700"><span className="font-semibold">{voluntario.usuario?.nome || 'Alguém'}</span> candidatou-se como voluntário.</p>
                     </div>
                 ))}
@@ -302,7 +304,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
 
   return (
     <section>
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg space-y-3 bg-gray-50">
           <h3 className="font-semibold text-gray-800">{editingSlide ? 'Editar Slide' : 'Adicionar Novo Slide'}</h3>
           <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Título do Slide" required />
@@ -319,7 +321,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
             />
              {editingSlide && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a imagem atual.</p>}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-2">
             <Button type="submit">{editingSlide ? 'Salvar Alterações' : 'Adicionar Slide'}</Button>
             {editingSlide && (
               <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
@@ -331,15 +333,15 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
           <h3 className="font-semibold mb-2 text-gray-800">Slides Atuais</h3>
           <div className="space-y-2">
             {slides.map(slide => (
-              <div key={slide.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
+              <div key={slide.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg bg-white gap-3">
                 <div className="flex items-center space-x-4">
-                  <img src={buildImageUrl(slide.imageUrl)} alt={slide.title} className="w-20 h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Erro'; }} />
-                  <div>
-                    <p className="font-semibold text-gray-900">{slide.title}</p>
-                    <p className="text-sm text-gray-500">{slide.subtitle}</p>
+                  <img src={buildImageUrl(slide.imageUrl)} alt={slide.title} className="w-16 h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Erro'; }} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-gray-900 truncate">{slide.title}</p>
+                    <p className="text-sm text-gray-500 truncate">{slide.subtitle}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 self-end sm:self-auto">
                     <button onClick={() => handleEditClick(slide)} className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Editar</button>
                     <button onClick={() => handleDelete(slide.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
                 </div>
@@ -389,39 +391,39 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
 
     return (
         <section>
-          <div className="bg-white rounded-xl shadow p-6">
+          <div className="bg-white rounded-xl shadow p-4 sm:p-6">
               <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                           <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Motivo</th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                           </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                           {voluntarios.map(voluntario => (
                               <tr key={voluntario.id}>
-                                  <td className="px-6 py-4 whitespace-nowrap">
+                                  <td className="px-4 py-4 whitespace-nowrap">
                                       <div className="text-sm font-medium text-gray-900">{voluntario.usuario?.nome || 'Utilizador não identificado'}</div>
                                       <div className="text-sm text-gray-500">{voluntario.usuario?.email}</div>
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-600 max-w-sm whitespace-normal">{voluntario.motivo}</td>
-                                  <td className="px-6 py-4 text-center">
+                                  <td className="px-4 py-4 text-sm text-gray-600 max-w-sm whitespace-normal hidden sm:table-cell">{voluntario.motivo}</td>
+                                  <td className="px-4 py-4 text-center">
                                       <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(voluntario.status)}`}>{voluntario.status}</span>
                                   </td>
-                                  <td className="px-6 py-4 text-center text-sm font-medium space-x-4 whitespace-nowrap">
+                                  <td className="px-4 py-4 text-center text-sm font-medium space-x-2 sm:space-x-4 whitespace-nowrap">
                                     {voluntario.status === 'pendente' && (
                                         <>
-                                            <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800">Mensagem</button>
-                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-blue-600 hover:text-blue-900">Aprovar</button>
-                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900">Recusar</button>
+                                            <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800 text-sm">Mensagem</button>
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'aprovado')} className="text-blue-600 hover:text-blue-900 text-sm">Aprovar</button>
+                                            <button onClick={() => handleUpdateStatus(voluntario.id, 'recusado')} className="text-red-600 hover:text-red-900 text-sm">Recusar</button>
                                         </>
                                     )}
                                     {(voluntario.status === 'aprovado' || voluntario.status === 'recusado') && (
-                                        <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800">
-                                            Chamar no WhatsApp
+                                        <button onClick={() => handleWhatsAppContact(voluntario)} className="text-green-600 hover:text-green-800 text-sm">
+                                            WhatsApp
                                         </button>
                                     )}
                                   </td>
@@ -434,7 +436,6 @@ const VolunteerManager = ({ initialVolunteers }: { initialVolunteers: Voluntario
         </section>
     );
 };
-
 
 // 4. COMPONENTE PARA GERIR MEMBROS
 const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[], onUserUpdate: (user: Usuario) => void }) => {
@@ -518,16 +519,16 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
                 Deseja mesmo tornar '{modalState.userToUpdate?.nome}' um {modalState.newRole === 'ADMIN' ? 'Administrador' : 'Utilizador'}?
             </ConfirmationModal>
 
-            <div className="bg-white rounded-xl shadow p-6">
+            <div className="bg-white rounded-xl shadow p-4 sm:p-6">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Admin</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Email</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Admin</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -535,32 +536,32 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
                                 <tr key={user.id}>
                                     {editingUser?.id === user.id ? (
                                         <>
-                                            <td className="px-6 py-4"><Input value={editingUser.nome} onChange={e => setEditingUser({...editingUser, nome: e.target.value})} /></td>
-                                            <td className="px-6 py-4"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
-                                            <td className="px-6 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
-                                            <td className="px-6 py-4"></td>
-                                            <td className="px-6 py-4 text-center space-x-2">
-                                                <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Salvar</button>
-                                                <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
+                                            <td className="px-4 py-4"><Input value={editingUser.nome} onChange={e => setEditingUser({...editingUser, nome: e.target.value})} /></td>
+                                            <td className="px-4 py-4 hidden sm:table-cell"><Input value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} /></td>
+                                            <td className="px-4 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
+                                            <td className="px-4 py-4"></td>
+                                            <td className="px-4 py-4 text-center space-x-2">
+                                                <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900 text-sm">Salvar</button>
+                                                <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900 text-sm">Cancelar</button>
                                             </td>
                                         </>
                                     ) : (
                                         <>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nome}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{user.email}</td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefone || 'N/A'}</td>
+                                            <td className="px-4 py-4 text-center">
                                                 <input
                                                     type="checkbox"
-                                                    className="h-5 w-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
+                                                    className="h-4 w-4 sm:h-5 sm:w-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
                                                     checked={user.role === 'ADMIN'}
                                                     onChange={() => handleRoleChange(user)}
                                                     disabled={user.id === currentUser?.id}
                                                 />
                                             </td>
-                                            <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
-                                                <button onClick={() => handleEdit(user)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
-                                                <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                                            <td className="px-4 py-4 text-center text-sm font-medium space-x-2">
+                                                <button onClick={() => handleEdit(user)} className="text-indigo-600 hover:text-indigo-900 text-sm">Editar</button>
+                                                <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900 text-sm">Apagar</button>
                                             </td>
                                         </>
                                     )}
@@ -576,16 +577,13 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
 
 // COMPONENTE PARA LISTAR DOAÇÕES
 const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsuario[] }) => {
-    // ESTADO PARA GERENCIAR AS DOAÇÕES E O CARREGAMENTO
     const [donations, setDonations] = useState<DoacaoComUsuario[]>(initialDonations);
     const [loadingId, setLoadingId] = useState<number | null>(null);
 
-    // FUNÇÃO PARA ATUALIZAR O STATUS (CONFIRMAR/REJEITAR)
     const handleUpdateStatus = async (id: number, status: StatusDoacao) => {
-        setLoadingId(id); // Ativa o ícone de loading para a linha específica
+        setLoadingId(id);
         try {
             const response = await api.patch(`/doacao/${id}/status`, { status });
-            // Atualiza a lista na tela sem precisar recarregar a página
             setDonations(prevDonations =>
                 prevDonations.map(d => (d.id === id ? response.data : d))
             );
@@ -593,7 +591,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
         } catch (error) {
             toast.error('Erro ao atualizar o status da doação.');
         } finally {
-            setLoadingId(null); // Desativa o loading
+            setLoadingId(null);
         }
     };
 
@@ -601,34 +599,35 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
-    const formatDate = (dateString: string | Date) => { // Date para evitar erros
+    const formatDate = (dateString: string | Date) => {
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
+
     return (
         <section>
-            <div className="bg-white rounded-xl shadow p-6">
+            <div className="bg-white rounded-xl shadow p-4 sm:p-6">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doador</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Comprovante</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doador</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Data</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Comprovante</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {donations.map(doacao => (
                                 <tr key={doacao.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">{doacao.usuario?.nome || 'Doação Anônima'}</div>
                                         <div className="text-sm text-gray-500">{doacao.usuario?.email}</div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{formatCurrency(doacao.valor)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(doacao.data)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{formatCurrency(doacao.valor)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{formatDate(doacao.data)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                             doacao.status === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
                                             doacao.status === 'REJEITADA' ? 'bg-red-100 text-red-800' :
@@ -637,19 +636,17 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
                                             {doacao.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                        {/* --- CORREÇÃO AQUI --- */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
                                         <a
-                                            href={buildImageUrl(doacao.comprovanteUrl)} // Usa buildImageUrl
+                                            href={buildImageUrl(doacao.comprovanteUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-amber-600 hover:text-amber-800 inline-flex items-center gap-1 font-semibold"
+                                            className="text-amber-600 hover:text-amber-800 inline-flex items-center gap-1 font-semibold text-sm"
                                         >
                                             Visualizar <ExternalLink size={14} />
                                         </a>
-                                        {/* --- FIM DA CORREÇÃO --- */}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                    <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium">
                                         {loadingId === doacao.id ? (
                                             <Loader2 className="h-5 w-5 animate-spin mx-auto text-gray-400" />
                                         ) : doacao.status === 'PENDENTE' ? (
@@ -674,7 +671,6 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
         </section>
     );
 };
-
 
 // 6. COMPONENTE PARA GERIR ANIMAIS
 const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals: React.Dispatch<React.SetStateAction<Animal[]>> }) => {
@@ -788,13 +784,13 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   };
 
   return (
-    <section className="space-y-8">
-      <div className="bg-white rounded-xl shadow p-6">
+    <section className="space-y-6 sm:space-y-8">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">
           {editingId ? 'Editar Animal' : 'Cadastrar Novo Animal'}
         </h3>
         <form onSubmit={editingId ? handleUpdate : handleCreateSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
               <Input id="nome" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: Bob" required />
@@ -808,24 +804,24 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               <Input id="idade" value={formData.idade} onChange={(e) => setFormData({ ...formData, idade: e.target.value })} placeholder="Ex: Aprox. 2 anos" required />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <label htmlFor="especie" className="block text-sm font-medium text-gray-700 mb-2">Espécie</label>
-              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
+              <select id="especie" value={especie} onChange={(e) => setEspecie(e.target.value as Especie)} className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Especie.CAO}>Cão</option>
                 <option value={Especie.GATO}>Gato</option>
               </select>
             </div>
             <div>
               <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
-              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
+              <select id="sexo" value={sexo} onChange={(e) => setSexo(e.target.value as Sexo)} className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Sexo.MACHO}>Macho</option>
                 <option value={Sexo.FEMEA}>Fêmea</option>
               </select>
             </div>
             <div>
               <label htmlFor="porte" className="block text-sm font-medium text-gray-700 mb-2">Porte</label>
-              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
+              <select id="porte" value={porte} onChange={(e) => setPorte(e.target.value as Porte)} className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-gray-900">
                 <option value={Porte.PEQUENO}>Pequeno</option>
                 <option value={Porte.MEDIO}>Médio</option>
                 <option value={Porte.GRANDE}>Grande</option>
@@ -840,9 +836,9 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
           )}
           <div>
             <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">Descrição e Comportamento</label>
-            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} rows={4} className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
+            <textarea id="descricao" value={formData.descricao} onChange={(e) => setFormData({ ...formData, descricao: e.target.value })} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 placeholder:text-gray-400 text-gray-900" placeholder="Conte a história do animal, como ele é com pessoas, outros animais, etc." required></textarea>
           </div>
-          <div className="flex justify-end items-center gap-4">
+          <div className="flex justify-end items-center gap-4 flex-wrap">
             {editingId && (
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancelar Edição
@@ -855,18 +851,18 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
         </form>
       </div>
 
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Animais Cadastrados</h3>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Porte</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Porte</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -879,15 +875,15 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
               ) : (
                 animals.map(animal => (
                   <tr key={animal.id}>
-                    <td className="px-6 py-4">
-                      <img src={buildImageUrl(animal.animalImageUrl)} alt={animal.nome} className="w-12 h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/48x48?text=Erro'; }} />
+                    <td className="px-4 py-4">
+                      <img src={buildImageUrl(animal.animalImageUrl)} alt={animal.nome} className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/48x48?text=Erro'; }} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.status}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.porte}</td>
-                    <td className="px-6 py-4 text-center text-sm font-medium space-x-2">
-                      <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
-                      <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nome}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{animal.status}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{animal.porte}</td>
+                    <td className="px-4 py-4 text-center text-sm font-medium space-x-2">
+                      <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900 text-sm">Editar</button>
+                      <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900 text-sm">Apagar</button>
                     </td>
                   </tr>
                 ))
@@ -946,9 +942,9 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     };
 
     return (
-        <section className="bg-white rounded-xl shadow p-6">
+        <section className="bg-white rounded-xl shadow p-4 sm:p-6">
             <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
                     <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                         Pedidos Pendentes ({pendingAdoptions.length})
                     </button>
@@ -962,29 +958,29 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Animal</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Animal</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidato</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {(activeTab === 'pendentes' ? pendingAdoptions : finalizedAdoptions).map(adocao => (
                             (adocao.animal && adocao.usuario) && (
                                 <tr key={adocao.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{adocao.animal.nome}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{adocao.usuario.nome}</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(adocao.status)}`}>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{adocao.animal.nome}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{adocao.usuario.nome}</td>
+                                    <td className="px-4 py-4 text-center">
+                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(adocao.status)}`}>
                                             {adocao.status.replace('_', ' ')}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
+                                    <td className="px-4 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
                                         {activeTab === 'pendentes' ? (
-                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900">Analisar Pedido</button>
+                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900 text-sm">Analisar Pedido</button>
                                         ) : (
                                             adocao.status === StatusAdocao.APROVADA && (
-                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Chamar no  WhatsApp</button>
+                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900 text-sm">WhatsApp</button>
                                             )
                                         )}
                                     </td>
@@ -997,15 +993,15 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
 
             {selectedAdoption && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
-                    <div className="bg-gray-50 rounded-xl shadow-2xl p-8 max-w-3xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+                    <div className="bg-gray-50 rounded-xl shadow-2xl p-6 sm:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 animate-fade-in-up">
                         <div className="flex justify-between items-center pb-4 border-b">
-                            <h2 className="text-2xl font-bold text-gray-800">Detalhes do Pedido de Adoção</h2>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Detalhes do Pedido de Adoção</h2>
                             <button onClick={() => setSelectedAdoption(null)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                <X className="h-6 w-6 text-gray-600" />
                             </button>
                         </div>
                         <div className="py-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                                 <div>
                                     <h3 className="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Informações do Animal</h3>
                                     <div className="space-y-2 text-gray-600">
@@ -1047,17 +1043,17 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                         </div>
                         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t space-y-4 sm:space-y-0">
                             <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.001 2C5.582 2 2 5.582 2 10.001c0 1.511.413 2.925 1.15 4.156l-1.15 4.156 4.296-1.13c1.21.69 2.598 1.093 4.054 1.093 4.418 0 8-3.582 8-8.001 0-4.418-3.582-8-8-8zm4.134 9.478c-.23.645-.854 1.11-1.48 1.228-.51.1-.926.04-1.37-.158-.58-.26-1.18-.59-1.73-.99-1.12-0.8-1.88-1.88-2.08-2.22-.2-.34-.48-.59-.48-.96 0-.37.23-.59.48-.79.25-.2.53-.26.73-.26h.3c.23 0 .45.03.65.34.2.31.68.82.73.88.05.06.1.12.01.23-.09.11-.14.17-.26.31-.12.14-.23.28-.34.39-.12.12-.23.26-.11.48.11.22.53.88 1.12 1.44.79.79 1.41 1.02 1.63 1.12.22.1.34.09.48-.06.14-.15.59-.68.73-.88.14-.2.31-.23.53-.23.2 0 .48.01.68.03.2.02.31.01.45.14.14.13.23.29.26.48.03.19.03.91-.2 1.556z" /></svg>
+                                <MessageCircle className="h-5 w-5 mr-2" />
                                 Chamar no Whatsapp
                             </Button>
-                            <div className="flex space-x-3 w-full sm:w-auto">
+                            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
                                 {selectedAdoption.status === StatusAdocao.SOLICITADA ? (
                                     <>
                                         <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.APROVADA)} className="w-full bg-amber-600 hover:bg-amber-700">Aprovar</Button>
                                         <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.RECUSADA)} className="w-full bg-red-600 hover:bg-red-700">Recusar</Button>
                                     </>
                                 ) : (
-                                    <p className="text-sm font-semibold text-gray-600">Este pedido já foi processado.</p>
+                                    <p className="text-sm font-semibold text-gray-600 text-center">Este pedido já foi processado.</p>
                                 )}
                             </div>
                         </div>
@@ -1177,9 +1173,9 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
     <section>
       {isModalOpen && selectedDivulgacao && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 animate-fade-in-up">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Aprovar e Listar Animal</h2>
-            <form onSubmit={handleConvertToAnimal} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+            <form onSubmit={handleConvertToAnimal} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="animal-nome" className="block text-sm font-medium text-gray-700 mb-1">Nome do Animal</label>
@@ -1222,7 +1218,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
                       </select>
                   </div>
               </div>
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end space-x-3 pt-4 flex-wrap gap-2">
                 <Button type="button" onClick={() => setIsModalOpen(false)} variant="outline" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Cancelar</Button>
                 <Button type="submit" isLoading={loadingStates[`convert-${selectedDivulgacao.id}`]} className="bg-amber-600 hover:bg-amber-700">Confirmar e Listar</Button>
               </div>
@@ -1231,9 +1227,9 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
         </div>
       )}
       
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6">
         <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+            <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
                 <button onClick={() => setActiveTab('pendentes')} className={`${activeTab === 'pendentes' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                     Pendentes ({pendingDivulgacoes.length})
                 </button>
@@ -1248,35 +1244,35 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
             {activeTab === 'pendentes' ? 'Nenhuma divulgação pendente encontrada.' : 'Nenhuma divulgação no histórico.'}
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {divulgacoesToShow.map((divulgacao) => (
             <div key={divulgacao.id} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-transform hover:scale-105 border">
               <div className="relative">
-               <img src={buildImageUrl(divulgacao.imageUrl)} alt={divulgacao.raca} className="w-full h-56 object-cover cursor-pointer" onClick={() => setSelectedImage(buildImageUrl(divulgacao.imageUrl))} onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x224?text=Erro'; }} />
+               <img src={buildImageUrl(divulgacao.imageUrl)} alt={divulgacao.raca} className="w-full h-48 sm:h-56 object-cover cursor-pointer" onClick={() => setSelectedImage(buildImageUrl(divulgacao.imageUrl))} onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x224?text=Erro'; }} />
                 <div className="absolute top-2 right-2"><StatusBadge status={divulgacao.status} /></div>
               </div>
               
               <div className="p-4 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-gray-800">{divulgacao.raca}</h3>
-                <p className="text-sm text-gray-600">{divulgacao.localizacao}</p>
+                <h3 className="text-lg font-bold text-gray-800 truncate">{divulgacao.raca}</h3>
+                <p className="text-sm text-gray-600 truncate">{divulgacao.localizacao}</p>
                 <div className="my-3 text-sm space-y-1 text-gray-700">
-                  <p><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
+                  <p className="truncate"><strong>Enviado por:</strong> {divulgacao.usuario?.nome || 'N/A'}</p>
                   <p><strong>Data:</strong> {new Date(divulgacao.createdAt).toLocaleDateString()}</p>
-                  <div className="flex items-center space-x-2 pt-1">
+                  <div className="flex items-center space-x-2 pt-1 flex-wrap gap-1">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.castrado ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}`}>{divulgacao.castrado ? 'Castrado' : 'Não Castrado'}</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${divulgacao.resgate ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'}`}>{divulgacao.resgate ? 'Resgate' : 'Particular'}</span>
                   </div>
                 </div>
-                {divulgacao.descricao && <p className="text-sm text-gray-600 mb-4 flex-1">"{divulgacao.descricao}"</p>}
+                {divulgacao.descricao && <p className="text-sm text-gray-600 mb-4 flex-1 line-clamp-2">"{divulgacao.descricao}"</p>}
                 <div className="mt-auto pt-4 border-t border-gray-200 space-y-2">
-                  <Button variant="primary" onClick={() => handleWhatsAppContact(divulgacao)} className="w-full bg-green-500 hover:bg-green-600">Contactar via WhatsApp</Button>
+                  <Button variant="primary" onClick={() => handleWhatsAppContact(divulgacao)} className="w-full bg-green-500 hover:bg-green-600 text-sm">Contactar via WhatsApp</Button>
                   {divulgacao.status === 'PENDENTE' && (
                     <div className="flex flex-col space-y-2">
-                      <Button variant="success" onClick={() => handleOpenApprovalModal(divulgacao)} isLoading={loadingStates[`convert-${divulgacao.id}`]}>Aprovar e Listar</Button>
-                      <Button variant="danger" onClick={() => handleStatusChange(divulgacao.id, DivulgacaoStatus.REJEITADO)} isLoading={loadingStates[`status-${divulgacao.id}`]}>Rejeitar</Button>
+                      <Button variant="success" onClick={() => handleOpenApprovalModal(divulgacao)} isLoading={loadingStates[`convert-${divulgacao.id}`]} className="text-sm">Aprovar e Listar</Button>
+                      <Button variant="danger" onClick={() => handleStatusChange(divulgacao.id, DivulgacaoStatus.REJEITADO)} isLoading={loadingStates[`status-${divulgacao.id}`]} className="text-sm">Rejeitar</Button>
                     </div>
                   )}
-                   <Button variant="outline" className="w-full" onClick={() => handleDelete(divulgacao.id)} isLoading={loadingStates[`delete-${divulgacao.id}`]}>Excluir Permanentemente</Button>
+                   <Button variant="outline" className="w-full text-sm" onClick={() => handleDelete(divulgacao.id)} isLoading={loadingStates[`delete-${divulgacao.id}`]}>Excluir Permanentemente</Button>
                 </div>
               </div>
             </div>
@@ -1390,9 +1386,9 @@ const ConteudoManager = () => {
   };
 
   return (
-    <section className="bg-white p-6 rounded-2xl shadow-lg">
+    <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
         <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+            <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
                 <button onClick={() => setActiveTab('sobre')} className={`${activeTab === 'sobre' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                     Conteúdo "Sobre"
                 </button>
@@ -1455,14 +1451,14 @@ const ConteudoManager = () => {
                         <h3 className="font-semibold mb-2 text-gray-800">Parceiros Atuais</h3>
                         <div className="space-y-2">
                         {parceiros.map(parceiro => (
-                            <div key={parceiro.id} className="flex items-center justify-between p-2 border rounded-lg bg-white">
+                            <div key={parceiro.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg bg-white gap-3">
                             <div className="flex items-center space-x-4">
-                                <img src={buildImageUrl(parceiro.logoUrl)} alt={parceiro.nome} className="w-20 h-12 object-contain rounded-md bg-gray-100 p-1" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Logo'; }}/>
+                                <img src={buildImageUrl(parceiro.logoUrl)} alt={parceiro.nome} className="w-16 h-12 object-contain rounded-md bg-gray-100 p-1" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80x48?text=Logo'; }}/>
                                 <div>
                                 <p className="font-semibold text-gray-900">{parceiro.nome}</p>
                                 </div>
                             </div>
-                            <button onClick={() => handleDeleteParceiro(parceiro.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm">Apagar</button>
+                            <button onClick={() => handleDeleteParceiro(parceiro.id)} className="text-red-500 hover:text-red-700 font-semibold text-sm self-end sm:self-auto">Apagar</button>
                             </div>
                         ))}
                         </div>
@@ -1474,10 +1470,8 @@ const ConteudoManager = () => {
   );
 };
 
-
 // --- COMPONENTE PARA GERIR RELATÓRIOS DO SISTEMA ---
 const ReportsManager = () => {
-  // Função genérica para lidar com o download de qualquer relatório
   const handleExport = async (format: 'csv' | 'pdf', reportType: string, fileName: string) => {
     const endpoint = `/reports/${reportType}/${format}`;
     const toastId = toast.loading(
@@ -1508,9 +1502,7 @@ const ReportsManager = () => {
       toast.success(
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+            <Check className="w-3 h-3 text-white" />
           </div>
           Download do relatório iniciado!
         </div>
@@ -1521,9 +1513,7 @@ const ReportsManager = () => {
       toast.error(
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-3 h-3 text-white" />
           </div>
           Erro ao gerar o relatório {format.toUpperCase()}
         </div>
@@ -1542,9 +1532,8 @@ const ReportsManager = () => {
     color: string;
   };
 
-  // Componente para o cartão de cada relatório
   const ReportCard = ({ title, description, reportType, csvFileName, pdfFileName, icon, color }: ReportCardProps) => (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6 transition-all duration-300 hover:shadow-2xl hover:scale-105 group">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:scale-105 group">
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-xl ${color} transition-transform duration-300 group-hover:scale-110`}>
           {icon}
@@ -1559,33 +1548,29 @@ const ReportsManager = () => {
         </div>
       </div>
       
-      <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-amber-700 transition-colors">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 group-hover:text-amber-700 transition-colors">
         {title}
       </h3>
       <p className="text-gray-600 leading-relaxed mb-6 text-sm">
         {description}
       </p>
       
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <Button 
           onClick={() => handleExport('csv', reportType, csvFileName)}
-          className="flex-1 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn"
+          className="flex-1 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn text-sm"
         >
           <div className="flex items-center justify-center gap-2">
-            <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <FileText className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
             CSV
           </div>
         </Button>
         <Button 
           onClick={() => handleExport('pdf', reportType, pdfFileName)}
-          className="flex-1 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn"
+          className="flex-1 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 group/btn text-sm"
         >
           <div className="flex items-center justify-center gap-2">
-            <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <FileText className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
             PDF
           </div>
         </Button>
@@ -1593,17 +1578,14 @@ const ReportsManager = () => {
     </div>
   );
 
-  // Ícones para os diferentes tipos de relatório
   const ReportIcons = {
-    donations: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ),
-    animals: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 5a2 2 0 10-4 0 2 2 0 004 0z" /></svg> ),
-    adoptions: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg> ),
-    users: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg> ),
-    volunteers: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg> ),
-    financial: ( <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0h6m-3-7h.01" /></svg> ),
+    donations: <FileText className="w-6 h-6 text-white" />,
+    animals: <PawPrint className="w-6 h-6 text-white" />,
+    adoptions: <Heart className="w-6 h-6 text-white" />,
+    users: <Users className="w-6 h-6 text-white" />,
+    volunteers: <Users className="w-6 h-6 text-white" />,
   };
   
-  // Array de configuração para os relatórios
   const reportsData = [
     { title: "Relatório de Doações", description: "Exporte uma lista completa de todas as doações recebidas com valores, datas e doadores.", reportType: "donations", icon: ReportIcons.donations },
     { title: "Relatório de Animais", description: "Lista de todos os animais cadastrados.", reportType: "animals", icon: ReportIcons.animals },
@@ -1614,7 +1596,7 @@ const ReportsManager = () => {
 
   return (
     <section className="p-4 sm:p-6 lg:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {reportsData.map((report) => (
           <ReportCard 
             key={report.reportType}
@@ -1670,20 +1652,20 @@ const ConfiguracaoManager = () => {
 
   return (
     <section>
-      <div className="bg-white rounded-xl shadow p-6 max-w-2xl">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-6 max-w-2xl">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Configurações Gerais</h3>
         
         {isLoading ? (
           <p className="text-gray-500">carregando...</p>
         ) : (
           <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
+            <div className="flex-1">
               <p className="font-medium text-gray-800">Sistema de Gamificação</p>
               <p className="text-sm text-gray-500">
                 Ative ou desative a atribuição de pontos e conquistas em todo o site.
               </p>
             </div>
-            <label htmlFor="gamification-toggle" className="relative inline-flex items-center cursor-pointer">
+            <label htmlFor="gamification-toggle" className="relative inline-flex items-center cursor-pointer ml-4">
               <input 
                 type="checkbox" 
                 id="gamification-toggle" 
@@ -1702,13 +1684,11 @@ const ConfiguracaoManager = () => {
 
 // 11. COMPONENTE PARA GERIR ANIMAIS COMUNITÁRIOS
 const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComunitario[], onUpdate: () => void }) => {
-    // Estado inicial alinhado com o DTO
     const initialState = {
         nomeTemporario: '',
         enderecoCompleto: '',
     };
     
-    // Posição inicial do mapa
     const initialPosition = { lat: -26.24, lng: -50.28 };
 
     const [formData, setFormData] = useState(initialState);
@@ -1717,14 +1697,10 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
     const [editingId, setEditingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    // Estado para as coordenadas do mapa
     const [coordinates, setCoordinates] = useState(initialPosition);
-
-    // Estado para o campo de busca de endereço e loading do geocoding
     const [addressSearch, setAddressSearch] = useState('');
     const [isGeocoding, setIsGeocoding] = useState(false);
 
-    // Importação dinâmica do mapa para rodar apenas no cliente
     const MapaDeSelecao = useMemo(() => dynamic(
         () => import('../components/common/MapaDeSelecao'),
         {
@@ -1733,7 +1709,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     ), []);
     
-    // Reseta o formulário e os novos estados
     const resetForm = () => {
         setFormData(initialState);
         setFile(null);
@@ -1745,12 +1720,10 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     };
     
-    // Recebe a posição do componente do mapa
     const handlePositionChange = (position: { lat: number; lng: number }) => {
         setCoordinates(position);
     };
 
-    // Função para buscar o endereço na API de geocoding
     const handleAddressSearch = async () => {
         if (!addressSearch.trim()) {
             toast.error("Por favor, digite um endereço para buscar.");
@@ -1772,7 +1745,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     };
 
-    // Envia os dados para a API (criar ou atualizar)
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setIsLoading(true);
@@ -1810,7 +1782,6 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
         }
     };
     
-    // Prepara o formulário para edição
     const handleEdit = (animal: AnimalComunitario) => {
         setEditingId(animal.id);
         setFormData({
@@ -1836,13 +1807,13 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
     };
 
     return (
-        <section className="space-y-8">
-            <div className="bg-white rounded-xl shadow p-6">
+        <section className="space-y-6 sm:space-y-8">
+            <div className="bg-white rounded-xl shadow p-4 sm:p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-6">
                     {editingId ? 'Editar Animal Comunitário' : 'Registar Novo Animal Comunitário'}
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <Input 
                             label="Nome / Identificação" 
                             value={formData.nomeTemporario} 
@@ -1862,14 +1833,14 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Procurar endereço no mapa
                         </label>
-                        <div className="flex items-stretch gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch gap-2">
                            <Input 
                                 value={addressSearch}
                                 onChange={(e) => setAddressSearch(e.target.value)}
                                 placeholder="Digite o endereço e clique em buscar..."
                                 onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddressSearch(); }}}
                            />
-                           <Button type="button" onClick={handleAddressSearch} isLoading={isGeocoding}>
+                           <Button type="button" onClick={handleAddressSearch} isLoading={isGeocoding} className="sm:w-auto">
                                Buscar
                            </Button>
                         </div>
@@ -1891,23 +1862,23 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                         {editingId && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a foto atual.</p>}
                     </div>
                     
-                    <div className="flex justify-end items-center gap-4">
+                    <div className="flex justify-end items-center gap-4 flex-wrap">
                         {editingId && (<Button type="button" variant="outline" onClick={resetForm}>Cancelar Edição</Button>)}
                         <Button type="submit" isLoading={isLoading}>{editingId ? 'Atualizar Registo' : 'Adicionar Registo'}</Button>
                     </div>
                 </form>
             </div>
 
-            <div className="bg-white rounded-xl shadow p-6">
+            <div className="bg-white rounded-xl shadow p-4 sm:p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Animais Comunitários Registados</h3>
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome / ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização (Texto)</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome / ID</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Localização (Texto)</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -1920,14 +1891,14 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
                             ) : (
                                 animais.map(animal => (
                                     <tr key={animal.id}>
-                                        <td className="px-6 py-4">
-                                          <img src={buildImageUrl(animal.imageUrl)} alt={animal.nomeTemporario} className="w-16 h-16 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64x64?text=Erro'; }}/>
+                                        <td className="px-4 py-4">
+                                          <img src={buildImageUrl(animal.imageUrl)} alt={animal.nomeTemporario} className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/64x64?text=Erro'; }}/>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{animal.enderecoCompleto || 'Não informado'}</td>
-                                        <td className="px-6 py-4 text-center text-sm font-medium space-x-4">
-                                            <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
-                                            <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900">Apagar</button>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.nomeTemporario}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{animal.enderecoCompleto || 'Não informado'}</td>
+                                        <td className="px-4 py-4 text-center text-sm font-medium space-x-2 sm:space-x-4">
+                                            <button onClick={() => handleEdit(animal)} className="text-indigo-600 hover:text-indigo-900 text-sm">Editar</button>
+                                            <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-900 text-sm">Apagar</button>
                                         </td>
                                     </tr>
                                 ))
@@ -1944,7 +1915,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
 export default function AdminPanelPage() {
   const { user, isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState<AdminView>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [voluntarios, setVoluntarios] = useState<Voluntario[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -2015,162 +1986,117 @@ export default function AdminPanelPage() {
   }
 
 const Sidebar = () => (
-  <aside className={`bg-gradient-to-b from-stone-800 to-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0'} overflow-hidden shadow-2xl border-r border-stone-700`}>
+  <aside className={`bg-gradient-to-b from-stone-800 to-stone-900 text-white flex flex-col h-screen transition-all duration-300 ease-in-out fixed sm:relative z-40 ${isSidebarOpen ? 'w-64' : 'w-0 sm:w-20'} overflow-hidden shadow-2xl border-r border-stone-700`}>
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Header */}
-      <div className="p-6 flex-shrink-0 border-b border-stone-700">
+      <div className="p-4 sm:p-6 flex-shrink-0 border-b border-stone-700">
         <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-amber-200 to-orange-200 bg-clip-text text-transparent">Painel Admin</h2>
-            <p className="text-stone-400 text-xs">Centro de Controle</p>
-          </div>
+          {isSidebarOpen && (
+            <div>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-amber-200 to-orange-200 bg-clip-text text-transparent">Painel Admin</h2>
+              <p className="text-stone-400 text-xs">Centro de Controle</p>
+            </div>
+          )}
+          {!isSidebarOpen && (
+            <div className="w-full text-center">
+              <Shield className="h-8 w-8 text-amber-400 mx-auto" />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 pb-4 overflow-y-auto space-y-1 custom-scrollbar py-4">
+      <nav className="flex-1 px-2 sm:px-4 pb-4 overflow-y-auto space-y-1 custom-scrollbar py-4">
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          }
+          icon={<Home className="w-5 h-5" />}
           label="Dashboard"
           active={activeView === 'dashboard'}
-          onClick={() => setActiveView('dashboard')}
+          onClick={() => { setActiveView('dashboard'); setIsSidebarOpen(false); }}
         />
 
         <NavSection title="Conteúdo" />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          }
+          icon={<Image className="w-5 h-5" />}
           label="Slides"
           active={activeView === 'slides'}
-          onClick={() => setActiveView('slides')}
+          onClick={() => { setActiveView('slides'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-          }
+          icon={<FileText className="w-5 h-5" />}
           label="Conteúdo"
           active={activeView === 'conteudo'}
-          onClick={() => setActiveView('conteudo')}
+          onClick={() => { setActiveView('conteudo'); setIsSidebarOpen(false); }}
         />
 
         <NavSection title="Animais" />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
+          icon={<PawPrint className="w-5 h-5" />}
           label="Animais"
           active={activeView === 'animais'}
-          onClick={() => setActiveView('animais')}
+          onClick={() => { setActiveView('animais'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          }
+          icon={<Users className="w-5 h-5" />}
           label="Animais Comunitários"
           active={activeView === 'animaisComunitarios'}
-          onClick={() => setActiveView('animaisComunitarios')}
+          onClick={() => { setActiveView('animaisComunitarios'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-            </svg>
-          }
+          icon={<MessageCircle className="w-5 h-5" />}
           label="Divulgações"
           active={activeView === 'divulgacoes'}
-          onClick={() => setActiveView('divulgacoes')}
+          onClick={() => { setActiveView('divulgacoes'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          }
+          icon={<Heart className="w-5 h-5" />}
           label="Adoções"
           active={activeView === 'adocoes'}
-          onClick={() => setActiveView('adocoes')}
+          onClick={() => { setActiveView('adocoes'); setIsSidebarOpen(false); }}
         />
 
         <NavSection title="Pessoas" />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          }
+          icon={<Users className="w-5 h-5" />}
           label="Voluntários"
           active={activeView === 'voluntarios'}
-          onClick={() => setActiveView('voluntarios')}
+          onClick={() => { setActiveView('voluntarios'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-          }
+          icon={<Users className="w-5 h-5" />}
           label="Membros"
           active={activeView === 'membros'}
-          onClick={() => setActiveView('membros')}
+          onClick={() => { setActiveView('membros'); setIsSidebarOpen(false); }}
         />
 
         <NavSection title="Financeiro" />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
+          icon={<FileText className="w-5 h-5" />}
           label="Doações"
           active={activeView === 'doacoes'}
-          onClick={() => setActiveView('doacoes')}
+          onClick={() => { setActiveView('doacoes'); setIsSidebarOpen(false); }}
         />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          }
+          icon={<FileText className="w-5 h-5" />}
           label="Relatórios"
           active={activeView === 'relatórios'}
-          onClick={() => setActiveView('relatórios')}
+          onClick={() => { setActiveView('relatórios'); setIsSidebarOpen(false); }}
         />
         
 
         <NavSection title="Sistema" />
         <NavItem 
-          icon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          }
+          icon={<Settings className="w-5 h-5" />}
           label="Configurações"
           active={activeView === 'configuracoes'}
-          onClick={() => setActiveView('configuracoes')}
+          onClick={() => { setActiveView('configuracoes'); setIsSidebarOpen(false); }}
         />
       </nav>
 
       {/* Footer */}
       <div className="p-4 flex-shrink-0 border-t border-stone-700">
         <Link href="/" className="flex items-center justify-center gap-3 text-center p-3 rounded-xl bg-gradient-to-r from-stone-700 to-stone-600 hover:from-stone-600 hover:to-stone-500 transition-all duration-200 group shadow-lg">
-          <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="font-medium">Voltar ao Site</span>
+          <Home className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+          {isSidebarOpen && <span className="font-medium">Voltar ao Site</span>}
         </Link>
       </div>
     </div>
@@ -2190,7 +2116,7 @@ const NavItem = ({ icon, label, active, onClick }: { icon: React.ReactNode, labe
     <div className={`transition-colors duration-200 ${active ? 'text-amber-400' : 'text-stone-400 group-hover:text-amber-300'}`}>
       {icon}
     </div>
-    <span className="font-medium text-sm">{label}</span>
+    <span className="font-medium text-sm whitespace-nowrap overflow-hidden">{label}</span>
     {active && (
       <div className="ml-auto w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
     )}
@@ -2203,6 +2129,7 @@ const NavSection = ({ title }: { title: string }) => (
     <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">{title}</span>
   </div>
 );
+
 const MainContent = () => {
   const viewTitles: Record<AdminView, string> = {
     dashboard: 'Dashboard',
@@ -2222,13 +2149,17 @@ const MainContent = () => {
   return (
     <div className="flex-1 flex flex-col h-screen overflow-y-hidden">
       <header className="bg-white shadow-sm p-4 flex-shrink-0 flex items-center">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4 sm:hidden">
+              <Menu className="h-6 w-6 text-gray-700" />
           </button>
           <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
       </header>
-      <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
-          {loading && <p className="text-center text-gray-600">Carregando...</p>}
+      <div className="flex-1 p-4 sm:p-6 md:p-10 bg-gray-100 overflow-y-auto">
+          {loading && (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+            </div>
+          )}
           {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
           
           {!loading && !error && (
@@ -2255,7 +2186,15 @@ const MainContent = () => {
   return (
     <div className="flex h-screen bg-gray-100">
         <Sidebar />
-        <MainContent />
+        <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'sm:ml-0' : 'sm:ml-20'}`}>
+          <MainContent />
+        </div>
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 sm:hidden" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
     </div>
   );
 }

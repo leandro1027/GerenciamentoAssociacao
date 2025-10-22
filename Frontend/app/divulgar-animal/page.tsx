@@ -453,7 +453,7 @@ export default function DivulgarAnimalPage() {
               <InfoCard
                 icon={<Camera className="w-4 h-4 sm:w-5 sm:h-5" />}
                 title="Dica para uma boa foto"
-                description="Use boa iluminação, mostre o animal inteiro e capture sua personalidade. Fotos claras aumentam as chances de adoção!"
+                description="Use boa iluminação, mostre o animal inteiro. Fotos claras aumentam as chances de adoção!"
                 type="warning"
               />
             </motion.div>
@@ -479,7 +479,7 @@ export default function DivulgarAnimalPage() {
                 onChange={handleInputChange} 
                 rows={5} 
                 className="block w-full rounded-xl sm:rounded-2xl border-2 border-gray-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 placeholder:text-gray-400 text-gray-900 text-base sm:text-lg p-3 sm:p-4 resize-none transition-colors"
-                placeholder="Ex: Este é o Thor, foi encontrado na rua muito assustado mas é extremamente carinhoso. Adora brincar, convive bem com outros cães e crianças. Está à procura de um lar paciente que o ajude a ganhar confiança..."
+                placeholder="Ex: Este é o Thor, é extremamente carinhoso. Adora brincar, convive bem com outros cães e crianças. Está à procura de um lar paciente que o ajude a ganhar confiança..."
               ></textarea>
               
               <InfoCard

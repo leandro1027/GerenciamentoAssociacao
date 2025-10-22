@@ -72,7 +72,6 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', { email });
     } catch (error: any) {
-      // Intencionalmente não é feito nada aqui. A UI mudará para sucesso de qualquer forma por segurança.
       console.error("Forgot password API error (hidden from user):", error);
     } finally {
       setIsLoading(false);
