@@ -2230,7 +2230,7 @@ const MainContent = () => {
           <h1 className="text-xl font-semibold text-gray-800">{viewTitles[activeView]}</h1>
       </header>
       <div className="flex-1 p-6 md:p-10 bg-gray-100 overflow-y-auto">
-          {loading && <p className="text-center text-gray-600">A carregar dados...</p>}
+          {loading && <p className="text-center text-gray-600">Carregando...</p>}
           {error && <div className="p-4 text-center text-red-800 bg-red-100 rounded-lg">{error}</div>}
           
           {!loading && !error && (
