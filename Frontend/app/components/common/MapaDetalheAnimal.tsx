@@ -3,13 +3,10 @@
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-
-// Importação manual dos ícones do marcador (workaround para o Next.js)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Correção para os caminhos dos ícones do Leaflet em ambientes com bundlers (Webpack/Next.js)
 // @ts-ignore
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -33,8 +30,6 @@ interface MapaDetalheProps {
 export default function MapaDetalheAnimal({ latitude, longitude }: MapaDetalheProps) {
   const position: [number, number] = [latitude, longitude];
 
-  // A chave 'key' no MapContainer força a re-renderização se a posição mudar,
-  // o que é útil dentro de um modal.
   return (
     <MapContainer
       key={`${latitude}-${longitude}`} 

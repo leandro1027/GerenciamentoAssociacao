@@ -1,4 +1,3 @@
-// Ficheiro: /components/common/MapaDeSelecao.tsx
 'use client';
 
 import { useMemo, useRef } from 'react';
@@ -6,7 +5,6 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Corrige o ícone padrão
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -42,7 +40,7 @@ export default function MapaDeSelecao({ position, onPositionChange }: MapaDeSele
   return (
     <MapContainer
       center={position}
-      zoom={15} // --- ZOOM MAIS PRÓXIMO AJUSTADO AQUI ---
+      zoom={15}
       style={{ height: '300px', width: '100%', borderRadius: '8px', zIndex: 0 }}
       key={position.toString()} // Força a re-renderização se a posição inicial mudar
     >

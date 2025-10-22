@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimalComunitario } from '@/types';
-import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
+import { buildImageUrl } from '@/utils/helpers';
 
 // Ícone de Fechar
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -25,7 +25,6 @@ export default function AnimalDetailModal({ animal, onClose }: ModalProps) {
     () => import('./MapaDetalheAnimal'),
     {
       ssr: false,
-      loading: () => <div className="h-full w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500">A carregar mapa...</p></div>
     }
   ), [animal]); // Recarrega se o animal mudar
 
@@ -36,13 +35,12 @@ export default function AnimalDetailModal({ animal, onClose }: ModalProps) {
     >
       <div
         className="bg-white rounded-2xl shadow-xl w-full max-w-4xl h-auto max-h-[90vh] flex flex-col md:flex-row overflow-hidden"
-        onClick={(e) => e.stopPropagation()} // Impede que o clique dentro do modal o feche
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Lado Esquerdo: Foto */}
         <div className="w-full md:w-1/2 flex-shrink-0 bg-gray-100">
             <img
-                // src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
-                src={buildImageUrl(animal.imageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+                src={buildImageUrl(animal.imageUrl)} 
                 alt={`Foto de ${animal.nomeTemporario}`}
                 className="w-full h-full object-cover"
                 onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/600x600?text=Sem+Foto'; }}

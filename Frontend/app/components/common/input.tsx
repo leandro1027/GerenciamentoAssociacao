@@ -1,6 +1,5 @@
 import React, { useId } from 'react';
 
-// 1. Adicionamos 'label' à lista de props
 type InputProps = React.ComponentProps<'input'> & {
   label?: string;
   icon?: React.ReactNode;
@@ -9,12 +8,11 @@ type InputProps = React.ComponentProps<'input'> & {
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, icon, onIconClick, ...props }, ref) => {
-    // 2. Criamos um id único para conectar a label ao input (boa prática de acessibilidade)
+ 
     const inputId = useId();
 
     return (
       <div className="w-full">
-        {/* 3. Renderizamos a label se ela for fornecida */}
         {label && (
           <label
             htmlFor={inputId}

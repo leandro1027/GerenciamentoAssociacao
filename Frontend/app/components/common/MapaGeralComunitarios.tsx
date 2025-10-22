@@ -1,4 +1,3 @@
-// Ficheiro: /components/common/MapaGeralComunitarios.tsx
 'use client';
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -6,9 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { AnimalComunitario } from '@/types';
 import { useEffect } from 'react';
-import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
+import { buildImageUrl } from '@/utils/helpers';
 
-// Componente interno para ajustar o mapa (sem alterações)
+// Componente interno para ajustar o mapa
 const MapUpdater = ({ animais }: { animais: AnimalComunitario[] }) => {
   const map = useMap();
 
@@ -46,12 +45,11 @@ export default function MapaGeralComunitarios({ animais }: MapaGeralProps) {
 
       {animais.map((animal) => {
         const customIcon = new L.Icon({
-          // iconUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`, // <-- 2. CÓDIGO ANTIGO REMOVIDO
-          iconUrl: buildImageUrl(animal.imageUrl), // <-- 3. USANDO buildImageUrl AQUI
+          iconUrl: buildImageUrl(animal.imageUrl), 
           iconSize: [45, 45],
           iconAnchor: [22, 45],
           popupAnchor: [0, -45],
-          className: 'mapa-animal-icon' // Classe para estilização customizada se necessário
+          className: 'mapa-animal-icon' 
         });
 
         return (
@@ -63,8 +61,7 @@ export default function MapaGeralComunitarios({ animais }: MapaGeralProps) {
             <Popup>
               <div style={{ textAlign: 'center', width: '150px' }}>
                 <img
-                  // src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${animal.imageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
-                  src={buildImageUrl(animal.imageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+                  src={buildImageUrl(animal.imageUrl)}
                   alt={animal.nomeTemporario}
                   style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', margin: '0 auto' }}
                   onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150x100?text=Foto'; }}

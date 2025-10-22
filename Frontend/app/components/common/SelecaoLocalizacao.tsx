@@ -81,7 +81,6 @@ const SelecaoLocalizacao = ({ onEstadoChange, onCidadeChange }: SelecaoLocalizac
           value={selectedEstado}
           onChange={handleEstadoChange}
           required
-          // ATUALIZADO: Adicionada a classe text-gray-900
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-600 focus:ring-amber-600 text-gray-900"
         >
           <option value="" disabled>Selecione um estado</option>
@@ -105,11 +104,10 @@ const SelecaoLocalizacao = ({ onEstadoChange, onCidadeChange }: SelecaoLocalizac
           onChange={handleCidadeChange}
           required
           disabled={!selectedEstado || isLoadingCidades}
-          // ATUALIZADO: Adicionada a classe text-gray-900
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-600 focus:ring-amber-600 disabled:bg-gray-100 text-gray-900"
         >
           <option value="" disabled>
-            {isLoadingCidades ? 'A carregar cidades...' : !selectedEstado ? 'Selecione um estado primeiro' : 'Selecione uma cidade'}
+            {isLoadingCidades ? '' : !selectedEstado ? 'Selecione um estado primeiro' : 'Selecione uma cidade'}
           </option>
           {cidades.map(cidade => (
             <option key={cidade.id} value={cidade.nome}>
