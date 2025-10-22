@@ -44,7 +44,6 @@ const PasswordStrengthIndicator = ({ password = '' }: { password?: string }) => 
 export default function CadastroPage() {
     const router = useRouter();
 
-    // ATUALIZADO: Unificado os estados do formulário em um único objeto
     const [formData, setFormData] = useState({
         nome: '',
         email: '',
@@ -68,7 +67,6 @@ export default function CadastroPage() {
         setIsLoading(true);
 
         try {
-            // ATUALIZADO: Envia o objeto formData completo para a API
             const response = await api.post<Usuario>('/usuario', formData);
 
             toast.success(`Utilizador "${response.data.nome}" registado com sucesso!`);
@@ -83,7 +81,7 @@ export default function CadastroPage() {
                     toast.error(message);
                 });
             } else {
-                const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao registar.';
+                const errorMessage = err.response?.data?.message || 'Ocorreu um erro ao cadastrar.';
                 toast.error(errorMessage);
             }
         } finally {
@@ -123,8 +121,6 @@ export default function CadastroPage() {
                             required
                         />
                     </div>
-                    
-                    {/* NOVO: Componente de seleção de Estado e Cidade */}
                     <SelecaoLocalizacao
                         onEstadoChange={(estado) => setFormData(prev => ({ ...prev, estado, cidade: '' }))} // Reseta a cidade ao mudar o estado
                         onCidadeChange={(cidade) => setFormData(prev => ({ ...prev, cidade }))}

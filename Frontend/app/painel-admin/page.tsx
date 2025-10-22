@@ -121,7 +121,6 @@ const Dashboard = ({
   if (isLoading) {
     return (
         <div className="flex justify-center items-center h-full">
-            <p className="text-gray-600 text-lg">Carregando dados da dashboard...</p>
         </div>
     );
   }
@@ -164,7 +163,7 @@ const Dashboard = ({
           title="Total de Membros"
           value={stats.totalMembros}
           icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-          description="Utilizadores registados na plataforma."
+          description="Usuários registados na plataforma."
         />
       </div>
 
@@ -290,7 +289,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Tem a certeza que deseja apagar este slide?')) {
+    if (window.confirm('Tem acerteza que deseja excluir este slide?')) {
       try {
         await api.delete(`/slide/${id}`);
         setSlides(slides.filter(slide => slide.id !== id));
@@ -321,7 +320,7 @@ const SlideManager = ({ initialSlides }: { initialSlides: Slide[] }) => {
              {editingSlide && <p className="text-xs text-gray-500 mt-1">Deixe em branco para manter a imagem atual.</p>}
           </div>
           <div className="flex items-center space-x-2">
-            <Button type="submit">{editingSlide ? 'Guardar Alterações' : 'Adicionar Slide'}</Button>
+            <Button type="submit">{editingSlide ? 'Salvar Alterações' : 'Adicionar Slide'}</Button>
             {editingSlide && (
               <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
             )}
@@ -450,7 +449,7 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
     });
 
     const handleDelete = async (userId: number) => {
-        if (confirm('Tem a certeza de que deseja apagar este membro?')) {
+        if (confirm('Tem certeza de que deseja apagar este membro?')) {
             try {
                 await api.delete(`/usuario/${userId}`);
                 const updatedUsers = usuarios.filter(u => u.id !== userId);
@@ -541,7 +540,7 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
                                             <td className="px-6 py-4"><Input value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} /></td>
                                             <td className="px-6 py-4"></td>
                                             <td className="px-6 py-4 text-center space-x-2">
-                                                <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Guardar</button>
+                                                <button onClick={handleUpdate} className="text-amber-600 hover:text-amber-900">Salvar</button>
                                                 <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-900">Cancelar</button>
                                             </td>
                                         </>
@@ -577,11 +576,11 @@ const MemberManager = ({ initialUsers, onUserUpdate }: { initialUsers: Usuario[]
 
 // COMPONENTE PARA LISTAR DOAÇÕES
 const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsuario[] }) => {
-    // 2. ESTADO PARA GERENCIAR AS DOAÇÕES E O CARREGAMENTO
+    // ESTADO PARA GERENCIAR AS DOAÇÕES E O CARREGAMENTO
     const [donations, setDonations] = useState<DoacaoComUsuario[]>(initialDonations);
     const [loadingId, setLoadingId] = useState<number | null>(null);
 
-    // 3. FUNÇÃO PARA ATUALIZAR O STATUS (CONFIRMAR/REJEITAR)
+    // FUNÇÃO PARA ATUALIZAR O STATUS (CONFIRMAR/REJEITAR)
     const handleUpdateStatus = async (id: number, status: StatusDoacao) => {
         setLoadingId(id); // Ativa o ícone de loading para a linha específica
         try {
@@ -602,7 +601,7 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     };
 
-    const formatDate = (dateString: string | Date) => { // Aceita Date para evitar erros
+    const formatDate = (dateString: string | Date) => { // Date para evitar erros
         return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
@@ -619,14 +618,12 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doador</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                {/* 4. NOVAS COLUNAS ADICIONADAS */}
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Comprovante</th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {/* Usando o estado 'donations' em vez de 'initialDonations' */}
                             {donations.map(doacao => (
                                 <tr key={doacao.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -635,7 +632,6 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{formatCurrency(doacao.valor)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(doacao.data)}</td>
-                                    {/* 5. DADOS DAS NOVAS COLUNAS */}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                             doacao.status === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
@@ -656,7 +652,6 @@ const DonationManager = ({ initialDonations }: { initialDonations: DoacaoComUsua
                                         </a>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        {/* Renderização condicional: botões, loading ou nada */}
                                         {loadingId === doacao.id ? (
                                             <Loader2 className="h-5 w-5 animate-spin mx-auto text-gray-400" />
                                         ) : doacao.status === 'PENDENTE' ? (
@@ -936,7 +931,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
 
     const handleWhatsAppContact = (adocao: Adocao, isFollowUp: boolean = false) => {
         if (!adocao.usuario?.telefone) {
-            toast.error('Este utilizador não possui um número de telefone registado.');
+            toast.error('Este usuário não possui um número de telefone registado.');
             return;
         }
         const numero = adocao.usuario.telefone.replace(/\D/g, '');
@@ -944,7 +939,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
         let texto;
 
         if (isFollowUp) {
-            texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Somos da associação de protetores independentes Fabiana Forte Huergo e gostaríamos de fazer o acompanhamento da adoção do(a) ${nomeAnimal}. Como ele(a) está a adaptar-se ao novo lar?`);
+            texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Somos da associação de protetores independentes Fabiana Forte Huergo e gostaríamos de fazer o acompanhamento da adoção do(a) ${nomeAnimal}. Como ele(a) está se adaptando ao novo lar?`);
         } else {
             texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Vimos o seu interesse em adotar o(a) ${nomeAnimal}. Gostaríamos de conversar mais sobre o processo!`);
         }
@@ -991,7 +986,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                             <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900">Analisar Pedido</button>
                                         ) : (
                                             adocao.status === StatusAdocao.APROVADA && (
-                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Acompanhar via WhatsApp</button>
+                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Chamar no  WhatsApp</button>
                                             )
                                         )}
                                     </td>
@@ -1125,7 +1120,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
 
   const handleWhatsAppContact = (divulgacao: Divulgacao) => {
     if (!divulgacao.usuario?.telefone) {
-        toast.error('Este utilizador não possui um número de telefone registado.');
+        toast.error('Este usuário não possui um número de telefone registado.');
         return;
     }
     const numero = divulgacao.usuario.telefone.replace(/\D/g, '');
@@ -1161,7 +1156,7 @@ const DivulgacaoManager = ({ initialDivulgacoes, onUpdate }: { initialDivulgacoe
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Tem a certeza que deseja excluir esta divulgação?")) {
+    if (!window.confirm("Tem certeza que deseja excluir esta divulgação?")) {
       return;
     }
     setLoadingStates(prev => ({ ...prev, [`delete-${id}`]: true }));
@@ -1385,7 +1380,7 @@ const ConteudoManager = () => {
   };
 
   const handleDeleteParceiro = async (id: number) => {
-    if (confirm('Tem a certeza que deseja apagar este parceiro?')) {
+    if (confirm('Tem certeza que deseja apagar este parceiro?')) {
       try {
         await api.delete(`/parceiros/${id}`);
         toast.success('Parceiro apagado com sucesso!');
@@ -1681,7 +1676,7 @@ const ConfiguracaoManager = () => {
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Configurações Gerais</h3>
         
         {isLoading ? (
-          <p className="text-gray-500">A carregar...</p>
+          <p className="text-gray-500">carregando...</p>
         ) : (
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
@@ -1709,13 +1704,13 @@ const ConfiguracaoManager = () => {
 
 // 11. COMPONENTE PARA GERIR ANIMAIS COMUNITÁRIOS
 const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComunitario[], onUpdate: () => void }) => {
-    // Estado inicial alinhado com o novo DTO
+    // Estado inicial alinhado com o DTO
     const initialState = {
         nomeTemporario: '',
         enderecoCompleto: '',
     };
     
-    // Posição inicial do mapa (ex: centro da sua cidade)
+    // Posição inicial do mapa
     const initialPosition = { lat: -26.24, lng: -50.28 };
 
     const [formData, setFormData] = useState(initialState);
@@ -1733,10 +1728,10 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
 
     // Importação dinâmica do mapa para rodar apenas no cliente
     const MapaDeSelecao = useMemo(() => dynamic(
-        () => import('../components/common/MapaDeSelecao'), // Certifique-se que o caminho está correto
+        () => import('../components/common/MapaDeSelecao'),
         {
             ssr: false,
-            loading: () => <div className="h-[300px] w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500">A carregar mapa...</p></div>
+            loading: () => <div className="h-[300px] w-full flex justify-center items-center bg-gray-100 rounded-lg"><p className="text-gray-500"> carregando mapa...</p></div>
         }
     ), []);
     
@@ -1831,7 +1826,7 @@ const AnimalComunitarioManager = ({ animais, onUpdate }: { animais: AnimalComuni
     };
 
     const handleDelete = async (animalId: string) => {
-        if (window.confirm('Tem a certeza que deseja apagar este registo?')) {
+        if (window.confirm('Tem certeza que deseja apagar este registo?')) {
             try {
                 await api.delete(`/animais-comunitarios/${animalId}`);
                 toast.success('Registo apagado com sucesso!');
@@ -2012,7 +2007,7 @@ export default function AdminPanelPage() {
       <main className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-md p-8 text-center bg-white rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold text-red-600">Acesso Negado</h1>
-          <p className="mt-2 text-gray-700">Você não tem permissão para aceder a esta página.</p>
+          <p className="mt-2 text-gray-700">Você não tem permissão para acessar o painel administrativo.</p>
           <Link href="/" className="mt-6 inline-block text-amber-600 hover:underline">
             Voltar à Página Inicial
           </Link>

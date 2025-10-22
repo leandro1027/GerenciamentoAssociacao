@@ -1065,7 +1065,7 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const toastId = toast.loading('A enviar a sua nova foto... 📸');
+    const toastId = toast.loading('Carregando...');
     try {
       const response = await api.patch<Usuario>('/usuario/me/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -1073,7 +1073,7 @@ export default function ProfilePage() {
       updateUser(response.data);
       // USANDO A FUNÇÃO buildImageUrl PARA ATUALIZAR O AVATAR
       setAvatarUrl(buildImageUrl(response.data.profileImageUrl));
-      toast.success('Foto de perfil atualizada! ✨', { id: toastId });
+      toast.success('Foto de perfil atualizada!', { id: toastId });
     } catch {
       toast.error('Erro ao enviar a foto.', { id: toastId });
     }
@@ -1093,7 +1093,6 @@ export default function ProfilePage() {
           animate={{ opacity: 1 }}
         >
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando seu perfil...</p>
         </motion.div>
       </main>
     );
@@ -1111,7 +1110,7 @@ export default function ProfilePage() {
             <Lock className="w-10 h-10 text-red-500" />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900">Acesso Negado</h2>
-          <p className="text-gray-600">Por favor, faça login para aceder ao seu perfil.</p>
+          <p className="text-gray-600">Por favor, faça login para acessar ao seu perfil.</p>
           <Link href="/login" className="block w-full px-6 py-4 font-semibold text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-600">
             Ir para o Login
           </Link>
@@ -1175,7 +1174,7 @@ export default function ProfilePage() {
                 )}
 
                 {activeView === 'login_history' && (
-                  <HistoricoDeLogin /> // ← AGORA USA O COMPONENTE QUE BUSCA DADOS REAIS
+                  <HistoricoDeLogin /> 
                 )}
 
                 {activeView === 'edit_profile' && (
@@ -1233,7 +1232,7 @@ export default function ProfilePage() {
                           Cancelar
                         </Button>
                         <Button type="submit" isLoading={isProfileLoading} className="bg-amber-500 hover:bg-amber-600 border-amber-600">
-                          Guardar Alterações
+                          Salvar Alterações
                         </Button>
                       </div>
                     </form>
@@ -1328,7 +1327,7 @@ export default function ProfilePage() {
                             >
                               <div className="flex items-center space-x-4">
                                 <img 
-                                  // USANDO A FUNÇÃO buildImageUrl PARA IMAGENS DE ANIMAIS
+                                  // buildImageUrl PARA IMAGENS DE ANIMAIS
                                   src={buildImageUrl(pedido.animal.animalImageUrl)} 
                                   alt={pedido.animal.nome}
                                   className="w-20 h-20 object-cover rounded-xl shadow-md border border-amber-200"

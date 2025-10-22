@@ -23,8 +23,7 @@ const AnimalCardComunitario = ({ animal, onCardClick }: { animal: AnimalComunita
   >
     <div className="block relative overflow-hidden">
       <img
-        // src={`${api.defaults.baseURL}${animal.imageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
-        src={buildImageUrl(animal.imageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+        src={buildImageUrl(animal.imageUrl)}
         alt={`Foto de ${animal.nomeTemporario}`}
         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
         onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x224?text=Sem+Foto'; }}

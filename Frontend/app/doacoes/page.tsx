@@ -1,6 +1,5 @@
 'use client';
 
-// 1. Adicionar ChangeEvent para tipar o evento do input de arquivo
 import { useState, FormEvent, useEffect, ChangeEvent } from 'react';
 import api from '../services/api';
 import Button from '../components/common/button';
@@ -10,7 +9,6 @@ import Link from 'next/link';
 import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-// Adicionado UploadCloud para o novo campo
 import { Heart, ClipboardCopy, CheckCircle, ArrowLeft, Shield, Zap, Users, PawPrint, UploadCloud } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,7 +21,7 @@ export default function DoacoesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // 2. NOVO STATE: para armazenar o arquivo do comprovante selecionado
+  //armazenar o arquivo do comprovante selecionado
   const [comprovante, setComprovante] = useState<File | null>(null);
 
   const handleGenerateQRCode = (event: FormEvent) => {
@@ -109,7 +107,7 @@ export default function DoacoesPage() {
       });
   };
   
-  // 3. NOVA FUNÇÃO: para lidar com a seleção de arquivo
+  //lidar com a seleção de arquivo
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setComprovante(event.target.files[0]);
@@ -117,7 +115,7 @@ export default function DoacoesPage() {
   };
 
 
-  // 4. FUNÇÃO ATUALIZADA: para enviar a doação com o comprovante
+  //enviar a doação com o comprovante
   const handleConfirmDonation = async () => {
     if (!comprovante) {
       toast.error('Por favor, anexe o comprovante de pagamento para continuar.');
@@ -126,22 +124,21 @@ export default function DoacoesPage() {
 
     setIsLoading(true);
     
-    // Usamos FormData para enviar dados e arquivo juntos
+    // FormData para enviar dados e arquivo juntos
     const formData = new FormData();
     formData.append('valor', valor);
     formData.append('tipo', 'pix');
-    formData.append('comprovante', comprovante); // A chave 'comprovante' deve ser a mesma no backend
+    formData.append('comprovante', comprovante); 
 
     if (isAuthenticated && user) {
       formData.append('usuarioId', String(user.id));
     }
 
     try {
-      // O cabeçalho 'Content-Type' será definido como 'multipart/form-data' automaticamente
+      
       await api.post('/doacao', formData);
 
-      toast.success('Doação enviada para análise! Muito obrigado pelo seu apoio 💛');
-      // Resetar todos os estados
+      toast.success('Doação enviada para análise! Muito obrigado pelo seu apoio.');
       setValor('');
       setQrCodeDataURL(null);
       setComprovante(null);
@@ -162,8 +159,7 @@ export default function DoacoesPage() {
   };
 
   const impactCards = [
-    // ... (sem alterações aqui)
-    { icon: <PawPrint className="w-6 h-6" />, amount: "R$ 25", title: "Vermifugação", description: "Protege um animal contra parasitas internos" },
+    { icon: <PawPrint className="w-6 h-6" />, amount: "R$ 25", title: "Vermifugação", description: "Protege um animal contra parasitas" },
     { icon: <Shield className="w-6 h-6" />, amount: "R$ 50", title: "Vacinação", description: "Custea uma vacina essencial para a saúde" },
     { icon: <Heart className="w-6 h-6" />, amount: "R$ 100", title: "Alimentação Mensal", description: "Alimenta um animal resgatado por um mês" },
     { icon: <Users className="w-6 h-6" />, amount: "R$ 200", title: "Castração", description: "Ajuda no custo de uma cirurgia de castração" }
@@ -233,23 +229,12 @@ export default function DoacoesPage() {
                     onSubmit={handleGenerateQRCode}
                     className="space-y-6"
                   >
-                   {/*(Todo o formulário inicial) ... */}
                    {isAuthenticated && user && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className="bg-amber-50 border border-amber-200 rounded-2xl p-4"
                     >
-                      <label className="block text-sm font-semibold text-amber-700 mb-2">Você está doando como:</label>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                          {user.nome.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-800">{user.nome}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                        </div>
-                      </div>
                     </motion.div>
                    )}
                    <div>
@@ -313,7 +298,6 @@ export default function DoacoesPage() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="flex flex-col items-center space-y-6 text-center"
                   >
-                    {/* ... (Header, Valor, QR Code e Instruções sem alterações) ... */}
                     <div className="text-center mb-2">
                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Pagamento via PIX</h3>
                        <p className="text-gray-600">Após o pagamento, anexe o comprovante abaixo.</p>

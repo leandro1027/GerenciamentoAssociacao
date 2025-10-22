@@ -25,7 +25,7 @@ export default function LoginPage() {
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
-        'Falha no login. Verifique as suas credenciais.';
+        'Falha no login. Verifique seu login e senha.';
       toast.error(errorMessage);
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-// app/adote/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -38,8 +37,7 @@ const AnimalCard = ({ animal }: { animal: Animal }) => (
   <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all">
     <div className="relative overflow-hidden">
       <img
-        // src={`${api.defaults.baseURL}${animal.animalImageUrl}`} // <-- 2. CÓDIGO ANTIGO REMOVIDO
-        src={buildImageUrl(animal.animalImageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+        src={buildImageUrl(animal.animalImageUrl)}
         alt={`Foto de ${animal.nome}`}
         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
         onError={(e) => {
@@ -190,7 +188,7 @@ export default function AdotePage() {
         </div>
 
         {/* lista de animais */}
-        {loading && <p className="text-center py-16 text-gray-500 font-medium">Carregando animais...</p>}
+        {loading && <p className="text-center py-16 text-gray-500 font-medium">Carregando...</p>}
         {error && <p className="text-center py-16 text-red-600 font-medium">{error}</p>}
         {!loading && !error && (
           animais.length > 0 ? (

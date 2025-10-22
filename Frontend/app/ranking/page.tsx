@@ -250,13 +250,13 @@ function UserAvatar({ src, name, index }: { src: string; name: string; index: nu
       className={`w-14 h-14 rounded-full object-cover bg-amber-100 transition-all duration-300 ${getBorderStyle()}`}
      onError={(e) => {
       e.currentTarget.src = `https://via.placeholder.com/150/f59e0b/ffffff?text=${encodeURIComponent(name.charAt(0))}`;
-      e.currentTarget.alt = `Avatar de ${name}`; // Atualiza o alt text
+      e.currentTarget.alt = `Avatar de ${name}`;
     }}
     />
   );
 }
 
-// Componente para o card de ranking ATUALIZADO
+// Componente para o card de ranking
 function RankingCard({ 
   user, 
   index, 
@@ -317,7 +317,7 @@ function RankingCard({
               transition={{ delay: index * 0.1 + 0.3 }}
               className="text-sm font-semibold text-amber-600"
             >
-              {index === 0 ? '🏆 Campeão' : index === 1 ? '🥈 Vice-campeão' : '🥉 Terceiro lugar'}
+              {index === 0 ? '🏆' : index === 1 ? '🥈' : '🥉'}
             </motion.span>
           )}
         </div>
@@ -473,7 +473,6 @@ export default function RankingPage() {
       
       if (configRes.data.gamificacaoAtiva) {
         const rankingRes = await api.get<RankingUser[]>(`/usuario/ranking?t=${timestamp}`);
-        // CORREÇÃO: Garantir que os IDs sejam strings
         const rankingData = rankingRes.data.map(user => ({
           ...user,
           id: user.id.toString() // Converter para string
@@ -516,7 +515,7 @@ export default function RankingPage() {
             className="text-center mb-12"
           >
             <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
-              🏆 Ranking de Contribuidores
+              Ranking de usuários
             </h1>
             <p className="text-xl text-amber-700 max-w-2xl mx-auto">
               Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.
@@ -534,7 +533,7 @@ export default function RankingPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
-              🏆 Ranking de Contribuidores
+              Ranking de Contribuidores
             </h1>
           </div>
           <motion.div 
@@ -542,7 +541,7 @@ export default function RankingPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl shadow-xl border border-amber-200 p-12 text-center"
           >
-            <div className="text-8xl mb-6">❌</div>
+            <div className="text-8xl mb-6"></div>
             <h2 className="text-3xl font-bold text-amber-800 mb-4">Erro ao Carregar</h2>
             <p className="text-amber-700 text-lg mb-8 max-w-md mx-auto">{error}</p>
             <motion.button
@@ -565,7 +564,7 @@ export default function RankingPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
-              🏆 Ranking de Contribuidores
+              Ranking de Contribuidores
             </h1>
           </div>
           <motion.div 
@@ -585,8 +584,7 @@ export default function RankingPage() {
             </motion.div>
             <h2 className="text-3xl font-bold text-amber-800 mb-4">Gamificação Desativada</h2>
             <p className="text-amber-700 text-lg mb-8 max-w-md mx-auto">
-              O sistema de ranking está temporariamente desativado. 
-              Entre em contato com o administrador para mais informações.
+              Erro
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -613,7 +611,7 @@ export default function RankingPage() {
             className="text-center mb-12"
           >
             <h1 className="text-5xl font-black bg-gradient-to-r from-amber-700 to-amber-600 bg-clip-text text-transparent mb-4">
-              🏆 Ranking de Contribuidores
+              Ranking de Contribuidores
             </h1>
             <p className="text-xl text-amber-700 max-w-2xl mx-auto leading-relaxed">
               Obrigado a todos que ajudam a nossa causa! Estes são os nossos maiores heróis.

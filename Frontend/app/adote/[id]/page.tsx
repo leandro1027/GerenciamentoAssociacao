@@ -102,8 +102,7 @@ const OtherAnimalCard = ({ animal }: { animal: Animal }) => (
     <Link href={`/adote/${animal.id}`} className="group block space-y-2">
         <div className="aspect-square rounded-xl overflow-hidden shadow-md">
             <img
-                // src={animal.animalImageUrl ? `${api.defaults.baseURL}${animal.animalImageUrl}` : '...'} // <-- 2. CÓDIGO ANTIGO REMOVIDO
-                src={buildImageUrl(animal.animalImageUrl)} // <-- 3. USANDO buildImageUrl AQUI
+                src={buildImageUrl(animal.animalImageUrl)}
                 alt={animal.nome}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 onError={(e) => { e.currentTarget.src = 'https://placehold.co/300x300/e2e8f0/cbd5e0?text=Sem+Foto' }}
@@ -112,8 +111,6 @@ const OtherAnimalCard = ({ animal }: { animal: Animal }) => (
         <h3 className="font-bold text-base text-gray-800 group-hover:text-amber-800 transition-colors">{animal.nome}</h3>
     </Link>
 );
-
-// --- Componente de Skeleton Loader (simplificado) ---
 const AnimalDetailSkeleton = () => (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 animate-pulse">
         <div className="h-5 w-48 bg-gray-200 rounded-md mb-8"></div>
@@ -211,7 +208,7 @@ export default function AnimalDetailPage() {
 
     const handleOpenAdoptionModal = () => {
         if (!isAuthenticated) {
-            toast.error('Você precisa estar logado para solicitar uma adoção.');
+            toast.error('Você precisa estar logado para adotar.');
             router.push('/login');
             return;
         }
