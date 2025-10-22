@@ -20,11 +20,13 @@ import { ConfiguracaoModule } from './configuracao/configuracao.module';
 import { AnimaisComunitariosModule } from './animais-comunitarios/animais-comunitarios.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
 import { UploadModule } from './uploads-s3/upload.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     UsuarioModule,
     VoluntarioModule,

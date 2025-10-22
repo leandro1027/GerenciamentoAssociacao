@@ -259,6 +259,27 @@ export class GamificacaoService {
     return config?.gamificacaoAtiva ?? false;
   }
 
+  async resetarRankingGeral(): Promise<void> {
+    this.logger.log('INICIANDO RESET MENSAL DO RANKING...');
+    
+    try {
+      // Usamos updateMany para atualizar todos os usuários de uma vez
+      const { count } = await this.prisma.usuario.updateMany({
+        where: {
+          pontos: { gt: 0 } // Apenas atualiza quem tem pontos (otimização)
+        },
+        data: {
+          pontos: 0 // Zera a pontuação
+        },
+      });
+
+      this.logger.log(`RESET MENSAL CONCLUÍDO: ${count} usuários tiveram seus pontos zerados.`);
+
+    } catch (error) {
+      this.logger.error('Falha crítica ao tentar resetar o ranking mensal.', error.stack);
+    }
+  }
+
   // ===================================================================
   // MÉTODOS DE GESTÃO DE CONQUISTAS (CRUD para Admins)
   // ===================================================================
