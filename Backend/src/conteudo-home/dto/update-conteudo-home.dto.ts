@@ -1,9 +1,14 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateConteudoHomeDto } from './create-conteudo-home.dto';
+import { IsString, IsOptional, IsJSON } from 'class-validator';
 
 export class UpdateConteudoHomeDto {
-    titulo: string;
-    subtitulo: string;
-    itens: string;
-}
+  @IsString()
+  @IsOptional() 
+  titulo?: string;
 
+  @IsString()
+  @IsOptional()
+  subtitulo?: string;
+
+  @IsOptional()
+  itens?: string; 
+}

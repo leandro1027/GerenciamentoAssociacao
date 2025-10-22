@@ -8,8 +8,6 @@ import { UpdateConteudoHomeDto } from './dto/update-conteudo-home.dto';
 import { UploadsService } from 'src/uploads-s3/upload.service';
 
 
-// REMOVIDO: 'diskStorage' e 'extname' não são mais necessários aqui
-
 @Controller('conteudo-home')
 export class ConteudoHomeController {
   constructor(
