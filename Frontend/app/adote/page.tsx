@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-import { Animal, Especie, Sexo, Porte } from '../../types';
+import { Animal, Especie, Sexo, Porte } from '../../types'; // Certifique-se que Animal tem isFromDivulgacao
 import { useDebounce } from 'use-debounce';
 import Link from 'next/link';
 import { buildImageUrl } from '@/utils/helpers';
+import Image from 'next/image'; // Import necessário para a logo
 
 // --- Ícone ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -32,42 +33,77 @@ const FilterPill = ({ label, value, activeValue, onClick }: { label: string, val
   );
 };
 
-// --- Card de animal ---
-const AnimalCard = ({ animal }: { animal: Animal }) => (
-  <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all">
-    <div className="relative overflow-hidden">
-      <img
-        src={buildImageUrl(animal.animalImageUrl)}
-        alt={`Foto de ${animal.nome}`}
-        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-        onError={(e) => {
-           e.currentTarget.src = 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
-           e.currentTarget.alt = 'Imagem indisponível';
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-      <div className="absolute bottom-4 left-4">
-        <h3 className="text-xl font-bold text-white drop-shadow">{animal.nome}</h3>
-        <p className="text-sm text-gray-200">{animal.raca}</p>
-      </div>
-    </div>
-    <div className="p-4">
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="flex items-center bg-amber-50 text-amber-800 px-2 py-1 rounded-full font-medium">
-          {animal.sexo}
-        </span>
-        <span className="flex items-center bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">
-          {animal.porte}
-        </span>
-      </div>
-      <div className="mt-4">
-        <span className="inline-block w-full text-center bg-amber-800 text-white font-semibold px-4 py-2 rounded-lg group-hover:bg-amber-900 transition-colors">
-          Ver Detalhes
-        </span>
-      </div>
-    </div>
-  </Link>
-);
+// --- Card de animal (ATUALIZADO NA PÁGINA ADOTE) ---
+const AnimalCard = ({ animal }: { animal: Animal }) => {
+    const imageUrl = buildImageUrl(animal.animalImageUrl);
+    const originouDeDivulgacao = animal.isFromDivulgacao === true;
+
+    return (
+        <Link href={`/adote/${animal.id}`} className="group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+            <div className="relative h-56 overflow-hidden">
+                <img
+                    src={imageUrl}
+                    alt={`Foto de ${animal.nome}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/400x400/e2e8f0/cbd5e0?text=Sem+Foto';
+                        e.currentTarget.alt = 'Imagem indisponível';
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                {/* --- ALTERAÇÃO AQUI: Mostra selo ou logo na mesma posição --- */}
+                {originouDeDivulgacao ? (
+                  <span className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full shadow z-10">
+                    Divulgado
+                  </span>
+                ) : (
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white p-1 shadow z-10">
+                    <Image
+                      src="/logo.png" // Verifique o caminho
+                      alt="Logo da Associação"
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                 {/* --- FIM DA ALTERAÇÃO --- */}
+
+                <div className="absolute bottom-4 left-4">
+                    <h3 className="text-xl font-bold text-white drop-shadow">{animal.nome}</h3>
+                    <p className="text-sm text-gray-200">{animal.raca}</p>
+                </div>
+            </div>
+            <div className="p-4">
+                <div className="flex flex-wrap gap-2 text-xs mb-3">
+                    <span className="flex items-center bg-amber-50 text-amber-800 px-2 py-1 rounded-full font-medium">
+                        {animal.sexo}
+                    </span>
+                    <span className="flex items-center bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">
+                        {animal.porte}
+                    </span>
+                    {/* Tags de origem adicionadas aqui para contexto */}
+                    {originouDeDivulgacao ? (
+                        <span className="flex items-center bg-blue-50 text-blue-800 px-2 py-1 rounded-full font-medium">
+                            Comunidade
+                        </span>
+                    ) : (
+                         <span className="flex items-center bg-green-50 text-green-800 px-2 py-1 rounded-full font-medium">
+                            Associação
+                        </span>
+                    )}
+                </div>
+                <div className="mt-4">
+                    <span className="inline-block w-full text-center bg-amber-800 text-white font-semibold px-4 py-2 rounded-lg group-hover:bg-amber-900 transition-colors">
+                        Ver Detalhes
+                    </span>
+                </div>
+            </div>
+        </Link>
+    );
+};
+
 
 export default function AdotePage() {
   const [animais, setAnimais] = useState<Animal[]>([]);
@@ -91,11 +127,12 @@ export default function AdotePage() {
       if (porte) params.append('porte', porte);
 
       const res = await api.get<Animal[]>(`/animais?${params.toString()}`);
-      setAnimais(res.data);
+      setAnimais(Array.isArray(res.data) ? res.data : []); // Garante que é array
       setError(null); // Limpa o erro em caso de sucesso
     } catch (err) {
       console.error("Erro ao buscar animais:", err);
       setError('Não foi possível carregar os animais.');
+      setAnimais([]); // Limpa animais em caso de erro
     } finally {
       setLoading(false);
     }
@@ -110,6 +147,7 @@ export default function AdotePage() {
     setEspecie('');
     setSexo('');
     setPorte('');
+    // A busca será refeita automaticamente pelo useEffect dependente dos filtros
   };
 
   return (
@@ -188,7 +226,12 @@ export default function AdotePage() {
         </div>
 
         {/* lista de animais */}
-        {loading && <p className="text-center py-16 text-gray-500 font-medium">Carregando...</p>}
+        {loading && (
+            <div className="text-center py-16">
+                <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500 font-medium">Carregando...</p>
+            </div>
+        )}
         {error && <p className="text-center py-16 text-red-600 font-medium">{error}</p>}
         {!loading && !error && (
           animais.length > 0 ? (
@@ -209,3 +252,4 @@ export default function AdotePage() {
     </main>
   );
 }
+
