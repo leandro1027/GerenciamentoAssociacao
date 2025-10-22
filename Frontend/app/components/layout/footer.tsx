@@ -140,7 +140,7 @@ const Footer = () => {
             <p className="text-amber-300 text-xs">
               Desenvolvido por{' '}
               <a 
-                href="https://leandrobalaban.com" 
+                href="https://www.linkedin.com/in/leandro-balaban-822958283/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-amber-200 hover:text-amber-50 transition-colors font-medium"
