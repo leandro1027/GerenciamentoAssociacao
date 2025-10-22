@@ -34,7 +34,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }: { is
 };
 
 // TIPO PARA CONTROLAR A VISTA ATIVA
-type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'membros' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes' | 'animaisComunitarios';
+type AdminView = 'dashboard' | 'slides' | 'voluntarios' | 'usuários' | 'doacoes' | 'animais' | 'adocoes' | 'divulgacoes' | 'conteudo' | 'relatórios' | 'configuracoes' | 'animaisComunitarios';
 
 // --- TIPOS ADICIONAIS PARA O DASHBOARD DINÂMICO ---
 type WeeklyActivity = {
@@ -158,7 +158,7 @@ const Dashboard = ({
           description="Animais aguardando um novo lar."
         />
         <StatCard
-          title="Total de Membros"
+          title="Total de usuários"
           value={stats.totalMembros}
           icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-amber-800" />}
           description="Usuários registados na plataforma."
@@ -2063,9 +2063,9 @@ const Sidebar = () => (
         />
         <NavItem 
           icon={<Users className="w-5 h-5" />}
-          label="Membros"
-          active={activeView === 'membros'}
-          onClick={() => { setActiveView('membros'); setIsSidebarOpen(false); }}
+          label="Usuários"
+          active={activeView === 'usuários'}
+          onClick={() => { setActiveView('usuários'); setIsSidebarOpen(false); }}
         />
 
         <NavSection title="Financeiro" />
@@ -2137,7 +2137,7 @@ const MainContent = () => {
     animais: 'Gestão de Animais para Adoção',
     adocoes: 'Gestão de Pedidos de Adoção',
     voluntarios: 'Gestão de Voluntários',
-    membros: 'Membros Registados',
+    usuários: 'Usuários Registados',
     doacoes: 'Histórico de Doações',
     divulgacoes: 'Gestão de Divulgações da Comunidade',
     conteudo: 'Gestão de Conteúdo e Parceiros',
@@ -2171,7 +2171,7 @@ const MainContent = () => {
                   {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
                   {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
                   {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
-                  {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
+                  {activeView === 'usuários' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}
                   {activeView === 'doacoes' && <DonationManager initialDonations={doacoes} />}
                   {activeView === 'conteudo' && <ConteudoManager />}
                   {activeView === 'relatórios' && <ReportsManager />}
