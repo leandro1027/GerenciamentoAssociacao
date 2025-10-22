@@ -290,8 +290,8 @@ const Navbar = () => {
                <div className="flex items-center space-x-3">
                  <Link 
                    href="/login" 
-                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-300"
-                 >
+                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+>
                    <User className="w-4 h-4" />
                    Entrar
                  </Link>
