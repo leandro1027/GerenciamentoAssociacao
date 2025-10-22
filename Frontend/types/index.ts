@@ -131,6 +131,7 @@ export interface Adocao {
   animalId: string;
   animal?: Animal;
   usuario?: Usuario;
+createdAt?: Date | string;
 }
 
 export enum DivulgacaoStatus {
