@@ -56,6 +56,7 @@ const Navbar = () => {
     { href: "/voluntario", label: "Quero Ajudar" },
     { href: "/doacoes", label: "Quero Doar" },
     { href: "/adote", label: "Quero Adotar" },
+    { href: "/divulgar-animal", label: "Quero divulgar" },
     { href: "/quem-somos", label: "Quem Somos" },
     { href: "/comunitarios", label: "Animais Comunitários" },
   ];
@@ -247,14 +248,6 @@ const Navbar = () => {
                  
                  {isDropdownOpen && (
                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl py-3 z-20 border border-amber-100 backdrop-blur-sm animate-fade-in">
-                     <div className="px-4 py-3 border-b border-amber-100">
-                       <p className="font-semibold text-gray-800">{user?.nome}</p>
-                       <p className="text-sm text-gray-500">{user?.email}</p>
-                       <div className="flex items-center gap-2 mt-1">
-                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                         <p className="text-xs text-gray-500">Online</p>
-                       </div>
-                     </div>
                      <Link 
                        href="/perfil" 
                        onClick={() => setIsDropdownOpen(false)}

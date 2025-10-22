@@ -5,7 +5,7 @@ import api from '../services/api';
 import { Animal, Especie, Sexo, Porte } from '../../types';
 import { useDebounce } from 'use-debounce';
 import Link from 'next/link';
-import { buildImageUrl } from '@/utils/helpers'; // <-- 1. IMPORTADO AQUI
+import { buildImageUrl } from '@/utils/helpers';
 
 // --- Ícone ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
