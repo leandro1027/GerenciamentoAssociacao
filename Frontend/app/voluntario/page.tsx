@@ -21,7 +21,6 @@ const Icon = ({ path, className = "w-12 h-12" }: { path: string, className?: str
 const LoadingSpinner = () => (
     <div className="flex flex-col items-center justify-center text-center">
         <div className="w-10 h-10 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
-        <p className="mt-3 text-gray-600">A verificar o seu estado...</p>
     </div>
 );
 
@@ -60,7 +59,6 @@ export default function VoluntarioPage() {
       };
       checkStatus();
     } else if (isAuthenticated === true && !user) {
-        // Aguardando o objeto 'user' carregar
         setIsCheckingStatus(true);
     } else {
         setIsCheckingStatus(false);
@@ -104,7 +102,7 @@ export default function VoluntarioPage() {
           icon: "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z",
           color: "amber",
           title: "Candidatura em Análise",
-          message: "A sua candidatura foi recebida e está a ser analisada pela nossa equipa. Entraremos em contacto em breve!",
+          message: "A sua candidatura foi recebida e sera analisada pela nossa equipa. Entraremos em contato em breve!",
         },
         aprovado: {
           icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -142,13 +140,6 @@ export default function VoluntarioPage() {
           <p className="mt-2 text-gray-600">Junte-se a nós e faça a diferença. Preencha a sua candidatura abaixo.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 pt-6">
-          <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">Candidatando-se como:</label>
-            <div className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg">
-              <p className="font-semibold text-gray-800">{user?.nome}</p>
-              <p className="text-sm text-gray-500">{user?.email}</p>
-            </div>
-          </div>
           <div>
             <label htmlFor="motivo" className="block mb-2 text-sm font-medium text-gray-700">Por que você quer ser voluntário?</label>
             <Textarea
