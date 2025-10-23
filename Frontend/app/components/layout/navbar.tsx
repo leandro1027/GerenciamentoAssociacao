@@ -8,8 +8,7 @@ import { usePathname } from 'next/navigation';
 import api from '@/app/services/api';
 import { User, LogOut, Settings, PawPrint, Trophy } from 'lucide-react';
 import { Voluntario, StatusVoluntario } from '../../../types';
-import { buildImageUrl } from '@/utils/helpers'; // Assumindo que buildImageUrl está em utils
-
+import { buildImageUrl } from '@/utils/helpers';
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const pathname = usePathname();
@@ -21,15 +20,13 @@ const Navbar = () => {
   const [volunteerStatus, setVolunteerStatus] = useState<StatusVoluntario | null>(null); // <-- NOVO ESTADO
 
   const navLinks = [
-    // Removido o link fixo daqui, será adicionado condicionalmente
-    // { href: "/voluntario", label: "Quero Ajudar" },
+
     { href: "/doacoes", label: "Quero Doar" },
     { href: "/adote", label: "Quero Adotar" },
     { href: "/quem-somos", label: "Quem Somos" },
     { href: "/comunitarios", label: "Animais Comunitários" },
   ];
 
-  // --- NOVO useEffect para buscar status do voluntário ---
   useEffect(() => {
     const fetchVolunteerStatus = async () => {
       if (isAuthenticated && user) { // Só busca se estiver logado
@@ -53,8 +50,7 @@ const Navbar = () => {
       }
     };
     fetchVolunteerStatus();
-  }, [isAuthenticated, user]); // Depende do estado de autenticação e do usuário
-  // --- FIM NOVO useEffect ---
+  }, [isAuthenticated, user]);-
 
   useEffect(() => {
     const fetchGamificacaoStatus = async () => {
@@ -100,15 +96,11 @@ const Navbar = () => {
 
   if (pathname.startsWith('/painel-admin')) return null;
 
-  // --- LÓGICA DE RENDERIZAÇÃO DOS LINKS ATUALIZADA ---
   const renderNavLinks = (isMobile = false) => {
-    // --- CORREÇÃO AQUI ---
-    // Adiciona o link "Quero Ajudar" apenas se o status NÃO for 'aprovado' (string literal)
+    // Adiciona o link "Quero Ajudar" apenas se o status NÃO for 'aprovado'
     const linksParaMostrar = volunteerStatus !== 'aprovado'
       ? [{ href: "/voluntario", label: "Quero Ajudar" }, ...navLinks]
       : navLinks;
-    // --- FIM DA CORREÇÃO ---
-
     return linksParaMostrar.map(link => {
       const isActive = pathname === link.href;
       const baseStyle = "flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300";
@@ -131,7 +123,6 @@ const Navbar = () => {
       );
     });
   }
-  // --- FIM DA ATUALIZAÇÃO ---
 
   const renderRankingLink = (isMobile = false) => {
     if (!isGamificacaoAtiva) return null;
@@ -200,11 +191,10 @@ const Navbar = () => {
 
           {/* Ações e Autenticação (Direita) */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Link do Painel Admin agora AGRUPADO aqui */}
             {isAuthenticated && user?.role === "ADMIN" && (
               <Link
                 href="/painel-admin"
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" // Adicionado focus styles
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
               >
                 <Settings className="w-4 h-4" />
                 Painel Admin
@@ -215,7 +205,7 @@ const Navbar = () => {
               <div className="relative" ref={dropdownRef}>
                    <button
                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                     className="flex items-center gap-3 text-gray-700 text-sm font-medium p-2 rounded-2xl hover:bg-amber-50 hover:text-amber-700 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" // Adicionado focus styles
+                     className="flex items-center gap-3 text-gray-700 text-sm font-medium p-2 rounded-2xl hover:bg-amber-50 hover:text-amber-700 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" 
                      aria-haspopup="true"
                      aria-expanded={isDropdownOpen}
                    >
@@ -253,14 +243,6 @@ const Navbar = () => {
 
                    {isDropdownOpen && (
                      <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl py-3 z-20 border border-amber-100 backdrop-blur-sm animate-fade-in">
-                       <div className="px-4 py-3 border-b border-amber-100">
-                         <p className="font-semibold text-gray-800">{user?.nome}</p>
-                         <p className="text-sm text-gray-500">{user?.email}</p>
-                         <div className="flex items-center gap-2 mt-1">
-                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                           <p className="text-xs text-gray-500">Online</p>
-                         </div>
-                       </div>
                        <Link
                          href="/perfil"
                          onClick={() => setIsDropdownOpen(false)}
@@ -303,7 +285,7 @@ const Navbar = () => {
                    </Link>
                    <Link
                      href="/cadastro"
-                     className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2" // Adicionado focus styles
+                     className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2" 
                    >
                      <PawPrint className="w-4 h-4" />
                      Cadastrar
@@ -319,7 +301,7 @@ const Navbar = () => {
               type="button"
               aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={isMobileMenuOpen}
-              className="bg-white inline-flex items-center justify-center p-3 rounded-2xl text-gray-600 hover:text-amber-700 hover:bg-amber-50 transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500" // Adicionado focus styles
+              className="bg-white inline-flex items-center justify-center p-3 rounded-2xl text-gray-600 hover:text-amber-700 hover:bg-amber-50 transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500"
             >
               {isMobileMenuOpen ? (
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,7 +319,7 @@ const Navbar = () => {
 
       {/* Painel Mobile */}
       {isMobileMenuOpen && (
-          <div className="lg:hidden animate-slide-in-top bg-white/95 backdrop-blur-sm border-t border-amber-100 shadow-2xl absolute w-full left-0 top-full"> {/* Adicionado absolute e posicionamento */}
+          <div className="lg:hidden animate-slide-in-top bg-white/95 backdrop-blur-sm border-t border-amber-100 shadow-2xl absolute w-full left-0 top-full"> 
             <div className="px-4 pt-4 pb-3 space-y-1">
               {renderNavLinks(true)}
               {renderRankingLink(true)}
