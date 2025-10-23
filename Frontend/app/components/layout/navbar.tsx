@@ -7,41 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import api from '@/app/services/api';
 import { User, LogOut, Settings, PawPrint, Trophy } from 'lucide-react';
-
-// --- FUNÇÃO PARA CONSTRUIR URLS DO R2 ---
-const buildImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) {
-    return 'https://via.placeholder.com/150/4a5568/ffffff?text=Sem+Imagem';
-  }
-  
-  // Se já for uma URL completa do R2, retorna como está
-  if (imagePath.includes('r2.dev')) {
-    return imagePath;
-  }
-  
-  // Se for uma URL do backend (localhost ou render), extrai o nome do arquivo
-  if (imagePath.includes('localhost') || imagePath.includes('render.com')) {
-    const fileName = imagePath.split('/').pop(); // pega o nome do arquivo
-    if (fileName) {
-      const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-      return r2Domain ? `${r2Domain}/${fileName}` : `https://via.placeholder.com/150/4a5568/ffffff?text=Erro+R2`;
-    }
-  }
-  
-  // Se for apenas um nome de arquivo (UUID.jpg), constrói URL do R2
-  if (/^[a-f0-9-]+\.(jpg|jpeg|png|webp|gif)$/i.test(imagePath)) {
-    const r2Domain = process.env.NEXT_PUBLIC_R2_PUBLIC_DOMAIN;
-    if (r2Domain) {
-      return `${r2Domain}/${imagePath}`;
-    } else {
-      console.error('NEXT_PUBLIC_R2_PUBLIC_DOMAIN não está definido');
-      return 'https://via.placeholder.com/150/4a5568/ffffff?text=Erro+Config';
-    }
-  }
-  
-  // Fallback: retorna como está
-  return imagePath;
-};
+import { Voluntario, StatusVoluntario } from '../../../types';
+import { buildImageUrl } from '@/utils/helpers'; // Assumindo que buildImageUrl está em utils
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -51,15 +18,43 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isGamificacaoAtiva, setIsGamificacaoAtiva] = useState(false);
+  const [volunteerStatus, setVolunteerStatus] = useState<StatusVoluntario | null>(null); // <-- NOVO ESTADO
 
   const navLinks = [
-    { href: "/voluntario", label: "Quero Ajudar" },
+    // Removido o link fixo daqui, será adicionado condicionalmente
+    // { href: "/voluntario", label: "Quero Ajudar" },
     { href: "/doacoes", label: "Quero Doar" },
     { href: "/adote", label: "Quero Adotar" },
-    { href: "/divulgar-animal", label: "Quero divulgar" },
     { href: "/quem-somos", label: "Quem Somos" },
     { href: "/comunitarios", label: "Animais Comunitários" },
   ];
+
+  // --- NOVO useEffect para buscar status do voluntário ---
+  useEffect(() => {
+    const fetchVolunteerStatus = async () => {
+      if (isAuthenticated && user) { // Só busca se estiver logado
+        try {
+          // Usa o endpoint que retorna o status do voluntário logado
+          const { data } = await api.get<Voluntario | null>('/voluntario/meu-status');
+          if (data && data.status) {
+            setVolunteerStatus(data.status);
+          } else {
+            setVolunteerStatus(null); // Usuário não tem registro de voluntário
+          }
+        } catch (error: any) {
+          // Trata erro 404 (não encontrado) como status nulo, outros erros loga
+          if (error.response?.status !== 404) {
+             console.error("Falha ao buscar status de voluntário:", error);
+          }
+          setVolunteerStatus(null);
+        }
+      } else {
+        setVolunteerStatus(null); // Reseta se deslogar
+      }
+    };
+    fetchVolunteerStatus();
+  }, [isAuthenticated, user]); // Depende do estado de autenticação e do usuário
+  // --- FIM NOVO useEffect ---
 
   useEffect(() => {
     const fetchGamificacaoStatus = async () => {
@@ -105,8 +100,16 @@ const Navbar = () => {
 
   if (pathname.startsWith('/painel-admin')) return null;
 
-  const renderNavLinks = (isMobile = false) =>
-    navLinks.map(link => {
+  // --- LÓGICA DE RENDERIZAÇÃO DOS LINKS ATUALIZADA ---
+  const renderNavLinks = (isMobile = false) => {
+    // --- CORREÇÃO AQUI ---
+    // Adiciona o link "Quero Ajudar" apenas se o status NÃO for 'aprovado' (string literal)
+    const linksParaMostrar = volunteerStatus !== 'aprovado'
+      ? [{ href: "/voluntario", label: "Quero Ajudar" }, ...navLinks]
+      : navLinks;
+    // --- FIM DA CORREÇÃO ---
+
+    return linksParaMostrar.map(link => {
       const isActive = pathname === link.href;
       const baseStyle = "flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300";
       const desktopStyle = isActive
@@ -115,19 +118,21 @@ const Navbar = () => {
       const mobileStyle = isActive
         ? "bg-amber-100 text-amber-700 border-l-4 border-amber-500"
         : "text-gray-700 hover:bg-amber-50 hover:text-amber-700";
-      
+
       return (
         <Link
           key={link.href}
           href={link.href}
           className={`${baseStyle} ${isMobile ? mobileStyle : desktopStyle} ${isMobile ? "text-base" : "text-sm"}`}
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={() => isMobile && setIsMobileMenuOpen(false)} // Fecha no mobile
         >
           {link.label}
         </Link>
       );
     });
-  
+  }
+  // --- FIM DA ATUALIZAÇÃO ---
+
   const renderRankingLink = (isMobile = false) => {
     if (!isGamificacaoAtiva) return null;
 
@@ -199,7 +204,7 @@ const Navbar = () => {
             {isAuthenticated && user?.role === "ADMIN" && (
               <Link
                 href="/painel-admin"
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:text-amber-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" // Adicionado focus styles
               >
                 <Settings className="w-4 h-4" />
                 Painel Admin
@@ -208,95 +213,103 @@ const Navbar = () => {
 
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
-                 <button
-                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                   className="flex items-center gap-3 text-gray-700 text-sm font-medium p-2 rounded-2xl hover:bg-amber-50 hover:text-amber-700 transition-all duration-300 group"
-                   aria-haspopup="true"
-                   aria-expanded={isDropdownOpen}
-                 >
-                   <div className="relative">
-                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
-                       {user?.profileImageUrl ? (
-                         // CORREÇÃO: Usar buildImageUrl para o avatar
-                         <img 
-                           src={buildImageUrl(user.profileImageUrl)} 
-                           alt="Avatar" 
-                           className="w-full h-full object-cover" 
-                         />
-                       ) : (
-                         <span className="text-white font-bold text-sm">
-                           {user?.nome?.[0]?.toUpperCase() || "U"}
-                         </span>
-                       )}
-                     </div>
-                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                   </div>
-                   <div className="text-left">
-                     <p className="font-semibold text-gray-800 group-hover:text-amber-700">
-                       {user?.nome?.split(' ')[0]}
-                     </p>
-                   </div>
-                   <svg 
-                     className={`w-4 h-4 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                     fill="none" 
-                     stroke="currentColor" 
-                     viewBox="0 0 24 24"
+                   <button
+                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                     className="flex items-center gap-3 text-gray-700 text-sm font-medium p-2 rounded-2xl hover:bg-amber-50 hover:text-amber-700 transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2" // Adicionado focus styles
+                     aria-haspopup="true"
+                     aria-expanded={isDropdownOpen}
                    >
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                   </svg>
-                 </button>
-                 
-                 {isDropdownOpen && (
-                   <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl py-3 z-20 border border-amber-100 backdrop-blur-sm animate-fade-in">
-                     <Link 
-                       href="/perfil" 
-                       onClick={() => setIsDropdownOpen(false)}
-                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-amber-50 transition-colors group"
+                     <div className="relative">
+                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
+                         {user?.profileImageUrl ? (
+                           <img
+                             src={buildImageUrl(user.profileImageUrl)}
+                             alt="Avatar"
+                             className="w-full h-full object-cover"
+                             onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.nome || 'U')}&background=f59e0b&color=fff`; }} // Fallback
+                           />
+                         ) : (
+                           <span className="text-white font-bold text-sm">
+                             {user?.nome?.[0]?.toUpperCase() || "U"}
+                           </span>
+                         )}
+                       </div>
+                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                     </div>
+                     <div className="text-left">
+                       <p className="font-semibold text-gray-800 group-hover:text-amber-700">
+                         {user?.nome?.split(' ')[0]}
+                       </p>
+                     </div>
+                     <svg
+                       className={`w-4 h-4 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24"
                      >
-                       <User className="w-4 h-4 text-amber-600" />
-                       <span>Meu Perfil</span>
-                     </Link>
-                     {user?.role === "ADMIN" && (
-                       <Link 
-                         href="/painel-admin" 
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                     </svg>
+                   </button>
+
+                   {isDropdownOpen && (
+                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl py-3 z-20 border border-amber-100 backdrop-blur-sm animate-fade-in">
+                       <div className="px-4 py-3 border-b border-amber-100">
+                         <p className="font-semibold text-gray-800">{user?.nome}</p>
+                         <p className="text-sm text-gray-500">{user?.email}</p>
+                         <div className="flex items-center gap-2 mt-1">
+                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                           <p className="text-xs text-gray-500">Online</p>
+                         </div>
+                       </div>
+                       <Link
+                         href="/perfil"
                          onClick={() => setIsDropdownOpen(false)}
-                         className="flex items-center gap-3 px-4 py-3 text-amber-700 hover:bg-amber-50 transition-colors group"
+                         className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-amber-50 transition-colors group"
                        >
-                         <Settings className="w-4 h-4 text-amber-600" />
-                         <span>Painel Admin</span>
+                         <User className="w-4 h-4 text-amber-600" />
+                         <span>Meu Perfil</span>
                        </Link>
-                     )}
-                     <button 
-                       onClick={() => {
-                         logout();
-                         setIsDropdownOpen(false);
-                       }} 
-                       className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 transition-colors group"
-                     >
-                       <LogOut className="w-4 h-4 text-red-500" />
-                       <span>Sair</span>
-                     </button>
-                   </div>
-                 )}
-              </div>
+                       {user?.role === "ADMIN" && (
+                         <Link
+                           href="/painel-admin"
+                           onClick={() => setIsDropdownOpen(false)}
+                           className="flex items-center gap-3 px-4 py-3 text-amber-700 hover:bg-amber-50 transition-colors group"
+                         >
+                           <Settings className="w-4 h-4 text-amber-600" />
+                           <span>Painel Admin</span>
+                         </Link>
+                       )}
+                       <button
+                         onClick={() => {
+                           logout();
+                           setIsDropdownOpen(false);
+                         }}
+                         className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 transition-colors group"
+                       >
+                         <LogOut className="w-4 h-4 text-red-500" />
+                         <span>Sair</span>
+                       </button>
+                     </div>
+                   )}
+                 </div>
             ) : (
-               <div className="flex items-center space-x-3">
-                 <Link 
-                   href="/login" 
-                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
->
-                   <User className="w-4 h-4" />
-                   Entrar
-                 </Link>
-                 <Link 
-                   href="/cadastro" 
-                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                 >
-                   <PawPrint className="w-4 h-4" />
-                   Cadastrar
-                 </Link>
-               </div>
-             )}
+                 <div className="flex items-center space-x-3">
+                   <Link
+                     href="/login"
+                     className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2" // Adicionado focus styles
+                   >
+                     <User className="w-4 h-4" />
+                     Entrar
+                   </Link>
+                   <Link
+                     href="/cadastro"
+                     className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2" // Adicionado focus styles
+                   >
+                     <PawPrint className="w-4 h-4" />
+                     Cadastrar
+                   </Link>
+                 </div>
+               )}
           </div>
 
           {/* Menu Mobile Button */}
@@ -306,7 +319,7 @@ const Navbar = () => {
               type="button"
               aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
               aria-expanded={isMobileMenuOpen}
-              className="bg-white inline-flex items-center justify-center p-3 rounded-2xl text-gray-600 hover:text-amber-700 hover:bg-amber-50 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="bg-white inline-flex items-center justify-center p-3 rounded-2xl text-gray-600 hover:text-amber-700 hover:bg-amber-50 transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500" // Adicionado focus styles
             >
               {isMobileMenuOpen ? (
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,80 +334,80 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Painel Mobile */}
       {isMobileMenuOpen && (
-         <div className="lg:hidden animate-slide-in-top bg-white/95 backdrop-blur-sm border-t border-amber-100 shadow-2xl">
-           <div className="px-4 pt-4 pb-3 space-y-1">
-             {renderNavLinks(true)}
-             {renderRankingLink(true)}
-             {isAuthenticated && user?.role === "ADMIN" && (
-               <Link
-                 href="/painel-admin"
-                 onClick={() => setIsMobileMenuOpen(false)}
-                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
-               >
-                 <Settings className="w-4 h-4" />
-                 Painel Admin
-               </Link>
-             )}
-           </div>
-           
-           <div className="pt-4 pb-6 border-t border-amber-100">
-             {isAuthenticated ? (
-               <div className="px-4 space-y-2">
-                 <div className="px-4 py-3 bg-amber-50 rounded-xl mb-2">
-                   <p className="font-semibold text-gray-800">{user?.nome}</p>
-                   <p className="text-sm text-gray-500">{user?.email}</p>
-                   <div className="flex items-center gap-2 mt-1">
-                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                     <span className="text-xs text-gray-500">Online</span>
-                   </div>
-                 </div>
-                 
-                 <Link
-                   href="/perfil"
-                   onClick={() => setIsMobileMenuOpen(false)}
-                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-amber-50 transition-colors"
-                 >
-                   <User className="w-4 h-4 text-amber-600" />
-                   Meu Perfil
-                 </Link>
-                 
-                 <button
-                   onClick={() => {
-                     logout();
-                     setIsMobileMenuOpen(false);
-                   }}
-                   className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
-                 >
-                   <LogOut className="w-4 h-4 text-red-500" />
-                   Sair
-                 </button>
-               </div>
-             ) : (
-               <div className="px-4 space-y-3">
-                 <Link
-                   href="/login"
-                   onClick={() => setIsMobileMenuOpen(false)}
-                   className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-base font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 transition-colors"
-                 >
-                   <User className="w-4 h-4" />
-                   Fazer Login
-                 </Link>
-                 <Link
-                   href="/cadastro"
-                   onClick={() => setIsMobileMenuOpen(false)}
-                   className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg transition-colors"
-                 >
-                   <PawPrint className="w-4 h-4" />
-                   Criar Conta
-                 </Link>
-               </div>
-             )}
-           </div>
-         </div>
-       )}
+          <div className="lg:hidden animate-slide-in-top bg-white/95 backdrop-blur-sm border-t border-amber-100 shadow-2xl absolute w-full left-0 top-full"> {/* Adicionado absolute e posicionamento */}
+            <div className="px-4 pt-4 pb-3 space-y-1">
+              {renderNavLinks(true)}
+              {renderRankingLink(true)}
+              {isAuthenticated && user?.role === "ADMIN" && (
+                <Link
+                  href="/painel-admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Painel Admin
+                </Link>
+              )}
+            </div>
+
+            <div className="pt-4 pb-6 border-t border-amber-100">
+              {isAuthenticated ? (
+                <div className="px-4 space-y-2">
+                  <div className="px-4 py-3 bg-amber-50 rounded-xl mb-2">
+                    <p className="font-semibold text-gray-800">{user?.nome}</p>
+                    <p className="text-sm text-gray-500">{user?.email}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-gray-500">Online</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/perfil"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-amber-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-amber-600" />
+                    Meu Perfil
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    Sair
+                  </button>
+                </div>
+              ) : (
+                <div className="px-4 space-y-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-base font-semibold text-amber-700 border-2 border-amber-200 hover:bg-amber-50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    Fazer Login
+                  </Link>
+                  <Link
+                    href="/cadastro"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg transition-colors"
+                  >
+                    <PawPrint className="w-4 h-4" />
+                    Criar Conta
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       {/* Estilos de Animação */}
       <style jsx global>{`
@@ -402,16 +415,16 @@ const Navbar = () => {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes slide-in-top {
           from { transform: translateY(-20px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
-        
+
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
         }
-        
+
         .animate-slide-in-top {
           animation: slide-in-top 0.4s ease-out;
         }
@@ -421,3 +434,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
