@@ -900,13 +900,16 @@ const AnimalManager = ({ animals, setAnimals }: { animals: Animal[], setAnimals:
   );
 };
 
-// 7. COMPONENTE PARA GERIR ADOÇÕES
-const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void }) => {
+// 7. COMPONENTE PARA GERIR ADOÇÕES (ATUALIZADO COM TRATAMENTO DE ERRO 409)
+const AdoptionManager = ({ initialAdoptions, onUpdate, fetchData }: { initialAdoptions: Adocao[], onUpdate: (updatedAdoption: Adocao) => void, fetchData: () => Promise<void> }) => { // Adicionado fetchData
     const [selectedAdoption, setSelectedAdoption] = useState<Adocao | null>(null);
     const [activeTab, setActiveTab] = useState<'pendentes' | 'finalizadas'>('pendentes');
+    const [isLoadingStatus, setIsLoadingStatus] = useState<string | null>(null); // Estado para loading por ID
 
-    const pendingAdoptions = initialAdoptions.filter(a => a.status === StatusAdocao.SOLICITADA || a.status === StatusAdocao.EM_ANALISE);
-    const finalizedAdoptions = initialAdoptions.filter(a => a.status === StatusAdocao.APROVADA || a.status === StatusAdocao.RECUSADA);
+    // Recalcula as listas quando initialAdoptions mudar
+    const pendingAdoptions = useMemo(() => initialAdoptions.filter(a => a.status === StatusAdocao.SOLICITADA || a.status === StatusAdocao.EM_ANALISE), [initialAdoptions]);
+    const finalizedAdoptions = useMemo(() => initialAdoptions.filter(a => a.status === StatusAdocao.APROVADA || a.status === StatusAdocao.RECUSADA), [initialAdoptions]);
+
 
     const getStatusClass = (status: StatusAdocao) => {
         switch (status) {
@@ -917,15 +920,30 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
     };
 
     const handleUpdateStatus = async (adocaoId: string, status: StatusAdocao) => {
+        setIsLoadingStatus(adocaoId); // Ativa loading específico
         try {
             const response = await api.patch<Adocao>(`/adocoes/${adocaoId}/status`, { status });
-            onUpdate(response.data);
+            // onUpdate(response.data); // Chama a função onUpdate para atualizar o estado local
             toast.success(`Pedido ${status === StatusAdocao.APROVADA ? 'aprovado' : 'recusado'} com sucesso!`);
-            setSelectedAdoption(null);
-        } catch (error) {
-            toast.error('Erro ao atualizar o status do pedido.');
+            setSelectedAdoption(null); // Fecha o modal
+            await fetchData(); // Recarrega TODOS os dados do painel para refletir recusas automáticas
+        } catch (error: any) { // Mudado para any para acessar response
+            console.error("Erro ao atualizar status da adoção:", error);
+            // --- TRATAMENTO DE ERRO ESPECÍFICO ---
+            if (error.response?.status === 409) { // 409 Conflict
+                toast.error(error.response.data.message || 'Este animal já foi adotado por outra solicitação.');
+            } else if (error.response?.data?.message){
+                 toast.error(`Erro: ${error.response.data.message}`); // Mostra mensagem do backend se houver
+            }
+             else {
+                toast.error('Erro ao atualizar o status do pedido.'); // Mensagem genérica
+            }
+            // --- FIM DO TRATAMENTO ---
+        } finally {
+             setIsLoadingStatus(null); // Desativa loading específico
         }
     };
+
 
     const handleWhatsAppContact = (adocao: Adocao, isFollowUp: boolean = false) => {
         if (!adocao.usuario?.telefone) {
@@ -941,7 +959,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
         } else {
             texto = encodeURIComponent(`Olá ${adocao.usuario.nome}! Vimos o seu interesse em adotar o(a) ${nomeAnimal}. Gostaríamos de conversar mais sobre o processo!`);
         }
-        
+
         window.open(`https://wa.me/55${numero}?text=${texto}`, '_blank');
     };
 
@@ -970,6 +988,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {(activeTab === 'pendentes' ? pendingAdoptions : finalizedAdoptions).map(adocao => (
+                            // Verifica se animal e usuario existem antes de renderizar a linha
                             (adocao.animal && adocao.usuario) && (
                                 <tr key={adocao.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{adocao.animal.nome}</td>
@@ -981,23 +1000,37 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                     </td>
                                     <td className="px-6 py-4 text-center text-sm font-medium space-x-2 whitespace-nowrap">
                                         {activeTab === 'pendentes' ? (
-                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900">Analisar Pedido</button>
+                                             // Desabilita o botão se estiver carregando
+                                            <button onClick={() => setSelectedAdoption(adocao)} className="text-amber-600 hover:text-amber-900 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!!isLoadingStatus}>
+                                                Analisar Pedido
+                                            </button>
                                         ) : (
                                             adocao.status === StatusAdocao.APROVADA && (
-                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">Chamar no  WhatsApp</button>
+                                                <button onClick={() => handleWhatsAppContact(adocao, true)} className="text-green-600 hover:text-green-900">
+                                                    Chamar no WhatsApp
+                                                </button>
                                             )
                                         )}
                                     </td>
                                 </tr>
                             )
                         ))}
+                         {/* Mensagem se não houver adoções */}
+                         {(activeTab === 'pendentes' ? pendingAdoptions.length === 0 : finalizedAdoptions.length === 0) && (
+                             <tr>
+                                 <td colSpan={4} className="text-center py-10 text-gray-500">
+                                     Nenhum pedido encontrado nesta aba.
+                                 </td>
+                             </tr>
+                         )}
                     </tbody>
                 </table>
             </div>
 
+            {/* Modal de Detalhes e Ações */}
             {selectedAdoption && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300">
-                    <div className="bg-gray-50 rounded-xl shadow-2xl p-8 max-w-3xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up">
+                    <div className="bg-gray-50 rounded-xl shadow-2xl p-8 max-w-3xl w-full transform transition-all duration-300 scale-95 animate-fade-in-up max-h-[90vh] overflow-y-auto"> {/* Adicionado max-h e overflow */}
                         <div className="flex justify-between items-center pb-4 border-b">
                             <h2 className="text-2xl font-bold text-gray-800">Detalhes do Pedido de Adoção</h2>
                             <button onClick={() => setSelectedAdoption(null)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
@@ -1012,6 +1045,7 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                                         <p><strong className="font-medium text-gray-800">Nome:</strong> {selectedAdoption.animal?.nome}</p>
                                         <p><strong className="font-medium text-gray-800">Espécie:</strong> {selectedAdoption.animal?.especie}</p>
                                         <p><strong className="font-medium text-gray-800">Raça:</strong> {selectedAdoption.animal?.raca}</p>
+                                         <p><strong className="font-medium text-gray-800">Status Atual:</strong> <span className={`font-semibold ${selectedAdoption.animal?.status === StatusAnimal.ADOTADO ? 'text-red-600' : 'text-green-600'}`}>{selectedAdoption.animal?.status}</span></p> {/* Mostra status do animal */}
                                     </div>
                                 </div>
                                 <div>
@@ -1026,35 +1060,51 @@ const AdoptionManager = ({ initialAdoptions, onUpdate }: { initialAdoptions: Ado
                             <div>
                                 <h3 className="font-semibold text-lg mb-3 text-gray-700 border-b pb-2">Respostas do Questionário</h3>
                                 <div className="bg-white p-4 rounded-lg border space-y-3 text-gray-600">
-                                    <div>
-                                        <p className="font-medium text-gray-800">Qual o seu tipo de moradia?</p>
-                                        <p className="pl-2">- {selectedAdoption.tipoMoradia || 'Não informado'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-800">Você possui outros animais?</p>
-                                        <p className="pl-2">- {selectedAdoption.outrosAnimais || 'Não informado'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-800">Quanto tempo você terá disponível?</p>
-                                        <p className="pl-2">- {selectedAdoption.tempoDisponivel || 'Não informado'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-gray-800">Por que gostaria de adotar?</p>
-                                        <p className="pl-2">- {selectedAdoption.motivoAdocao || 'Não informado'}</p>
-                                    </div>
+                                    {/* ... respostas do questionário ... */}
+                                     <div>
+                                         <p className="font-medium text-gray-800">Qual o seu tipo de moradia?</p>
+                                         <p className="pl-2">- {selectedAdoption.tipoMoradia || 'Não informado'}</p>
+                                     </div>
+                                     <div>
+                                         <p className="font-medium text-gray-800">Você possui outros animais?</p>
+                                         <p className="pl-2">- {selectedAdoption.outrosAnimais || 'Não informado'}</p>
+                                     </div>
+                                     <div>
+                                         <p className="font-medium text-gray-800">Quanto tempo você terá disponível?</p>
+                                         <p className="pl-2">- {selectedAdoption.tempoDisponivel || 'Não informado'}</p>
+                                     </div>
+                                     <div>
+                                         <p className="font-medium text-gray-800">Por que gostaria de adotar?</p>
+                                         <p className="pl-2">- {selectedAdoption.motivoAdocao || 'Não informado'}</p>
+                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t space-y-4 sm:space-y-0">
-                            <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600">
+                            <Button onClick={() => handleWhatsAppContact(selectedAdoption)} className="w-full sm:w-auto bg-green-500 hover:bg-green-600 disabled:opacity-50" disabled={!!isLoadingStatus}>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10.001 2C5.582 2 2 5.582 2 10.001c0 1.511.413 2.925 1.15 4.156l-1.15 4.156 4.296-1.13c1.21.69 2.598 1.093 4.054 1.093 4.418 0 8-3.582 8-8.001 0-4.418-3.582-8-8-8zm4.134 9.478c-.23.645-.854 1.11-1.48 1.228-.51.1-.926.04-1.37-.158-.58-.26-1.18-.59-1.73-.99-1.12-0.8-1.88-1.88-2.08-2.22-.2-.34-.48-.59-.48-.96 0-.37.23-.59.48-.79.25-.2.53-.26.73-.26h.3c.23 0 .45.03.65.34.2.31.68.82.73.88.05.06.1.12.01.23-.09.11-.14.17-.26.31-.12.14-.23.28-.34.39-.12.12-.23.26-.11.48.11.22.53.88 1.12 1.44.79.79 1.41 1.02 1.63 1.12.22.1.34.09.48-.06.14-.15.59-.68.73-.88.14-.2.31-.23.53-.23.2 0 .48.01.68.03.2.02.31.01.45.14.14.13.23.29.26.48.03.19.03.91-.2 1.556z" /></svg>
                                 Chamar no Whatsapp
                             </Button>
                             <div className="flex space-x-3 w-full sm:w-auto">
-                                {selectedAdoption.status === StatusAdocao.SOLICITADA ? (
+                                {/* Botões de Ação só aparecem se o status for SOLICITADA */}
+                                {selectedAdoption.status === StatusAdocao.SOLICITADA || selectedAdoption.status === StatusAdocao.EM_ANALISE ? (
                                     <>
-                                        <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.APROVADA)} className="w-full bg-amber-600 hover:bg-amber-700">Aprovar</Button>
-                                        <Button onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.RECUSADA)} className="w-full bg-red-600 hover:bg-red-700">Recusar</Button>
+                                        <Button
+                                            onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.APROVADA)}
+                                            className="w-full bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+                                            isLoading={isLoadingStatus === selectedAdoption.id} // Usa isLoadingStatus
+                                            disabled={!!isLoadingStatus} // Desabilita se qualquer loading estiver ativo
+                                        >
+                                           {isLoadingStatus === selectedAdoption.id ? 'Aprovando...' : 'Aprovar'}
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleUpdateStatus(selectedAdoption.id, StatusAdocao.RECUSADA)}
+                                            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                                            isLoading={isLoadingStatus === selectedAdoption.id} // Usa isLoadingStatus
+                                            disabled={!!isLoadingStatus} // Desabilita se qualquer loading estiver ativo
+                                        >
+                                            {isLoadingStatus === selectedAdoption.id ? 'Recusando...' : 'Recusar'}
+                                        </Button>
                                     </>
                                 ) : (
                                     <p className="text-sm font-semibold text-gray-600">Este pedido já foi processado.</p>
@@ -2237,7 +2287,7 @@ const MainContent = () => {
                   {activeView === 'slides' && <SlideManager initialSlides={slides} />}
                   {activeView === 'animais' && <AnimalManager animals={animais} setAnimals={setAnimais} />}
                   {activeView === 'animaisComunitarios' && <AnimalComunitarioManager animais={animaisComunitarios} onUpdate={fetchData} />}
-                  {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} />}
+                 {activeView === 'adocoes' && <AdoptionManager initialAdoptions={adocoes} onUpdate={(updated) => setAdocoes(adocoes.map(a => a.id === updated.id ? updated : a))} fetchData={fetchData} />}
                   {activeView === 'divulgacoes' && <DivulgacaoManager initialDivulgacoes={divulgacoes} onUpdate={fetchData} />}
                   {activeView === 'voluntarios' && <VolunteerManager initialVolunteers={voluntarios} />}
                   {activeView === 'membros' && <MemberManager initialUsers={usuarios} onUserUpdate={handleUserUpdate} />}

@@ -1357,7 +1357,6 @@ export default function ProfilePage() {
                   </motion.div>
                 )}
 
-                {/* --- ATUALIZADO: Passa os pedidos para MeusPedidosView --- */}
                 {activeView === 'meus_pedidos' && (
                   <MeusPedidosView pedidos={profileData.pedidos} />
                 )}
