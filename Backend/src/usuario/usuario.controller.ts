@@ -29,7 +29,7 @@ import { UploadsService } from 'src/uploads-s3/upload.service';
 export class UsuarioController {
   constructor(
     private readonly usuarioService: UsuarioService,
-    private readonly uploadsService: UploadsService, // ADICIONADO
+    private readonly uploadsService: UploadsService, 
   ) {}
 
   @Post()

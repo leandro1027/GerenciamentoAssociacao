@@ -89,7 +89,7 @@ export class GamificacaoService {
       return;
     }
     this.logger.log(`Processando recompensas de adoção para o usuário ID: ${usuarioId}`);
-    
+
     const totalAdocoesAprovadas = await prisma.adocao.count({
       where: {
         usuarioId: usuarioId,
@@ -151,8 +151,8 @@ export class GamificacaoService {
 
   async getLoginHistory(usuarioId: number): Promise<LoginHistoryStatus[]> {
     const seteDiasAtras = new Date();
-    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-    seteDiasAtras.setUTCHours(0, 0, 0, 0);
+    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7); // Alterado para 7 dias atrás
+    seteDiasAtras.setHours(0, 0, 0, 0); // Zera hora para o início do dia local
 
     const logins = await this.prisma.loginDiario.findMany({
       where: {
@@ -166,23 +166,46 @@ export class GamificacaoService {
       },
     });
 
-    const ultimosSeteDias: LoginHistoryStatus[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const data = new Date();
-      data.setDate(data.getDate() - i);
-      data.setUTCHours(0, 0, 0, 0);
-      const loginDoDia = logins.find(login => {
+    const loginsMap = new Map<string, boolean>();
+    logins.forEach(login => {
         const loginDate = new Date(login.data);
-        loginDate.setUTCHours(0, 0, 0, 0);
-        return loginDate.getTime() === data.getTime();
-      });
-      ultimosSeteDias.push({
-        data,
-        status: loginDoDia ? 'completed' : 'missed',
-      });
+        loginDate.setHours(0, 0, 0, 0);
+        loginsMap.set(loginDate.toISOString().split('T')[0], true); // Usa YYYY-MM-DD como chave
+    });
+
+
+    const ultimosSeteDias: LoginHistoryStatus[] = [];
+    const hoje = new Date(); // Pega a data atual uma vez
+    hoje.setHours(0, 0, 0, 0); // Zera para comparar apenas a data
+
+    for (let i = 6; i >= 0; i--) { // Começa de 6 (6 dias atrás) até 0 (hoje)
+      const dataRef = new Date();
+      dataRef.setDate(dataRef.getDate() - i);
+      dataRef.setHours(0, 0, 0, 0); // Zera hora local
+      const dataRefString = dataRef.toISOString().split('T')[0]; // Chave YYYY-MM-DD
+
+      // --- CORREÇÃO: Não retorna dias futuros ---
+      if (dataRef.getTime() <= hoje.getTime()) {
+        ultimosSeteDias.push({
+          data: dataRef, // Mantém o objeto Date zerado
+          status: loginsMap.has(dataRefString) ? 'completed' : 'missed',
+        });
+      }
+      // Se dataRef for maior que hoje, simplesmente não adiciona ao array
     }
-    return ultimosSeteDias;
+    // Garante que o array tenha sempre 7 dias, preenchendo com 'missed' se necessário
+    while (ultimosSeteDias.length < 7) {
+        const ultimoDia = ultimosSeteDias[ultimosSeteDias.length - 1]?.data || new Date(hoje.getTime() - (7 * 24 * 60 * 60 * 1000)); // Usa hoje - 7 se vazio
+        const diaAnterior = new Date(ultimoDia);
+        diaAnterior.setDate(ultimoDia.getDate() - 1);
+        diaAnterior.setHours(0, 0, 0, 0);
+        ultimosSeteDias.unshift({ data: diaAnterior, status: 'missed'}); // Adiciona no início
+    }
+
+    // Se houver mais de 7 dias (improvável, mas seguro), pega apenas os 7 mais recentes
+    return ultimosSeteDias.slice(-7);
   }
+
 
   // ===================================================================
   // MÉTODOS INTERNOS E DE APOIO
@@ -206,7 +229,7 @@ export class GamificacaoService {
       },
     });
   }
-  
+
   async verificarEAdicionarConquista(
     usuarioId: number,
     nomeConquista: string,
@@ -256,12 +279,14 @@ export class GamificacaoService {
     const config = await this.prisma.configuracao.findUnique({
       where: { id: 1 },
     });
+    // Retorna false se config for null ou se gamificacaoAtiva for false
     return config?.gamificacaoAtiva ?? false;
   }
 
+  // --- MÉTODO PARA RESETAR O RANKING ---
   async resetarRankingGeral(): Promise<void> {
     this.logger.log('INICIANDO RESET MENSAL DO RANKING...');
-    
+
     try {
       // Usamos updateMany para atualizar todos os usuários de uma vez
       const { count } = await this.prisma.usuario.updateMany({
@@ -279,6 +304,8 @@ export class GamificacaoService {
       this.logger.error('Falha crítica ao tentar resetar o ranking mensal.', error.stack);
     }
   }
+  // --- FIM DO MÉTODO DE RESET ---
+
 
   // ===================================================================
   // MÉTODOS DE GESTÃO DE CONQUISTAS (CRUD para Admins)
@@ -301,7 +328,7 @@ export class GamificacaoService {
   }
 
   async update(id: number, updateConquistaDto: UpdateConquistaDto) {
-    await this.findOne(id);
+    await this.findOne(id); // Garante que a conquista existe antes de tentar atualizar
     return this.prisma.conquista.update({
       where: { id },
       data: updateConquistaDto,
@@ -309,7 +336,14 @@ export class GamificacaoService {
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    await this.findOne(id); 
+
+    await this.prisma.usuarioConquista.deleteMany({
+      where: { conquistaId: id },
+    });
+    
+
     return this.prisma.conquista.delete({ where: { id } });
   }
 }
+

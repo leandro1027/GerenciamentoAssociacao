@@ -9,7 +9,7 @@ import Input from '../components/common/input';
 import Button from '../components/common/button';
 import { Doacao, Voluntario, Usuario, Adocao, Conquista, UsuarioConquista, StatusAdocao } from '../../types'; // Adicionado StatusAdocao
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Camera, Clock, ChevronDown, Star, Trophy, Gift, Heart, Clipboard, User, Lock, Home, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, EyeOff, Camera, Clock, ChevronDown, Star, Trophy, Gift, Heart, Clipboard, User, Lock, Home, Calendar, CheckCircle, XCircle, HelpCircle } from 'lucide-react'; // Adicionado HelpCircle
 import axios from 'axios';
 
 type ProfileView = 'overview' | 'edit_profile' | 'change_password' | 'meus_pedidos' | 'gamification' | 'login_history';
@@ -122,7 +122,7 @@ const useProfileData = (user: Usuario | null) => {
 
       } catch (error: any) {
         console.error("Erro crítico ao buscar dados do perfil:", error);
-        if (error.response?.status !== 403) { // Avoid redundant toasts on auth errors
+        if (error.response?.status !== 403 && error.response?.status !== 401) { // Avoid redundant toasts on auth errors
           toast.error('Não foi possível carregar os dados do perfil.');
         }
         setProfileData(prev => ({ ...prev, isLoading: false, isGamificationActive: false })); // Stop loading on error
@@ -715,7 +715,7 @@ const GamificationView = ({ pontos, conquistas }: { pontos: number; conquistas: 
     );
 };
 
-// --- COMPONENTE DE HISTÓRICO DE LOGIN ---
+// --- COMPONENTE DE HISTÓRICO DE LOGIN (COM DADOS REAIS E CORREÇÃO DE STREAK/DIAS FUTUROS) ---
 interface LoginHistoryFromAPI {
   data: string;
   status: 'completed' | 'missed';
@@ -736,8 +736,11 @@ const HistoricoDeLogin = () => {
     setError(null);
     try {
       const response = await api.get<LoginHistoryFromAPI[]>('/gamificacao/login-history');
+
+      // Formata e garante que as datas sejam tratadas como locais
       const formattedHistory = response.data.map(item => {
-        const dateString = item.data.substring(0, 10);
+        const dateString = item.data.substring(0, 10); // Pega YYYY-MM-DD
+        // Cria a data como se fosse meia-noite no fuso horário local do navegador
         const dataLocal = new Date(dateString + 'T00:00:00');
         return { ...item, data: dataLocal };
       });
@@ -788,42 +791,60 @@ const HistoricoDeLogin = () => {
   return <LoginHistoryView loginHistory={loginHistory} />;
 };
 
-// Componente de visualização do histórico
+// Componente de visualização do histórico (COM CORREÇÃO DE STREAK E DIAS FUTUROS)
 const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistoryItem[] }) => {
     const hoje = new Date();
     const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+    // Lógica de cálculo da sequência (streak) CORRIGIDA
     const getStreak = () => {
         let streak = 0;
         const hojeSemHoras = new Date();
         hojeSemHoras.setHours(0, 0, 0, 0);
 
-        for (let i = loginHistory.length - 1; i >= 0; i--) {
-            if (loginHistory[i].status === 'completed') {
-                const dia = new Date(loginHistory[i].data);
+        // Filtra para remover dias futuros ANTES de calcular
+        const historicoPassadoEPresente = loginHistory.filter(item => {
+            const diaItem = new Date(item.data);
+            diaItem.setHours(0,0,0,0);
+            // Compara apenas a data, ignorando a hora
+            return diaItem.toISOString().split('T')[0] <= hojeSemHoras.toISOString().split('T')[0];
+        });
+
+        // Calcula a streak usando o array filtrado
+        for (let i = historicoPassadoEPresente.length - 1; i >= 0; i--) {
+            if (historicoPassadoEPresente[i].status === 'completed') {
+                const dia = new Date(historicoPassadoEPresente[i].data);
                 dia.setHours(0, 0, 0, 0);
                 const diffDias = Math.round((hojeSemHoras.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+
                 if (diffDias === streak) {
                     streak++;
                 } else {
-                    break;
+                    break; // Sequência quebrada
                 }
             } else {
-                const dia = new Date(loginHistory[i].data);
-                dia.setHours(0, 0, 0, 0);
-                const diffDias = Math.round((hojeSemHoras.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
-                if (diffDias > 0) {
+                 const dia = new Date(historicoPassadoEPresente[i].data);
+                 dia.setHours(0, 0, 0, 0);
+                 const diffDias = Math.round((hojeSemHoras.getTime() - dia.getTime()) / (1000 * 60 * 60 * 24));
+                 if(diffDias > 0) { // Se o dia perdido foi ANTES de hoje
                     break;
-                }
+                 }
+                 // Se o dia perdido for HOJE, não quebra, mas também não incrementa
             }
         }
         return streak;
     };
 
     const currentStreak = getStreak();
-    const completedLogins = loginHistory.filter(l => l.status === 'completed').length;
-    const totalPoints = completedLogins * 5;
+    // Filtra novamente aqui para garantir que dias futuros não contem para pontos
+     const completedLoginsThisWeek = loginHistory.filter(l => {
+         const diaItem = new Date(l.data);
+         diaItem.setHours(0,0,0,0);
+         return l.status === 'completed' && diaItem.toISOString().split('T')[0] <= hoje.toISOString().split('T')[0];
+     }).length;
+    const totalPoints = completedLoginsThisWeek * 5;
+
 
     return (
         <motion.div
@@ -870,15 +891,23 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistoryItem[] }
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Últimos 7 Dias</h3>
                 <div className="grid grid-cols-7 gap-4">
                     {loginHistory.map((day, index) => {
-                        const isToday = day.data.toDateString() === hoje.toDateString();
+                        const hojeSemHoras = new Date();
+                        hojeSemHoras.setHours(0, 0, 0, 0);
+                        const diaItemSemHoras = new Date(day.data);
+                        diaItemSemHoras.setHours(0,0,0,0);
+
+                        const isToday = diaItemSemHoras.toISOString().split('T')[0] === hojeSemHoras.toISOString().split('T')[0];
                         const diaSemana = diasDaSemana[day.data.getDay()];
                         const diaMes = day.data.getDate();
                         const mes = meses[day.data.getMonth()];
+                        const isFuture = diaItemSemHoras.getTime() > hojeSemHoras.getTime();
+
 
                         return (
                             <motion.div
                                 key={index}
                                 className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
+                                    isFuture ? 'bg-gray-50 border-gray-200 opacity-40 cursor-not-allowed' : // Estilo futuro
                                     day.status === 'completed'
                                         ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-lg'
                                         : 'bg-gray-50 border-gray-200 opacity-60'
@@ -886,15 +915,25 @@ const LoginHistoryView = ({ loginHistory }: { loginHistory: LoginHistoryItem[] }
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4 + index * 0.1 }}
-                                whileHover={{ scale: 1.05 }}
+                                whileHover={{ scale: isFuture ? 1 : 1.05 }}
                             >
-                                <div className={`mb-2 ${day.status === 'completed' ? 'text-green-600' : 'text-gray-400'}`}>
-                                    {day.status === 'completed' ? <CheckCircle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+                                <div className={`mb-2 ${
+                                    isFuture ? 'text-gray-300' :
+                                    day.status === 'completed' ? 'text-green-600' : 'text-gray-400'
+                                }`}>
+                                    {isFuture ? <HelpCircle className="w-8 h-8" /> :
+                                     day.status === 'completed' ? <CheckCircle className="w-8 h-8" /> :
+                                     <XCircle className="w-8 h-8" />}
                                 </div>
-                                <p className={`font-semibold text-sm ${day.status === 'completed' ? 'text-gray-800' : 'text-gray-400'}`}>
+                                <p className={`font-semibold text-sm ${
+                                    isFuture ? 'text-gray-400' :
+                                    day.status === 'completed' ? 'text-gray-800' : 'text-gray-400'
+                                }`}>
                                     {diaSemana}
                                 </p>
-                                <p className="text-xs text-gray-500">{diaMes} {mes}</p>
+                                <p className={`text-xs ${isFuture ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {diaMes} {mes}
+                                </p>
                                 {isToday && (
                                     <span className="absolute -top-2 -right-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full font-semibold">
                                         Hoje
@@ -1331,3 +1370,4 @@ export default function ProfilePage() {
     </main>
   );
 }
+
