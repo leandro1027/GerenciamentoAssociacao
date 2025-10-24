@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common'; // Adicionado BadRequestException
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -6,6 +6,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcrypt';
 import { UploadsService } from 'src/uploads-s3/upload.service';
+import { Prisma } from '@prisma/client'; // Importar Prisma (removido 'Role')
 
 @Injectable()
 export class UsuarioService {
@@ -26,6 +27,7 @@ export class UsuarioService {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { senha, ...result } = user;
     return result;
   }
@@ -39,6 +41,7 @@ export class UsuarioService {
     const users = await this.prisma.usuario.findMany({
       orderBy: { nome: 'asc' },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return users.map(({ senha, ...rest }) => rest); // Remove a senha de todos os usuários
   }
 
@@ -48,10 +51,11 @@ export class UsuarioService {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
     // Retorna o usuário completo para uso interno, mas sem a senha para o controller
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { senha, ...result } = user;
     return result;
   }
-  
+
   // Retorna o usuário completo (incluindo senha) para validação interna
   private async findOneInternal(id: number) {
     const user = await this.prisma.usuario.findUnique({ where: { id } });
@@ -62,21 +66,32 @@ export class UsuarioService {
   }
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    await this.findOne(id);
+    await this.findOne(id); // Verifica se o usuário existe
     const user = await this.prisma.usuario.update({
       where: { id },
       data: updateUsuarioDto,
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { senha, ...result } = user;
     return result;
   }
 
   async updateRole(id: number, newRole: string) {
-    await this.findOne(id);
+    await this.findOne(id); // Verifica se o usuário existe
+     
+     // --- CORREÇÃO AQUI ---
+     // 1. Validar se o newRole é uma string 'USER' ou 'ADMIN'
+     if (newRole !== 'USER' && newRole !== 'ADMIN') {
+        throw new BadRequestException(`Role inválido. Deve ser 'USER' ou 'ADMIN'.`);
+     }
+
     const user = await this.prisma.usuario.update({
       where: { id },
-      data: { role: newRole },
+      data: { role: newRole }, // 2. Passa a string diretamente
     });
+    // --- FIM DA CORREÇÃO ---
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { senha, ...result } = user;
     return result;
   }
@@ -87,7 +102,12 @@ export class UsuarioService {
 
     // Deleta o avatar da Cloudflare antes de deletar o usuário do DB
     if (user.profileImageUrl) {
-      await this.uploadsService.deletarArquivo(user.profileImageUrl);
+      try {
+           await this.uploadsService.deletarArquivo(user.profileImageUrl);
+      } catch (error) {
+           console.error(`Erro ao deletar avatar ${user.profileImageUrl} do usuário ${id}:`, error);
+           // Considerar se deve prosseguir mesmo com erro ao deletar imagem
+      }
     }
 
     return this.prisma.usuario.delete({ where: { id } });
@@ -99,6 +119,7 @@ export class UsuarioService {
       where: { id },
       data: updateProfileDto,
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { senha, ...result } = user;
     return result;
   }
@@ -118,6 +139,8 @@ export class UsuarioService {
       where: { id },
       data: { senha: hashedPassword },
     });
+
+    // Não retorna nada em changePassword por segurança
   }
 
   async updateAvatar(id: number, avatarFileName: string) {
@@ -126,7 +149,11 @@ export class UsuarioService {
 
     // Deleta o avatar antigo da Cloudflare antes de atualizar com o novo
     if (usuarioAntigo.profileImageUrl) {
-      await this.uploadsService.deletarArquivo(usuarioAntigo.profileImageUrl);
+       try {
+           await this.uploadsService.deletarArquivo(usuarioAntigo.profileImageUrl);
+       } catch (error) {
+           console.error(`Erro ao deletar avatar antigo ${usuarioAntigo.profileImageUrl} do usuário ${id}:`, error);
+       }
     }
 
     // Atualiza o registro no banco com o nome do novo avatar
@@ -138,11 +165,18 @@ export class UsuarioService {
     return result;
   }
 
-  // --- RANKING DE PONTUAÇÃO ---
+  // --- RANKING DE PONTUAÇÃO
   async getRanking() {
     return this.prisma.usuario.findMany({
+      where: {
+        role: {
+          not: 'ADMIN' 
+        },
+        pontos: {
+          gt: 0 // Opcional: Mostra apenas usuários com pontos > 0
+        }
+      },
       orderBy: { pontos: 'desc' },
-      take: 10,
       select: {
         id: true,
         nome: true,
@@ -152,3 +186,4 @@ export class UsuarioService {
     });
   }
 }
+
