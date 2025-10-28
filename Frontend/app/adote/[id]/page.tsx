@@ -255,7 +255,7 @@ export default function AnimalDetailPage() {
 
     const buttonState = getButtonState();
 
-    const mockCaracteristicas = ['Dócil', 'Brincalhão', 'Castrado', 'Vacinado', 'Vermifugado'];
+    const mockCaracteristicas = ['Dócil', 'Brincalhão', 'Ativo(a)', 'Carinhoso(a)'];
 
     return (
         <>
@@ -335,7 +335,7 @@ export default function AnimalDetailPage() {
                             </div>
 
                             <div className="border-t border-gray-100 pt-6">
-                                <h2 className="text-lg font-bold text-gray-800 mb-3">Minha História</h2>
+                                <h2 className="text-lg font-bold text-gray-800 mb-3">Mais detalhes</h2>
                                 <p className="leading-relaxed text-gray-700 text-justify text-sm">{animal.descricao}</p>
                             </div>
 
