@@ -284,7 +284,7 @@ export default function ComunitariosPage() {
                    path="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 10a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
                    className="w-16 h-16 text-gray-400 mx-auto mb-4"
                  />
-                 <p className="text-gray-700 font-semibold text-lg mb-2">Nenhum animal comunitário encontrado</p>
+                 <p className="text-gray-700 font-semibold text-lg mb-2">Nenhum animal comunitário encontrado!</p>
                  <p className="text-gray-500 text-sm sm:text-base">
                    {debouncedLocalizacao && isAdmin
                      ? "Tente ajustar os termos da sua pesquisa."
