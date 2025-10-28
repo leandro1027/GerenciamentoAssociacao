@@ -32,48 +32,71 @@ const AnimalCardComunitario = ({
     animate={{ opacity: 1, y: 0 }}
     whileHover={{ y: -4 }}
     transition={{ duration: 0.3 }}
-    className={`group relative bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg border border-amber-100 ${
+    className={`group bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg border border-gray-200 ${
       isAdmin ? 'cursor-pointer' : 'cursor-default'
     }`}
     onClick={() => {
       if (isAdmin) onCardClick(animal);
     }}
   >
+    {/* Container da Imagem - Sem gradiente */}
     <div className="relative overflow-hidden">
       <img
         src={buildImageUrl(animal.imageUrl)}
         alt={`Foto de ${animal.nomeTemporario}`}
         className="w-full h-48 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-500"
-        onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x224?text=Sem+Foto'; }}
+        onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Sem+Foto'; }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-amber-900/40 via-amber-900/10 to-transparent" />
-      <div className="absolute bottom-4 left-4">
-        <h3 className="text-xl font-bold text-white drop-shadow-md">{animal.nomeTemporario}</h3>
-      </div>
+      
+      {/* Badge Admin - Posicionado sobre a imagem */}
       {isAdmin && (
         <div className="absolute top-3 right-3">
-          <span className="bg-amber-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+          <span className="bg-amber-500 text-white text-xs px-3 py-1.5 rounded-full font-semibold shadow-md">
             Admin
           </span>
         </div>
       )}
     </div>
 
-    {isAdmin && (
-      <div className="p-4">
-        <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+    {/* Conteúdo do Card */}
+    <div className="p-4">
+      {/* Nome do Animal */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold text-gray-900">{animal.nomeTemporario}</h3>
+        {isAdmin && (
+          <span className="text-amber-600 hover:text-amber-700 transition-colors">
+            <Icon path="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" className="w-4 h-4" />
+          </span>
+        )}
+      </div>
+
+      {/* Localização (apenas para Admin) */}
+      {isAdmin && animal.enderecoCompleto && (
+        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
           <div className="flex items-start gap-2">
-            <Icon path="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <Icon 
+              path="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" 
+              className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" 
+            />
             <div>
               <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Localização</p>
               <p className="text-sm text-amber-900 line-clamp-2">
-                {animal.enderecoCompleto || 'Localização não informada'}
+                {animal.enderecoCompleto}
               </p>
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
+
+      {/* Mensagem para usuários não-admin */}
+      {!isAdmin && (
+        <div className="text-center py-2">
+          <p className="text-sm text-gray-600 italic">
+            Animal comunitário da nossa região
+          </p>
+        </div>
+      )}
+    </div>
   </motion.div>
 );
 
@@ -110,7 +133,7 @@ export default function ComunitariosPage() {
       {
         ssr: false,
         loading: () => (
-          <div className="h-full w-full flex justify-center items-center bg-amber-50 rounded-lg">
+          <div className="h-full w-full flex justify-center items-center bg-gray-50 rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-600 border-t-transparent"></div>
           </div>
         )
@@ -194,15 +217,14 @@ export default function ComunitariosPage() {
   const isLoading = loading || isAuthLoading;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-25">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-amber-600 to-amber-700 py-16 sm:py-20">
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <main className="min-h-screen bg-gray-50">
+      {/* Hero Section - Mais Simples */}
+      <section className="bg-white py-12 sm:py-16 border-b border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4"
           >
             Animais Comunitários
           </motion.h1>
@@ -210,7 +232,7 @@ export default function ComunitariosPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl sm:text-2xl text-amber-100 max-w-3xl mx-auto"
+            className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto"
           >
             Conheça os peludos que fazem parte da nossa comunidade
           </motion.p>
@@ -225,15 +247,15 @@ export default function ComunitariosPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-sm border border-amber-200 p-6 mb-8"
+            className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-8"
           >
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex-grow">
-                <label htmlFor="localizacao" className="block text-sm font-semibold text-amber-900 mb-2">
+                <label htmlFor="localizacao" className="block text-sm font-semibold text-gray-700 mb-2">
                   Pesquisar por localização
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-3 flex items-center text-amber-500">
+                  <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
                     <Icon path="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" className="w-5 h-5" />
                   </span>
                   <input
@@ -242,7 +264,7 @@ export default function ComunitariosPage() {
                     value={localizacao}
                     onChange={e => setLocalizacao(e.target.value)}
                     placeholder="Digite um endereço ou ponto de referência..."
-                    className="w-full pl-10 pr-4 py-3 text-base rounded-xl border-amber-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-amber-900 placeholder-amber-400 bg-amber-50/50"
+                    className="w-full pl-10 pr-4 py-3 text-base rounded-lg border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder-gray-500 bg-white"
                     disabled={isLoading}
                   />
                 </div>
@@ -250,7 +272,7 @@ export default function ComunitariosPage() {
               <button
                 onClick={handleResetFilters}
                 disabled={isLoading || !localizacao}
-                className="px-6 py-3 rounded-xl font-medium text-amber-700 hover:text-amber-800 hover:bg-amber-100 transition-colors border border-amber-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="px-6 py-3 rounded-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 Limpar
               </button>
@@ -267,7 +289,7 @@ export default function ComunitariosPage() {
           >
             <button
               onClick={() => setIsMapModalOpen(true)}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center gap-3 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
             >
               <Icon path="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3l6-3" className="w-5 h-5" />
               Visualizar Mapa Geral
@@ -280,7 +302,7 @@ export default function ComunitariosPage() {
           <div className="text-center py-16">
             <div className="inline-flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-3 border-amber-600 border-t-transparent"></div>
-              <p className="text-amber-700 font-medium">Carregando animais comunitários...</p>
+              <p className="text-gray-700 font-medium">Carregando animais comunitários...</p>
             </div>
           </div>
         )}
@@ -290,7 +312,7 @@ export default function ComunitariosPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl mx-auto"
+            className="text-center bg-red-50 border border-red-200 rounded-xl p-8 max-w-2xl mx-auto"
           >
             <Icon
               path="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
@@ -299,7 +321,7 @@ export default function ComunitariosPage() {
             <p className="text-red-700 font-semibold text-lg mb-2">{error}</p>
             <button
               onClick={fetchAnimais}
-              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition-colors"
+              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
             >
               Tentar novamente
             </button>
@@ -334,16 +356,16 @@ export default function ComunitariosPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center bg-white rounded-2xl shadow-sm border border-amber-200 py-16 px-8"
+              className="text-center bg-white rounded-xl shadow-sm border border-gray-200 py-16 px-8"
             >
               <Icon
                 path="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 10a1 1 0 100-2 1 1 0 000 2zm6 0a1 1 0 100-2 1 1 0 000 2z"
-                className="w-16 h-16 text-amber-400 mx-auto mb-4"
+                className="w-16 h-16 text-gray-400 mx-auto mb-4"
               />
-              <h3 className="text-amber-800 font-bold text-xl mb-2">
+              <h3 className="text-gray-800 font-bold text-xl mb-2">
                 Nenhum animal encontrado
               </h3>
-              <p className="text-amber-600 mb-4">
+              <p className="text-gray-600 mb-4">
                 {debouncedLocalizacao && isAdmin
                   ? "Tente ajustar os termos da sua pesquisa."
                   : "Volte mais tarde para conhecer nossos animais comunitários."
@@ -352,7 +374,7 @@ export default function ComunitariosPage() {
               {debouncedLocalizacao && isAdmin && (
                 <button
                   onClick={handleResetFilters}
-                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors"
+                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors"
                 >
                   Limpar pesquisa
                 </button>
@@ -376,16 +398,16 @@ export default function ComunitariosPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center p-6 border-b border-amber-200 flex-shrink-0">
-                <h2 className="text-2xl font-bold text-amber-900">
+              <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Mapa de Animais Comunitários
                 </h2>
                 <button
                   onClick={() => setIsMapModalOpen(false)}
-                  className="p-2 rounded-full text-amber-500 hover:bg-amber-100 transition-colors"
+                  className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
                 >
                   <Icon path="M6 18L18 6M6 6l12 12" className="w-6 h-6" />
                 </button>
