@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import api from '../services/api';
-import { AnimalComunitario } from '../../types';
+import { AnimalComunitario } from '@/types';
 import { useDebounce } from 'use-debounce';
 import { buildImageUrl } from '@/utils/helpers';
 import { useAuth } from '@/context/AuthContext';
@@ -132,7 +132,7 @@ export default function ComunitariosPage() {
     )
   }, [isAdmin]);
 
-  // ✅✅✅ FUNÇÃO CORRIGIDA - Lógica de parâmetros simplificada
+  // --- Função para buscar animais ---
   const fetchAnimais = useCallback(async () => {
     if (isAuthLoading) {
       console.log('Auth ainda carregando...');
@@ -145,13 +145,13 @@ export default function ComunitariosPage() {
     try {
       const isUserAdmin = user?.role === 'ADMIN';
       
-      // ✅ CORREÇÃO: Construir URL com parâmetros de forma mais robusta
+      // Define endpoint baseado no tipo de usuário
       let endpoint = '/animais/comunitarios';
       
       if (isUserAdmin) {
         endpoint = '/animais/comunitarios/admin';
         
-        // ✅ CORREÇÃO: Adicionar parâmetro search apenas se houver valor
+        // Adiciona parâmetro de busca apenas se houver valor
         if (debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
           endpoint += `?search=${encodeURIComponent(debouncedLocalizacao.trim())}`;
         }
@@ -170,7 +170,7 @@ export default function ComunitariosPage() {
         url: err.config?.url
       });
       
-      // ✅ CORREÇÃO: Mensagens de erro mais específicas
+      // Mensagens de erro específicas
       if (err.response?.status === 400) {
         setError('Parâmetros de pesquisa inválidos. Tente limpar o filtro.');
       } else if (err.response?.status === 401 || err.response?.status === 403) {
@@ -185,18 +185,16 @@ export default function ComunitariosPage() {
     }
   }, [debouncedLocalizacao, user, isAuthLoading]);
 
-  // ✅ CORREÇÃO: useEffect mais eficiente
+  // --- Efeito para buscar animais ---
   useEffect(() => {
     fetchAnimais();
   }, [fetchAnimais]);
 
-  // ✅ CORREÇÃO: Reset mais completo
+  // --- Reset de filtros ---
   const handleResetFilters = () => {
     setLocalizacao('');
-    // Não precisamos chamar fetchAnimais aqui pois o debouncedLocalizacao vai trigger automático
   };
 
-  // ✅ CORREÇÃO: Estado de loading mais preciso
   const isLoading = loading || isAuthLoading;
 
   return (
@@ -263,13 +261,13 @@ export default function ComunitariosPage() {
             transition={{ delay: 0.1 }}
             className="mb-6 sm:mb-8 flex justify-center"
           >
-              <button
-                  onClick={() => setIsMapModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-full shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-transform hover:scale-105 w-full sm:w-auto justify-center"
-              >
-                  <Icon path="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3l6-3" />
-                  <span className="text-center">Visualizar mapeamento (Admin)</span>
-              </button>
+            <button
+                onClick={() => setIsMapModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-full shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-transform hover:scale-105 w-full sm:w-auto justify-center"
+            >
+                <Icon path="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3l6-3" />
+                <span className="text-center">Visualizar mapeamento (Admin)</span>
+            </button>
           </motion.div>
         )}
 

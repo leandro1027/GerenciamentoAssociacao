@@ -1,5 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsNumber, IsNotEmpty } from 'class-validator';
 
 export class CreateAnimalComunitarioDto {
   @IsString()
@@ -8,15 +7,21 @@ export class CreateAnimalComunitarioDto {
 
   @IsString()
   @IsOptional()
-  enderecoCompleto?: string; //opcional para o cadastro e mapeamento
+  descricao?: string;
+
+  @IsString()
+  @IsOptional()
+  enderecoCompleto?: string;
 
   @IsNumber()
-  @Type(() => Number) 
-  @IsNotEmpty()
-  latitude: number;
+  @IsOptional()
+  latitude?: number;
 
   @IsNumber()
-  @Type(() => Number) 
-  @IsNotEmpty()
-  longitude: number;
+  @IsOptional()
+  longitude?: number;
+
+  @IsString()
+  @IsOptional()
+  observacoes?: string;
 }
