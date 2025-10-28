@@ -49,7 +49,7 @@ const AnimalCardComunitario = ({
       </div>
     </div>
 
-    {/* Mostra localização APENAS se for admin */}
+    {/* Conteúdo diferente para Admin vs Usuário Comum */}
     {isAdmin && (
       <div className="p-3 sm:p-4">
         <div className="bg-gray-50 p-2 sm:p-3 rounded-lg border">
@@ -59,16 +59,6 @@ const AnimalCardComunitario = ({
           </p>
         </div>
       </div>
-    )}
-
-    {/* Placeholder para manter altura consistente para usuários comuns */}
-    {!isAdmin && (
-       <div className="p-3 sm:p-4 invisible">
-         <div className="p-2 sm:p-3">
-           <p className="text-xs font-bold uppercase mb-1">&nbsp;</p>
-           <p className="text-sm font-semibold line-clamp-2">&nbsp;</p>
-         </div>
-       </div>
     )}
   </motion.div>
 );
@@ -357,7 +347,7 @@ export default function ComunitariosPage() {
               </button>
             </div>
             <div className="flex-grow h-full min-h-0">
-                <MapaGeralComunitarios animais={animais} />
+                {MapaGeralComunitarios && <MapaGeralComunitarios animais={animais} />}
             </div>
           </div>
         </div>
