@@ -132,47 +132,49 @@ export default function ComunitariosPage() {
     )
   }, [isAdmin]);
 
+  // ✅✅✅ FUNÇÃO CORRIGIDA - URLs atualizadas
   const fetchAnimais = useCallback(async () => {
-  if (isAuthLoading) {
-    console.log('Auth ainda carregando...');
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    // Determina o endpoint baseado no role
-    const isUserAdmin = user?.role === 'ADMIN';
-    const endpoint = isUserAdmin ? '/animais-comunitarios/admin' : '/animais-comunitarios';
-    
-    // Prepara os parâmetros
-    const requestConfig: any = {};
-    
-    if (isUserAdmin && debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
-      requestConfig.params = {
-        search: debouncedLocalizacao.trim()
-      };
+    if (isAuthLoading) {
+      console.log('Auth ainda carregando...');
+      return;
     }
 
-    console.log('Fazendo requisição para:', endpoint, 'com params:', requestConfig.params);
+    setLoading(true);
+    setError(null);
 
-    const res = await api.get<AnimalComunitario[]>(endpoint, requestConfig);
-    setAnimais(res.data);
-    
-  } catch (err: any) {
-    console.error("Erro detalhado ao buscar animais comunitários:", {
-      message: err.message,
-      status: err.response?.status,
-      data: err.response?.data,
-      url: err.config?.url
-    });
-    
-    setError('Não foi possível carregar os animais.');
-  } finally {
-    setLoading(false);
-  }
-}, [debouncedLocalizacao, user, isAuthLoading]); 
+    try {
+      // ✅ CORREÇÃO: URLs atualizadas para match com o controller
+      const isUserAdmin = user?.role === 'ADMIN';
+      const endpoint = isUserAdmin ? '/animais/comunitarios/admin' : '/animais/comunitarios'; // ← CORRIGIDO
+      
+      // Prepara os parâmetros
+      const requestConfig: any = {};
+      
+      if (isUserAdmin && debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
+        requestConfig.params = {
+          search: debouncedLocalizacao.trim()
+        };
+      }
+
+      console.log('Fazendo requisição para:', endpoint, 'com params:', requestConfig.params);
+
+      const res = await api.get<AnimalComunitario[]>(endpoint, requestConfig);
+      setAnimais(res.data);
+      
+    } catch (err: any) {
+      console.error("Erro detalhado ao buscar animais comunitários:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        url: err.config?.url
+      });
+      
+      setError('Não foi possível carregar os animais.');
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedLocalizacao, user, isAuthLoading]);
+
   useEffect(() => {
     fetchAnimais();
   }, [fetchAnimais]);
