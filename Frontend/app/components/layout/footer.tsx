@@ -145,7 +145,7 @@ const Footer = () => {
                 rel="noopener noreferrer" 
                 className="text-amber-200 hover:text-amber-50 transition-colors font-medium"
               >
-                Leandro Balaban.
+                Leandro Balaban
               </a>
             </p>
           </div>
