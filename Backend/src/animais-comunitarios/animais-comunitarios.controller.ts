@@ -31,10 +31,13 @@ export class AnimaisComunitariosController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  // ✅ ENDPOINT PÚBLICO - para usuários comuns (sem dados sensíveis)
+  // ✅ ENDPOINT PÚBLICO - (CORRIGIDO)
+  // Removido o @Query('search') para alinhar com o frontend,
+  // que não envia 'search' para usuários públicos.
   @Get()
-  findAllPublic(@Query('search') searchTerm?: string) {
-    return this.animaisComunitariosService.findAllPublic(searchTerm);
+  findAllPublic() {
+  	// O service será chamado sem parâmetro
+  	return this.animaisComunitariosService.findAllPublic();
   }
 
   // ✅ ENDPOINT ADMIN - com dados completos (requer autenticação)
@@ -42,19 +45,19 @@ export class AnimaisComunitariosController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   findAllAdmin(@Query('search') searchTerm?: string) {
-    return this.animaisComunitariosService.findAllAdmin(searchTerm);
+  	return this.animaisComunitariosService.findAllAdmin(searchTerm);
   }
 
   // ✅ ENDPOINT PARA MAPA - apenas localizações básicas
   @Get('mapa/localizacoes')
   findAllForMap() {
-    return this.animaisComunitariosService.findAllForMap();
+  	return this.animaisComunitariosService.findAllForMap();
   }
 
   // ✅ ENDPOINT INDIVIDUAL - público
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.animaisComunitariosService.findOne(id);
+  	return this.animaisComunitariosService.findOne(id);
   }
 
   // ✅ CRIAÇÃO - apenas admin (MÉTODO CORRIGIDO)
@@ -63,28 +66,28 @@ export class AnimaisComunitariosController {
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
   async create(
-    // 👇 CORREÇÃO: Trocamos 'createDto: CreateAnimalComunitarioDto' por 'body: any'
-    // Isso evita que o ValidationPipe falhe com dados de FormData.
-    @Body() body: any, 
-    @UploadedFile() file: Express.Multer.File,
+  	// 👇 CORREÇÃO: Trocamos 'createDto: CreateAnimalComunitarioDto' por 'body: any'
+  	// Isso evita que o ValidationPipe falhe com dados de FormData.
+  	@Body() body: any, 
+  	@UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) {
-      throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
-    }
+  	if (!file) {
+  	  throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
+  	}
 
-    // Montamos o DTO manualmente a partir do 'body'
-    // O Service vai converter latitude/longitude de string para float.
-    const createDto: CreateAnimalComunitarioDto = {
-      nomeTemporario: body.nomeTemporario,
-      enderecoCompleto: body.enderecoCompleto,
-      latitude: body.latitude,
-      longitude: body.longitude,
-    };
+  	// Montamos o DTO manualmente a partir do 'body'
+  	// O Service vai converter latitude/longitude de string para float.
+  	const createDto: CreateAnimalComunitarioDto = {
+  	  nomeTemporario: body.nomeTemporario,
+  	  enderecoCompleto: body.enderecoCompleto,
+  	  latitude: body.latitude,
+  	  longitude: body.longitude,
+  	};
 
-    const fotoFileName = await this.uploadsService.uploadArquivo(file);
-    
-    // Passamos o DTO montado manualmente e o nome do arquivo
-    return this.animaisComunitariosService.create(createDto, fotoFileName);
+  	const fotoFileName = await this.uploadsService.uploadArquivo(file);
+  	
+  	// Passamos o DTO montado manualmente e o nome do arquivo
+  	return this.animaisComunitariosService.create(createDto, fotoFileName);
   }
 
   // ✅ ATUALIZAÇÃO - apenas admin
@@ -93,26 +96,26 @@ export class AnimaisComunitariosController {
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
-    // 👇 CORREÇÃO: Aplicamos a mesma lógica do create
-    @Body() body: any,
-    @UploadedFile() file?: Express.Multer.File,
+  	@Param('id', ParseUUIDPipe) id: string,
+  	// 👇 CORREÇÃO: Aplicamos a mesma lógica do create
+  	@Body() body: any,
+  	@UploadedFile() file?: Express.Multer.File,
   ) {
-    let fotoFileName: string | undefined = undefined;
+  	let fotoFileName: string | undefined = undefined;
 
-    // Montamos o DTO de atualização manualmente
-    const updateDto: UpdateAnimalComunitarioDto = {
-      nomeTemporario: body.nomeTemporario,
-      enderecoCompleto: body.enderecoCompleto,
-      latitude: body.latitude,
-      longitude: body.longitude,
-    };
+  	// Montamos o DTO de atualização manualmente
+  	const updateDto: UpdateAnimalComunitarioDto = {
+  	  nomeTemporario: body.nomeTemporario,
+  	  enderecoCompleto: body.enderecoCompleto,
+  	  latitude: body.latitude,
+  	  longitude: body.longitude,
+  	};
 
-    if (file) {
-      fotoFileName = await this.uploadsService.uploadArquivo(file);
-    }
-    
-    return this.animaisComunitariosService.update(id, updateDto, fotoFileName);
+  	if (file) {
+  	  fotoFileName = await this.uploadsService.uploadArquivo(file);
+  	}
+  	
+  	return this.animaisComunitariosService.update(id, updateDto, fotoFileName);
   }
 
   // ✅ EXCLUSÃO - apenas admin
@@ -121,6 +124,7 @@ export class AnimaisComunitariosController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.animaisComunitariosService.remove(id);
+  	return this.animaisComunitariosService.remove(id);
   }
 }
+
