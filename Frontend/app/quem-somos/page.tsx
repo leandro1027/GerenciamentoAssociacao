@@ -308,19 +308,19 @@ export default function QuemSomosPage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <StatCard 
-              value="+500" 
+              value="+200" 
               label="Animais Resgatados" 
               icon={<PawPrint className="w-6 h-6" />}
               delay={0.1}
             />
             <StatCard 
-              value="+450" 
+              value="+80" 
               label="Adoções Bem-sucedidas" 
               icon={<Heart className="w-6 h-6" />}
               delay={0.2}
             />
             <StatCard 
-              value="+50" 
+              value="+10" 
               label="Voluntários Ativos" 
               icon={<Users className="w-6 h-6" />}
               delay={0.3}

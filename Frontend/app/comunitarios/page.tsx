@@ -292,7 +292,7 @@ export default function ComunitariosPage() {
                  />
                  <p className="text-gray-700 font-semibold text-lg mb-2">Nenhum animal comunitário encontrado</p>
                  <p className="text-gray-500 text-sm sm:text-base">
-                   {debouncedLocalizacao
+                   {debouncedLocalizacao && isAdmin
                      ? "Tente ajustar os termos da sua pesquisa."
                      : "Volte mais tarde para conhecer nossos animais comunitários."
                    }
@@ -345,6 +345,7 @@ export default function ComunitariosPage() {
           onClose={() => setSelectedAnimal(null)}
         />
       )}
+      {/* --- FIM ALTERAÇÃO 12 --- */}
     </main>
   );
 }
