@@ -24,19 +24,20 @@ import { Especie, Porte, Sexo } from '@prisma/client';
 import { FindComunitariosDto } from './dto/find-comunitarios.dto';
 import { UploadsService } from 'src/uploads-s3/upload.service';
 
-
 @Controller('animais')
 export class AnimalController {
   constructor(
     private readonly animalService: AnimalService,
-    private readonly uploadsService: UploadsService, 
+    private readonly uploadsService: UploadsService,
   ) {}
+
+  // --- ANIMAIS REGULARES ---
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
-  async create( // ADICIONADO: 'async'
+  async create(
     @Body() createAnimalDto: CreateAnimalDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -44,10 +45,7 @@ export class AnimalController {
       throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
     }
 
-    // MODIFICADO: Delega o upload para o serviço central
     const animalImageUrl = await this.uploadsService.uploadArquivo(file);
-
-    // Passa apenas o nome do arquivo para o serviço de negócio
     return this.animalService.create(createAnimalDto, animalImageUrl);
   }
 
@@ -57,29 +55,12 @@ export class AnimalController {
     @Query('sexo') sexo?: Sexo,
     @Query('porte') porte?: Porte,
     @Query('nome') nome?: string,
-    @Query('context') context?: string, // Recebe o contexto (ex: admin)
+    @Query('context') context?: string,
   ) {
-    // Se o contexto for 'admin', busca todos, senão, busca só disponíveis
     if (context === 'admin') {
       return this.animalService.findAllAdmin({ especie, sexo, porte, nome });
     }
     return this.animalService.findAllDisponiveis({ especie, sexo, porte, nome });
-  }
-
-  // --- ROTA PÚBLICA PARA ANIMAIS COMUNITÁRIOS ---
-  // Retorna apenas dados não sensíveis
-  @Get('comunitarios')
-  findAllComunitariosPublic() {
-    return this.animalService.findAllComunitariosPublic();
-  }
-
-  // --- ROTA ADMIN PARA ANIMAIS COMUNITÁRIOS ---
-  // Retorna dados completos e permite filtros
-  @Get('comunitarios/admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
-  findAllComunitariosAdmin(@Query() query: FindComunitariosDto) {
-    return this.animalService.findAllComunitariosAdmin(query);
   }
 
   @Get(':id')
@@ -90,16 +71,14 @@ export class AnimalController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  // ADICIONADO: Funcionalidade de upload na atualização
   @UseInterceptors(FileInterceptor('file'))
-  async update( // ADICIONADO: 'async'
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAnimalDto: UpdateAnimalDto,
-    @UploadedFile() file?: Express.Multer.File, // ADICIONADO: Recebe arquivo opcional
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     let animalImageUrl: string | undefined = undefined;
 
-    // ADICIONADO: Se um novo arquivo for enviado, faz o upload
     if (file) {
       animalImageUrl = await this.uploadsService.uploadArquivo(file);
     }
@@ -113,5 +92,84 @@ export class AnimalController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.animalService.remove(id);
   }
-}
 
+  // --- ANIMAIS COMUNITÁRIOS ---
+
+  /**
+   * ROTA PÚBLICA: Busca animais comunitários (apenas dados públicos)
+   */
+  @Get('comunitarios')
+  findAllComunitariosPublic() {
+    return this.animalService.findAllComunitariosPublic();
+  }
+
+  /**
+   * ROTA ADMIN: Busca animais comunitários (todos os dados + filtros)
+   */
+  @Get('comunitarios/admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  findAllComunitariosAdmin(@Query() query: FindComunitariosDto) {
+    return this.animalService.findAllComunitariosAdmin(query);
+  }
+
+  /**
+   * ROTA ADMIN: Busca um animal comunitário específico
+   */
+  @Get('comunitarios/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  findOneComunitario(@Param('id', ParseUUIDPipe) id: string) {
+    return this.animalService.findOneComunitario(id);
+  }
+
+  /**
+   * ROTA ADMIN: Cria um novo animal comunitário
+   */
+  @Post('comunitarios')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('file'))
+  async createComunitario(
+    @Body() createAnimalComunitarioDto: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('O ficheiro da imagem do animal é obrigatório.');
+    }
+
+    const imageUrl = await this.uploadsService.uploadArquivo(file);
+    return this.animalService.createComunitario(createAnimalComunitarioDto, imageUrl);
+  }
+
+  /**
+   * ROTA ADMIN: Atualiza um animal comunitário
+   */
+  @Patch('comunitarios/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateComunitario(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateAnimalComunitarioDto: any,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    let imageUrl: string | undefined = undefined;
+
+    if (file) {
+      imageUrl = await this.uploadsService.uploadArquivo(file);
+    }
+    
+    return this.animalService.updateComunitario(id, updateAnimalComunitarioDto, imageUrl);
+  }
+
+  /**
+   * ROTA ADMIN: Remove um animal comunitário
+   */
+  @Delete('comunitarios/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  removeComunitario(@Param('id', ParseUUIDPipe) id: string) {
+    return this.animalService.removeComunitario(id);
+  }
+}

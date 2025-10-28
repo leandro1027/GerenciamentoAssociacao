@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import api from '../services/api';
-import { AnimalComunitario, Usuario } from '../../types'; // Importar Usuario
+import { AnimalComunitario } from '../../types';
 import { useDebounce } from 'use-debounce';
 import { buildImageUrl } from '@/utils/helpers';
-import { useAuth } from '@/context/AuthContext'; // 1. IMPORTAR useAuth
-import { motion } from 'framer-motion'; // Importar motion
+import { useAuth } from '@/context/AuthContext';
+import { motion } from 'framer-motion';
 
 // --- Sub-componente: Ícone ---
 const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: string }) => (
@@ -17,7 +17,7 @@ const Icon = ({ path, className = "w-5 h-5" }: { path: string, className?: strin
   </svg>
 );
 
-// --- Sub-componente: Card de Animal (Atualizado) ---
+// --- Sub-componente: Card de Animal ---
 const AnimalCardComunitario = ({
   animal,
   onCardClick,
@@ -25,15 +25,15 @@ const AnimalCardComunitario = ({
 }: {
   animal: AnimalComunitario,
   onCardClick: (animal: AnimalComunitario) => void,
-  isAdmin: boolean // 2. Receber prop isAdmin
+  isAdmin: boolean
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
-    className={`group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} // Define cursor
+    className={`group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg ${isAdmin ? 'cursor-pointer hover:-translate-y-1' : 'cursor-default'}`}
     onClick={() => {
-      if (isAdmin) onCardClick(animal); // 3. Só permite clique se for admin
+      if (isAdmin) onCardClick(animal);
     }}
   >
     <div className="block relative overflow-hidden">
@@ -49,7 +49,7 @@ const AnimalCardComunitario = ({
       </div>
     </div>
 
-    {/* 4. Mostra localização APENAS se for admin */}
+    {/* Mostra localização APENAS se for admin */}
     {isAdmin && (
       <div className="p-3 sm:p-4">
         <div className="bg-gray-50 p-2 sm:p-3 rounded-lg border">
@@ -75,33 +75,30 @@ const AnimalCardComunitario = ({
 
 // --- Componente Principal da Página ---
 export default function ComunitariosPage() {
-  // --- Estados de Dados e UI ---
   const [animais, setAnimais] = useState<AnimalComunitario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // --- 5. ADICIONAR ESTADO DE AUTENTICAÇÃO ---
-  const { user, isLoading: isAuthLoading } = useAuth(); // Pega o usuário e o estado de loading do auth
-  const [isAdmin, setIsAdmin] = useState(false); // Estado local para isAdmin
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // --- Estados do Filtro ---
   const [localizacao, setLocalizacao] = useState('');
   const [debouncedLocalizacao] = useDebounce(localizacao, 500);
 
-  // --- Estados dos Modais ---
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalComunitario | null>(null);
 
-  // --- Atualiza isAdmin quando 'user' ou 'isAuthLoading' mudar ---
+  // --- Atualiza isAdmin quando auth mudar ---
   useEffect(() => {
-    if (!isAuthLoading) {
-      setIsAdmin(user?.role === 'ADMIN');
+    if (!isAuthLoading && user) {
+      setIsAdmin(user.role === 'ADMIN');
+    } else if (!isAuthLoading && !user) {
+      setIsAdmin(false);
     }
   }, [user, isAuthLoading]);
 
-  // --- Importações Dinâmicas de Componentes (Condicionais) ---
+  // --- Importações Dinâmicas (Apenas para Admin) ---
   const MapaGeralComunitarios = useMemo(() => {
-    // 6. Só importa o mapa se for admin
     if (!isAdmin) return () => null;
 
     return dynamic(
@@ -115,10 +112,9 @@ export default function ComunitariosPage() {
         )
       }
     )
-  }, [isAdmin]); // Depende do status de admin
+  }, [isAdmin]);
 
   const AnimalDetailModal = useMemo(() => {
-    // 7. Só importa o modal de detalhes se for admin
     if (!isAdmin) return () => null;
 
     return dynamic(
@@ -134,11 +130,10 @@ export default function ComunitariosPage() {
         )
       }
     )
-  }, [isAdmin]); // Depende do status de admin
+  }, [isAdmin]);
 
-  // --- Lógica de Busca de Dados ---
+  // --- Busca de Dados ---
   const fetchAnimais = useCallback(async () => {
-    // Não busca dados se a autenticação ainda estiver carregando
     if (isAuthLoading) return;
 
     setLoading(true);
@@ -146,10 +141,10 @@ export default function ComunitariosPage() {
 
     try {
       const params = new URLSearchParams();
-      let endpoint = '/animais-comunitarios'; // Endpoint público por padrão
+      let endpoint = '/animais-comunitarios';
 
-      // 8. Se for admin, muda o endpoint e adiciona parâmetros de busca
-      if (isAdmin) {
+      // Só usa endpoint admin se realmente for admin
+      if (isAdmin && user?.role === 'ADMIN') {
         endpoint = '/animais-comunitarios/admin';
         if (debouncedLocalizacao) {
           params.append('search', debouncedLocalizacao);
@@ -164,7 +159,7 @@ export default function ComunitariosPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedLocalizacao, isAdmin, isAuthLoading]); // Adicionado isAdmin e isAuthLoading
+  }, [debouncedLocalizacao, isAdmin, isAuthLoading, user]);
 
   useEffect(() => {
     fetchAnimais();
@@ -174,7 +169,6 @@ export default function ComunitariosPage() {
     setLocalizacao('');
   };
 
-  // --- Renderização do Componente ---
   return (
     <main className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
@@ -193,7 +187,7 @@ export default function ComunitariosPage() {
       {/* Conteúdo Principal */}
       <div className="max-w-7xl mx-auto py-6 sm:py-8 md:py-10 px-3 sm:px-4 lg:px-8">
 
-        {/* --- 9. Barra de Filtros (Condicional) --- */}
+        {/* Barra de Filtros (Apenas Admin) */}
         {isAdmin && !loading && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -229,7 +223,7 @@ export default function ComunitariosPage() {
           </motion.div>
         )}
 
-        {/* --- 10. Botão para Abrir o Mapa Geral (Condicional) --- */}
+        {/* Botão para Abrir o Mapa Geral (Apenas Admin) */}
         {isAdmin && !loading && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -247,8 +241,8 @@ export default function ComunitariosPage() {
           </motion.div>
         )}
 
-        {/* --- Estado de Carregamento --- */}
-        {(loading || isAuthLoading) && ( // Mostra loading se os dados OU a auth estiverem carregando
+        {/* Estado de Carregamento */}
+        {(loading || isAuthLoading) && (
            <div className="text-center py-8 sm:py-10">
              <div className="inline-flex items-center gap-3 text-gray-500">
                <div className="animate-spin rounded-full h-6 w-6 border-2 border-amber-600 border-t-transparent"></div>
@@ -257,7 +251,7 @@ export default function ComunitariosPage() {
            </div>
         )}
 
-        {/* --- Estado de Erro --- */}
+        {/* Estado de Erro */}
         {error && !loading && (
            <div className="text-center text-red-600 bg-red-100 p-4 rounded-lg mx-2 sm:mx-0">
              <p className="font-medium">{error}</p>
@@ -270,16 +264,16 @@ export default function ComunitariosPage() {
            </div>
         )}
 
-        {/* --- Lista de Animais --- */}
-        {!loading && !isAuthLoading && !error && ( // Só renderiza a lista se TUDO estiver carregado e sem erro
+        {/* Lista de Animais */}
+        {!loading && !isAuthLoading && !error && (
           animais.length > 0 ? (
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in-up">
               {animais.map(animal => (
                 <AnimalCardComunitario
                   key={animal.id}
                   animal={animal}
-                  onCardClick={setSelectedAnimal} // Clicar só funciona se for admin (lógica no card)
-                  isAdmin={isAdmin} // 11. Passar prop isAdmin
+                  onCardClick={setSelectedAnimal}
+                  isAdmin={isAdmin}
                 />
               ))}
             </div>
@@ -297,7 +291,7 @@ export default function ComunitariosPage() {
                      : "Volte mais tarde para conhecer nossos animais comunitários."
                    }
                  </p>
-                 {debouncedLocalizacao && isAdmin && ( // Só mostra "Limpar" se for admin
+                 {debouncedLocalizacao && isAdmin && (
                    <button
                      onClick={handleResetFilters}
                      className="mt-4 text-amber-600 hover:text-amber-700 font-medium text-sm"
@@ -311,7 +305,7 @@ export default function ComunitariosPage() {
         )}
       </div>
 
-      {/* --- 12. Modais Condicionais --- */}
+      {/* Modais (Apenas Admin) */}
       {isAdmin && isMapModalOpen && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-center items-center p-2 sm:p-4 animate-fade-in"
@@ -345,8 +339,6 @@ export default function ComunitariosPage() {
           onClose={() => setSelectedAnimal(null)}
         />
       )}
-      {/* --- FIM ALTERAÇÃO 12 --- */}
     </main>
   );
 }
-
