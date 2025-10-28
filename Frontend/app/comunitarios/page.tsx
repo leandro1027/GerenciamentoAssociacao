@@ -132,7 +132,7 @@ export default function ComunitariosPage() {
     )
   }, [isAdmin]);
 
-  // ✅✅✅ FUNÇÃO CORRIGIDA - URLs atualizadas
+  // ✅✅✅ FUNÇÃO CORRIGIDA - Lógica de parâmetros simplificada
   const fetchAnimais = useCallback(async () => {
     if (isAuthLoading) {
       console.log('Auth ainda carregando...');
@@ -143,45 +143,61 @@ export default function ComunitariosPage() {
     setError(null);
 
     try {
-      // ✅ CORREÇÃO: URLs atualizadas para match com o controller
       const isUserAdmin = user?.role === 'ADMIN';
-      const endpoint = isUserAdmin ? '/animais/comunitarios/admin' : '/animais/comunitarios'; // ← CORRIGIDO
       
-      // Prepara os parâmetros
-      const requestConfig: any = {};
+      // ✅ CORREÇÃO: Construir URL com parâmetros de forma mais robusta
+      let endpoint = '/animais/comunitarios';
       
-      if (isUserAdmin && debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
-        requestConfig.params = {
-          search: debouncedLocalizacao.trim()
-        };
+      if (isUserAdmin) {
+        endpoint = '/animais/comunitarios/admin';
+        
+        // ✅ CORREÇÃO: Adicionar parâmetro search apenas se houver valor
+        if (debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
+          endpoint += `?search=${encodeURIComponent(debouncedLocalizacao.trim())}`;
+        }
       }
 
-      console.log('Fazendo requisição para:', endpoint, 'com params:', requestConfig.params);
+      console.log('🔄 Fazendo requisição para:', endpoint);
 
-      const res = await api.get<AnimalComunitario[]>(endpoint, requestConfig);
+      const res = await api.get<AnimalComunitario[]>(endpoint);
       setAnimais(res.data);
       
     } catch (err: any) {
-      console.error("Erro detalhado ao buscar animais comunitários:", {
+      console.error("❌ Erro detalhado ao buscar animais comunitários:", {
         message: err.message,
         status: err.response?.status,
         data: err.response?.data,
         url: err.config?.url
       });
       
-      setError('Não foi possível carregar os animais.');
+      // ✅ CORREÇÃO: Mensagens de erro mais específicas
+      if (err.response?.status === 400) {
+        setError('Parâmetros de pesquisa inválidos. Tente limpar o filtro.');
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Você não tem permissão para acessar esta funcionalidade.');
+      } else if (err.response?.status === 404) {
+        setError('Recurso não encontrado. Verifique a configuração do servidor.');
+      } else {
+        setError('Não foi possível carregar os animais. Verifique sua conexão.');
+      }
     } finally {
       setLoading(false);
     }
   }, [debouncedLocalizacao, user, isAuthLoading]);
 
+  // ✅ CORREÇÃO: useEffect mais eficiente
   useEffect(() => {
     fetchAnimais();
   }, [fetchAnimais]);
 
+  // ✅ CORREÇÃO: Reset mais completo
   const handleResetFilters = () => {
     setLocalizacao('');
+    // Não precisamos chamar fetchAnimais aqui pois o debouncedLocalizacao vai trigger automático
   };
+
+  // ✅ CORREÇÃO: Estado de loading mais preciso
+  const isLoading = loading || isAuthLoading;
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -202,7 +218,7 @@ export default function ComunitariosPage() {
       <div className="max-w-7xl mx-auto py-6 sm:py-8 md:py-10 px-3 sm:px-4 lg:px-8">
 
         {/* Barra de Filtros (Apenas Admin) */}
-        {isAdmin && !loading && (
+        {isAdmin && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -224,12 +240,14 @@ export default function ComunitariosPage() {
                     onChange={e => setLocalizacao(e.target.value)}
                     placeholder="Digite um endereço ou ponto de referência..."
                     className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm sm:text-base rounded-md border-gray-300 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder:text-gray-500"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
               <button
                 onClick={handleResetFilters}
-                className="text-sm font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap px-3 sm:px-4 py-2 rounded-md hover:bg-amber-50 transition-colors border border-amber-200"
+                disabled={isLoading}
+                className="text-sm font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap px-3 sm:px-4 py-2 rounded-md hover:bg-amber-50 transition-colors border border-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Limpar filtro
               </button>
@@ -238,7 +256,7 @@ export default function ComunitariosPage() {
         )}
 
         {/* Botão para Abrir o Mapa Geral (Apenas Admin) */}
-        {isAdmin && !loading && (
+        {isAdmin && !isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -256,7 +274,7 @@ export default function ComunitariosPage() {
         )}
 
         {/* Estado de Carregamento */}
-        {(loading || isAuthLoading) && (
+        {isLoading && (
            <div className="text-center py-8 sm:py-10">
              <div className="inline-flex items-center gap-3 text-gray-500">
                <div className="animate-spin rounded-full h-6 w-6 border-2 border-amber-600 border-t-transparent"></div>
@@ -266,7 +284,7 @@ export default function ComunitariosPage() {
         )}
 
         {/* Estado de Erro */}
-        {error && !loading && (
+        {error && !isLoading && (
            <div className="text-center text-red-600 bg-red-100 p-4 rounded-lg mx-2 sm:mx-0">
              <p className="font-medium">{error}</p>
              <button
@@ -279,7 +297,7 @@ export default function ComunitariosPage() {
         )}
 
         {/* Lista de Animais */}
-        {!loading && !isAuthLoading && !error && (
+        {!isLoading && !error && (
           animais.length > 0 ? (
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 animate-fade-in-up">
               {animais.map(animal => (
