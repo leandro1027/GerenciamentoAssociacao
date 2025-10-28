@@ -51,21 +51,35 @@ export class AnimalController {
     return this.animalService.create(createAnimalDto, animalImageUrl);
   }
 
-  // --- NENHUMA ALTERAÇÃO NECESSÁRIA NAS ROTAS 'GET' ---
   @Get()
   findAll(
     @Query('especie') especie?: Especie,
     @Query('sexo') sexo?: Sexo,
     @Query('porte') porte?: Porte,
     @Query('nome') nome?: string,
+    @Query('context') context?: string, // Recebe o contexto (ex: admin)
   ) {
-    const filters = { especie, sexo, porte, nome };
-    return this.animalService.findAll(filters);
+    // Se o contexto for 'admin', busca todos, senão, busca só disponíveis
+    if (context === 'admin') {
+      return this.animalService.findAllAdmin({ especie, sexo, porte, nome });
+    }
+    return this.animalService.findAllDisponiveis({ especie, sexo, porte, nome });
   }
 
+  // --- ROTA PÚBLICA PARA ANIMAIS COMUNITÁRIOS ---
+  // Retorna apenas dados não sensíveis
   @Get('comunitarios')
-  findAllComunitarios(@Query() query: FindComunitariosDto) {
-    return this.animalService.findAllComunitarios(query);
+  findAllComunitariosPublic() {
+    return this.animalService.findAllComunitariosPublic();
+  }
+
+  // --- ROTA ADMIN PARA ANIMAIS COMUNITÁRIOS ---
+  // Retorna dados completos e permite filtros
+  @Get('comunitarios/admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  findAllComunitariosAdmin(@Query() query: FindComunitariosDto) {
+    return this.animalService.findAllComunitariosAdmin(query);
   }
 
   @Get(':id')
@@ -100,3 +114,4 @@ export class AnimalController {
     return this.animalService.remove(id);
   }
 }
+

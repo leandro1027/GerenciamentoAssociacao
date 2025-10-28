@@ -2,7 +2,7 @@ import { IsOptional, IsString } from 'class-validator';
 
 export class FindComunitariosDto {
   @IsString()
-  @IsOptional() // Torna o filtro de localização opcional
-  localizacaoComunitaria?: string;
+  @IsOptional()
+  search?: string; // 'search' para filtros de nome ou endereço
 }
 

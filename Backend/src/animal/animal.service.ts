@@ -32,23 +32,69 @@ export class AnimalService {
   /**
    * Cria um novo registro de animal no banco de dados.
    */
-  create(createAnimalDto: CreateAnimalDto, animalImageUrl: string) {
+  async create(createAnimalDto: CreateAnimalDto, animalImageUrl: string) {
     const { castrado, comunitario, ...restOfDto } = createAnimalDto;
-    return this.prisma.animal.create({
-      data: {
-        ...restOfDto,
-        castrado: String(castrado) === 'true',
-        comunitario: String(comunitario) === 'true',
-        animalImageUrl: animalImageUrl, // Salva apenas o nome do arquivo
-      },
-    });
+    
+    // Converte os campos 'castrado' e 'comunitario' para boolean
+    const data = {
+      ...restOfDto,
+      castrado: String(castrado) === 'true' || castrado === true,
+      comunitario: String(comunitario) === 'true' || comunitario === true,
+      animalImageUrl: animalImageUrl, // Salva apenas o nome do arquivo
+      isFromDivulgacao: false, // Garante que animais criados manualmente não são de divulgação
+    };
+    
+    const animal = await this.prisma.animal.create({ data });
+
+    // Retorna o animal criado com a URL completa
+    return {
+        ...animal,
+        animalImageUrl: this.buildImageUrl(animal.animalImageUrl)
+    };
   }
 
   /**
-   * Busca todos os animais disponíveis para adoção, com filtros opcionais.
-   * AGORA RETORNA URLS COMPLETAS
+   * Busca todos os animais (para painel admin), com filtros opcionais.
+   * Retorna URLs completas.
    */
-  async findAll(filters: {
+  async findAllAdmin(filters: {
+    especie?: Especie;
+    sexo?: Sexo;
+    porte?: Porte;
+    nome?: string;
+  }) {
+    const where: Prisma.AnimalWhereInput = {
+       comunitario: false, // Exclui animais comunitários desta lista
+    }; 
+
+    if (filters.especie) where.especie = filters.especie;
+    if (filters.sexo) where.sexo = filters.sexo;
+    if (filters.porte) where.porte = filters.porte;
+    if (filters.nome) {
+      where.nome = {
+        contains: filters.nome,
+        mode: 'insensitive',
+      };
+    }
+
+    const animais = await this.prisma.animal.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const animaisComUrls = animais.map(animal => ({
+      ...animal,
+      animalImageUrl: this.buildImageUrl(animal.animalImageUrl)
+    }));
+
+    return Array.isArray(animaisComUrls) ? animaisComUrls : [];
+  }
+
+  /**
+   * Busca todos os animais DISPONÍVEIS (público), com filtros opcionais.
+   * Retorna URLs completas.
+   */
+  async findAllDisponiveis(filters: {
     especie?: Especie;
     sexo?: Sexo;
     porte?: Porte;
@@ -56,6 +102,7 @@ export class AnimalService {
   }) {
     const where: Prisma.AnimalWhereInput = {
       status: StatusAnimal.DISPONIVEL,
+      comunitario: false, // Exclui animais comunitários desta lista
     };
 
     if (filters.especie) where.especie = filters.especie;
@@ -73,7 +120,6 @@ export class AnimalService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // ✅ TRANSFORMA: Converte nomes de arquivo para URLs completas
     const animaisComUrls = animais.map(animal => ({
       ...animal,
       animalImageUrl: this.buildImageUrl(animal.animalImageUrl)
@@ -82,38 +128,64 @@ export class AnimalService {
     return Array.isArray(animaisComUrls) ? animaisComUrls : [];
   }
 
+
+  // --- ANIMAIS COMUNITÁRIOS (NOVAS FUNÇÕES) ---
+
   /**
-   * Busca todos os animais comunitários disponíveis.
-   * AGORA RETORNA URLS COMPLETAS
+   * [PÚBLICO] Busca todos os animais comunitários.
+   * Retorna APENAS dados não-sensíveis.
    */
-  async findAllComunitarios(filters: FindComunitariosDto) {
-    const where: Prisma.AnimalWhereInput = { 
-      status: StatusAnimal.DISPONIVEL, 
-      comunitario: true 
-    };
-    
-    if (filters.localizacaoComunitaria) {
-      where.localizacaoComunitaria = {
-        contains: filters.localizacaoComunitaria,
-        mode: 'insensitive',
-      };
-    }
-    
-    const animais = await this.prisma.animal.findMany({ 
-      where, 
-      orderBy: { createdAt: 'desc' } 
+  async findAllComunitariosPublic() {
+    const animais = await this.prisma.animalComunitario.findMany({ 
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        nomeTemporario: true,
+        imageUrl: true,
+        // NÃO retorna latitude, longitude, ou enderecoCompleto
+      }
     });
 
-    // ✅ TRANSFORMA: Converte nomes de arquivo para URLs completas
+    // Converte nomes de arquivo para URLs completas
     return animais.map(animal => ({
       ...animal,
-      animalImageUrl: this.buildImageUrl(animal.animalImageUrl)
+      imageUrl: this.buildImageUrl(animal.imageUrl)
     }));
   }
 
   /**
+   * [ADMIN] Busca todos os animais comunitários.
+   * Retorna TODOS os dados e permite filtros.
+   */
+  async findAllComunitariosAdmin(filters: FindComunitariosDto) {
+    const where: Prisma.AnimalComunitarioWhereInput = {};
+    
+    // Renomeado DTO para 'search'
+    if (filters.search) {
+      where.OR = [
+        { nomeTemporario: { contains: filters.search, mode: 'insensitive' } },
+        { enderecoCompleto: { contains: filters.search, mode: 'insensitive' } }
+      ];
+    }
+    
+    const animais = await this.prisma.animalComunitario.findMany({ 
+      where, 
+      orderBy: { createdAt: 'desc' } 
+    });
+
+    // Converte nomes de arquivo para URLs completas
+    return animais.map(animal => ({
+      ...animal,
+      imageUrl: this.buildImageUrl(animal.imageUrl)
+    }));
+  }
+
+  // --- FIM ANIMAIS COMUNITÁRIOS ---
+
+
+  /**
    * Busca um único animal pelo seu ID.
-   * AGORA RETORNA URL COMPLETA
+   * Retorna URL completa.
    */
   async findOne(id: string) {
     const animal = await this.prisma.animal.findUnique({ where: { id } });
@@ -121,7 +193,7 @@ export class AnimalService {
       throw new NotFoundException(`Animal com ID "${id}" não encontrado.`);
     }
     
-    // ✅ TRANSFORMA: Converte nome do arquivo para URL completa
+    // Transforma: Converte nome do arquivo para URL completa
     return {
       ...animal,
       animalImageUrl: this.buildImageUrl(animal.animalImageUrl)
@@ -132,23 +204,30 @@ export class AnimalService {
    * Atualiza os dados de um animal.
    */
   async update(id: string, updateAnimalDto: UpdateAnimalDto, animalImageUrl?: string) {
-    const dataToUpdate = { ...updateAnimalDto };
+    // Garante que o animal existe
+    const animalAntigo = await this.prisma.animal.findUnique({ where: { id } });
+     if (!animalAntigo) {
+       throw new NotFoundException(`Animal com ID "${id}" não encontrado.`);
+     }
+
+    const dataToUpdate: Prisma.AnimalUpdateInput = { ...updateAnimalDto };
 
     if (animalImageUrl) {
-      const animalAntigo = await this.prisma.animal.findUnique({ where: { id } });
-      
-      if (animalAntigo?.animalImageUrl) {
-        await this.uploadsService.deletarArquivo(animalAntigo.animalImageUrl);
+      // Deleta a imagem antiga ANTES de atualizar
+      if (animalAntigo.animalImageUrl) {
+         try {
+           await this.uploadsService.deletarArquivo(animalAntigo.animalImageUrl);
+         } catch(e) { console.error(`Erro ao deletar imagem antiga ${animalAntigo.animalImageUrl}:`, e)}
       }
-      
-      (dataToUpdate as any).animalImageUrl = animalImageUrl;
+      dataToUpdate.animalImageUrl = animalImageUrl;
     }
 
-    if (dataToUpdate.castrado !== undefined) {
-      (dataToUpdate as any).castrado = String(dataToUpdate.castrado) === 'true';
+    // Converte campos booleanos vindos do FormData
+    if (updateAnimalDto.castrado !== undefined) {
+      (dataToUpdate as any).castrado = String(updateAnimalDto.castrado) === 'true' || updateAnimalDto.castrado === true;
     }
-    if (dataToUpdate.comunitario !== undefined) {
-      (dataToUpdate as any).comunitario = String(dataToUpdate.comunitario) === 'true';
+    if (updateAnimalDto.comunitario !== undefined) {
+      (dataToUpdate as any).comunitario = String(updateAnimalDto.comunitario) === 'true' || updateAnimalDto.comunitario === true;
     }
     
     const animalAtualizado = await this.prisma.animal.update({ 
@@ -156,7 +235,7 @@ export class AnimalService {
       data: dataToUpdate 
     });
 
-    // ✅ TRANSFORMA: Converte nome do arquivo para URL completa
+    // Transforma: Converte nome do arquivo para URL completa
     return {
       ...animalAtualizado,
       animalImageUrl: this.buildImageUrl(animalAtualizado.animalImageUrl)
@@ -173,7 +252,9 @@ export class AnimalService {
     }
     
     if (animal.animalImageUrl) {
-      await this.uploadsService.deletarArquivo(animal.animalImageUrl);
+       try {
+         await this.uploadsService.deletarArquivo(animal.animalImageUrl);
+       } catch(e) { console.error(`Erro ao deletar imagem ${animal.animalImageUrl}:`, e)}
     }
 
     return this.prisma.animal.delete({ where: { id } });
