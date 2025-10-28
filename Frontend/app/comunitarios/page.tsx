@@ -136,7 +136,7 @@ export default function ComunitariosPage() {
       const isUserAdmin = user?.role === 'ADMIN';
       
       // Define endpoint baseado no tipo de usuário
-      let endpoint = '/animais/comunitarios';
+      let endpoint = '/animais-comunitarios';
       
       if (isUserAdmin) {
         endpoint = '/animais/comunitarios/admin';
