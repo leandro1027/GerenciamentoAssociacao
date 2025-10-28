@@ -132,35 +132,47 @@ export default function ComunitariosPage() {
     )
   }, [isAdmin]);
 
-  // --- Busca de Dados ---
   const fetchAnimais = useCallback(async () => {
-    if (isAuthLoading) return;
+  if (isAuthLoading) {
+    console.log('Auth ainda carregando...');
+    return;
+  }
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const params = new URLSearchParams();
-      let endpoint = '/animais-comunitarios';
-
-      // Só usa endpoint admin se realmente for admin
-      if (isAdmin && user?.role === 'ADMIN') {
-        endpoint = '/animais-comunitarios/admin';
-        if (debouncedLocalizacao) {
-          params.append('search', debouncedLocalizacao);
-        }
-      }
-
-      const res = await api.get<AnimalComunitario[]>(`${endpoint}?${params.toString()}`);
-      setAnimais(res.data);
-    } catch (err) {
-      console.error("Erro ao buscar animais comunitários:", err);
-      setError('Não foi possível carregar os animais.');
-    } finally {
-      setLoading(false);
+  try {
+    // Determina o endpoint baseado no role
+    const isUserAdmin = user?.role === 'ADMIN';
+    const endpoint = isUserAdmin ? '/animais-comunitarios/admin' : '/animais-comunitarios';
+    
+    // Prepara os parâmetros
+    const requestConfig: any = {};
+    
+    if (isUserAdmin && debouncedLocalizacao && debouncedLocalizacao.trim() !== '') {
+      requestConfig.params = {
+        search: debouncedLocalizacao.trim()
+      };
     }
-  }, [debouncedLocalizacao, isAdmin, isAuthLoading, user]);
 
+    console.log('Fazendo requisição para:', endpoint, 'com params:', requestConfig.params);
+
+    const res = await api.get<AnimalComunitario[]>(endpoint, requestConfig);
+    setAnimais(res.data);
+    
+  } catch (err: any) {
+    console.error("Erro detalhado ao buscar animais comunitários:", {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      url: err.config?.url
+    });
+    
+    setError('Não foi possível carregar os animais.');
+  } finally {
+    setLoading(false);
+  }
+}, [debouncedLocalizacao, user, isAuthLoading]); 
   useEffect(() => {
     fetchAnimais();
   }, [fetchAnimais]);
