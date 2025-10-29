@@ -218,13 +218,21 @@ export default function ComunitariosPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Hero Section - Mais Simples */}
-      <section className="bg-white py-12 sm:py-16 border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Hero Section com Imagem de Fundo */}
+      <section 
+        className="relative py-16 sm:py-20 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/NossaMissao.jpg')"
+        }}
+      >
+        {/* Overlay sutil para melhor contraste do texto */}
+        <div className="absolute inset-0 bg-black/20" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 drop-shadow-lg"
           >
             Animais Comunitários
           </motion.h1>
@@ -232,7 +240,7 @@ export default function ComunitariosPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto"
+            className="text-lg sm:text-xl text-white/95 max-w-2xl mx-auto drop-shadow-md"
           >
             Conheça os peludos que fazem parte da nossa comunidade
           </motion.p>
