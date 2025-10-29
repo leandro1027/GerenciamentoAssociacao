@@ -1241,199 +1241,193 @@ export default function ProfilePage() {
                  {activeView === 'login_history' && profileData.isGamificationActive && ( // Renderiza condicionalmente
                     <HistoricoDeLogin />
                  )}
+                    {activeView === 'edit_profile' && (
+                      <motion.div
+                        className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                          Editar Dados Pessoais
+                        </h2>
 
-{activeView === 'edit_profile' && (
-  <motion.div
-    className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-  >
-    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-      Editar Dados Pessoais
-    </h2>
+                        <form onSubmit={handleProfileUpdate} className="space-y-6">
+                          <div>
+                            <label
+                              htmlFor="nome"
+                              className="block mb-3 text-sm font-semibold text-gray-700"
+                            >
+                              Nome Completo
+                            </label>
+                            <Input
+                              id="nome"
+                              value={nome}
+                              onChange={e => setNome(e.target.value)}
+                              disabled={isProfileLoading}
+                              className={
+                                errors.nome
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
+                              }
+                            />
+                            {errors.nome && (
+                              <p className="text-red-500 text-sm mt-1">{errors.nome}</p>
+                            )}
+                          </div>
 
-    <form onSubmit={handleProfileUpdate} className="space-y-6">
-      <div>
-        <label
-          htmlFor="nome"
-          className="block mb-3 text-sm font-semibold text-gray-700"
-        >
-          Nome Completo
-        </label>
-        <Input
-          id="nome"
-          value={nome}
-          onChange={e => setNome(e.target.value)}
-          disabled={isProfileLoading}
-          className={
-            errors.nome
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
-          }
-        />
-        {errors.nome && (
-          <p className="text-red-500 text-sm mt-1">{errors.nome}</p>
-        )}
-      </div>
+                          <div>
+                            <label
+                              htmlFor="email"
+                              className="block mb-3 text-sm font-semibold text-gray-700"
+                            >
+                              E-mail
+                            </label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={email}
+                              onChange={e => setEmail(e.target.value)}
+                              disabled={isProfileLoading}
+                              className={
+                                errors.email
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
+                              }
+                            />
+                            {errors.email && (
+                              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                            )}
+                          </div>
 
-      <div>
-        <label
-          htmlFor="email"
-          className="block mb-3 text-sm font-semibold text-gray-700"
-        >
-          E-mail
-        </label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          disabled={isProfileLoading}
-          className={
-            errors.email
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
-          }
-        />
-        {errors.email && (
-          <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-        )}
-      </div>
+                          <div>
+                            <label
+                              htmlFor="telefone"
+                              className="block mb-3 text-sm font-semibold text-gray-700"
+                            >
+                              Telefone
+                            </label>
+                            <Input
+                              id="telefone"
+                              value={telefone}
+                              onChange={e => setTelefone(e.target.value)}
+                              disabled={isProfileLoading}
+                              className={
+                                errors.telefone
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
+                              }
+                            />
+                            {errors.telefone && (
+                              <p className="text-red-500 text-sm mt-1">{errors.telefone}</p>
+                            )}
+                          </div>
 
-      <div>
-        <label
-          htmlFor="telefone"
-          className="block mb-3 text-sm font-semibold text-gray-700"
-        >
-          Telefone
-        </label>
-        <Input
-          id="telefone"
-          value={telefone}
-          onChange={e => setTelefone(e.target.value)}
-          disabled={isProfileLoading}
-          className={
-            errors.telefone
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
-          }
-        />
-        {errors.telefone && (
-          <p className="text-red-500 text-sm mt-1">{errors.telefone}</p>
-        )}
-      </div>
+                          <div className="pt-4 flex justify-end space-x-3">
+                            <Button
+                              type="button"
+                              onClick={() => setActiveView('overview')}
+                              className="bg-red-500 text-white border border-red-500 hover:bg-red-600 font-semibold"
+                              disabled={isProfileLoading}
+                            >
+                              Cancelar
+                            </Button>
 
-      <div className="pt-4 flex justify-end space-x-3">
-        <Button
-          type="button"
-          onClick={() => setActiveView('overview')}
-          className="bg-white text-red-600 border border-red-500 hover:bg-red-50 font-semibold"
-          disabled={isProfileLoading}
-        >
-          Cancelar
-        </Button>
+                            <Button
+                              type="submit"
+                              isLoading={isProfileLoading}
+                              className="bg-orange-500 text-white hover:bg-orange-600 border border-orange-600 font-semibold"
+                            >
+                              Salvar Alterações
+                            </Button>
+                          </div>
+                        </form>
+                      </motion.div>
+                    )}
+                    {activeView === 'change_password' && (
+                      <motion.div
+                        className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Alterar Senha</h2>
 
-        <Button
-          type="submit"
-          isLoading={isProfileLoading}
-          className="bg-amber-500 hover:bg-amber-600 border-amber-600"
-        >
-          Salvar Alterações
-        </Button>
-      </div>
-    </form>
-  </motion.div>
-)}
+                        <form onSubmit={handlePasswordChange} className="space-y-6">
+                          <div>
+                            <label
+                              htmlFor="senhaAtual"
+                              className="block mb-3 text-sm font-semibold text-gray-700"
+                            >
+                              Senha Atual
+                            </label>
+                            <Input
+                              id="senhaAtual"
+                              type={showCurrentPassword ? 'text' : 'password'}
+                              value={senhaAtual}
+                              onChange={e => setSenhaAtual(e.target.value)}
+                              icon={showCurrentPassword ? <Eye /> : <EyeOff />}
+                              onIconClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              disabled={isPasswordLoading}
+                              className={
+                                errors.senhaAtual
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
+                              }
+                            />
+                            {errors.senhaAtual && (
+                              <p className="text-red-500 text-sm mt-1">{errors.senhaAtual}</p>
+                            )}
+                          </div>
 
-{activeView === 'change_password' && (
-  <motion.div
-    className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-  >
-    <h2 className="text-2xl font-bold text-gray-800 mb-6">Alterar Senha</h2>
+                          <div>
+                            <label
+                              htmlFor="novaSenha"
+                              className="block mb-3 text-sm font-semibold text-gray-700"
+                            >
+                              Nova Senha
+                            </label>
+                            <Input
+                              id="novaSenha"
+                              type={showNewPassword ? 'text' : 'password'}
+                              value={novaSenha}
+                              onChange={e => setNovaSenha(e.target.value)}
+                              icon={showNewPassword ? <Eye /> : <EyeOff />}
+                              onIconClick={() => setShowNewPassword(!showNewPassword)}
+                              disabled={isPasswordLoading}
+                              className={
+                                errors.novaSenha
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
+                              }
+                            />
+                            {errors.novaSenha && (
+                              <p className="text-red-500 text-sm mt-1">{errors.novaSenha}</p>
+                            )}
+                          </div>
 
-    <form onSubmit={handlePasswordChange} className="space-y-6">
-      <div>
-        <label
-          htmlFor="senhaAtual"
-          className="block mb-3 text-sm font-semibold text-gray-700"
-        >
-          Senha Atual
-        </label>
-        <Input
-          id="senhaAtual"
-          type={showCurrentPassword ? 'text' : 'password'}
-          value={senhaAtual}
-          onChange={e => setSenhaAtual(e.target.value)}
-          icon={showCurrentPassword ? <Eye /> : <EyeOff />}
-          onIconClick={() => setShowCurrentPassword(!showCurrentPassword)}
-          disabled={isPasswordLoading}
-          className={
-            errors.senhaAtual
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
-          }
-        />
-        {errors.senhaAtual && (
-          <p className="text-red-500 text-sm mt-1">{errors.senhaAtual}</p>
-        )}
-      </div>
+                          <div className="pt-4 flex justify-end space-x-3">
+                            <Button
+                              type="button"
+                              onClick={() => setActiveView('overview')}
+                              className="bg-red-500 text-white border border-red-500 hover:bg-red-600 font-semibold"
+                              disabled={isPasswordLoading}
+                            >
+                              Cancelar
+                            </Button>
 
-      <div>
-        <label
-          htmlFor="novaSenha"
-          className="block mb-3 text-sm font-semibold text-gray-700"
-        >
-          Nova Senha
-        </label>
-        <Input
-          id="novaSenha"
-          type={showNewPassword ? 'text' : 'password'}
-          value={novaSenha}
-          onChange={e => setNovaSenha(e.target.value)}
-          icon={showNewPassword ? <Eye /> : <EyeOff />}
-          onIconClick={() => setShowNewPassword(!showNewPassword)}
-          disabled={isPasswordLoading}
-          className={
-            errors.novaSenha
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : 'border-amber-200 focus:border-amber-500 focus:ring-amber-500'
-          }
-        />
-        {errors.novaSenha && (
-          <p className="text-red-500 text-sm mt-1">{errors.novaSenha}</p>
-        )}
-      </div>
-
-      <div className="pt-4 flex justify-end space-x-3">
-        <Button
-          type="button"
-          onClick={() => setActiveView('overview')}
-          className="bg-white text-red-600 border border-red-500 hover:bg-red-50 font-semibold"
-          disabled={isPasswordLoading}
-        >
-          Cancelar
-        </Button>
-
-        <Button
-          type="submit"
-          isLoading={isPasswordLoading}
-          className="bg-amber-500 hover:bg-amber-600 border-amber-600"
-        >
-          Alterar Senha
-        </Button>
-      </div>
-    </form>
-  </motion.div>
-)}
-
-
-
+                            <Button
+                              type="submit"
+                              isLoading={isPasswordLoading}
+                              className="bg-orange-500 text-white hover:bg-orange-600 border border-orange-600 font-semibold"
+                            >
+                              Alterar Senha
+                            </Button>
+                          </div>
+                        </form>
+                      </motion.div>
+                    )}
                 {activeView === 'meus_pedidos' && (
                   <MeusPedidosView pedidos={profileData.pedidos} />
                 )}
-
               </motion.div>
             </AnimatePresence>
           </div>
