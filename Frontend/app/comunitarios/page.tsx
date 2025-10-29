@@ -222,7 +222,7 @@ export default function ComunitariosPage() {
       <section 
         className="relative py-16 sm:py-20 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/NossaMissao.jpg')"
+          backgroundImage: "url('/Adote.png')"
         }}
       >
         {/* Overlay sutil para melhor contraste do texto */}
