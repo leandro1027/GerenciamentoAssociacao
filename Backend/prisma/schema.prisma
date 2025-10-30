@@ -63,10 +63,7 @@ model Animal {
   updatedAt        DateTime     @updatedAt
   comunitario      Boolean      @default(false)
   localizacaoComunitaria String?
-  isFromDivulgacao Boolean @default(false) // Indica se o animal foi originado de uma divulgação
-
-
-  // Relações
+  isFromDivulgacao Boolean @default(false) 
   pedidosAdocao    Adocao[]
 }
 
