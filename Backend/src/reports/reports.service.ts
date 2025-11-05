@@ -3,7 +3,6 @@ import * as Papa from 'papaparse';
 import * as PDFDocument from 'pdfkit';
 import { Response } from 'express';
 
-// 🔹 Interface exportada — usada também em DonationsReportService
 export interface ReportColumn {
   key: string;
   header: string;

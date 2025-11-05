@@ -13,7 +13,6 @@ export class DoacaoService {
     private readonly gamificacaoService: GamificacaoService,
   ) {}
 
-  // MODIFICADO: A assinatura do método agora espera uma string 'comprovanteFileName'
   async create(
     createDoacaoDto: CreateDoacaoDto,
     comprovanteFileName: string,
@@ -28,7 +27,7 @@ export class DoacaoService {
         ...createDoacaoDto,
         valor: valorNumerico,
         usuarioId: usuarioIdNumerico,
-        comprovanteUrl: comprovanteFileName, // Salva o nome do arquivo vindo da Cloudflare
+        comprovanteUrl: comprovanteFileName,
       },
     });
   }
@@ -81,7 +80,6 @@ export class DoacaoService {
 
   async remove(id: number) {
     await this.findOne(id);
-    // TODO: Antes de deletar, buscar o nome do comprovante no DB para deletá-lo da Cloudflare R2
     return this.prisma.doacao.delete({
       where: { id },
     });

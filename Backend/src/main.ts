@@ -7,18 +7,16 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // 🔧 Configuração completa de CORS
   app.enableCors({
     origin: [
-      'http://localhost:3000', // Durante o desenvolvimento local
+      'http://localhost:3000', 
       'https://gerenciamento-associacao.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true, // necessário se usar cookies ou headers personalizados
+    credentials: true,
   });
 
-  // 🔒 Pipes globais de validação
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
     whitelist: true,

@@ -5,8 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-// import * as nodemailer from 'nodemailer'; // <-- REMOVIDO
-import * as sgMail from '@sendgrid/mail'; // <-- ADICIONADO
+import * as sgMail from '@sendgrid/mail';
 import { ConfigService } from '@nestjs/config';
 import { GamificacaoService } from 'src/gamificacao/gamificacao.service';
 import { Usuario } from '@prisma/client';
@@ -20,10 +19,8 @@ export class AuthService {
     private configService: ConfigService,
     private gamificacaoService: GamificacaoService,
   ) {
-    // --- ADICIONADO ---
-    // Configura o SendGrid com a API Key das variáveis de ambiente
+
     sgMail.setApiKey(this.configService.get<string>('SENDGRID_API_KEY')!);
-    // ------------------
   }
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -74,7 +71,6 @@ export class AuthService {
       return false;
     }
     
-    // --- CORREÇÃO DE FUSO HORÁRIO ---
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -108,11 +104,10 @@ export class AuthService {
     return false;
   }
 
-  // --- MÉTODO forgotPassword ATUALIZADO PARA USAR SENDGRID ---
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usuarioService.findByEmail(email);
     if (!user) {
-      // Retorna silenciosamente para não revelar se o e-mail existe
+      //Não mostra se o e-mail existe
       return;
     }
 
@@ -131,22 +126,16 @@ export class AuthService {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const resetURL = `${frontendUrl}/redefinir-senha/${resetToken}`;
     
-    // --- SUBSTITUIÇÃO DO NODEMAILER PELO SENDGRID ---
+    //SENDGRID 
 
-    // IMPORTANTE: Você precisa de um e-mail verificado no SendGrid.
-    // Vá ao painel do SendGrid -> Settings -> Sender Authentication
-    // e verifique um "Single Sender". Use esse e-mail verificado aqui.
-    // Pode ser o seu 'leandrobalaban78@gmail.com', desde que verificado lá.
-    const VERIFIED_SENDER_EMAIL = 'leandrobalaban78@gmail.com'; // <-- MUDE SE FOR OUTRO
-
+    const VERIFIED_SENDER_EMAIL = 'leandrobalaban78@gmail.com';
     const msg = {
-      to: user.email, // O e-mail do usuário que pediu a redefinição
+      to: user.email,
       from: {
         name: 'Associação Fabiana Forte Huergo', // O nome que o usuário verá
-        email: VERIFIED_SENDER_EMAIL, // O e-mail verificado no SendGrid
+        email: VERIFIED_SENDER_EMAIL, // E-mail verificado no SendGrid
       },
       subject: 'Redefinição de Senha da Sua Conta',
-      // Corpo em texto plano
       text: `Você solicitou a redefinição da sua senha.\n\nClique no seguinte link para completar o processo:\n\n${resetURL}\n\nEste link irá expirar em 10 minutos.\n`,
       html: `
         <p>Olá!</p>
@@ -164,11 +153,8 @@ export class AuthService {
     } catch (error) {
       console.error("Erro ao enviar e-mail de redefinição (SendGrid):", error);
       if (error.response) {
-        // Log detalhado do erro da API do SendGrid
-        console.error(error.response.body);
       }
     }
-    // --- FIM DA SUBSTITUIÇÃO ---
   }
 
   async validateResetToken(token: string): Promise<void> {

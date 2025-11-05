@@ -1,4 +1,3 @@
-// src/geocoding/geocoding.service.ts
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 
@@ -14,7 +13,7 @@ export class GeocodingService {
 
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'SuaApp/1.0 SeuEmail@dominio.com' // É boa prática se identificar
+          'User-Agent': 'SuaApp/1.0 leandro@gmail.com' 
         }
       });
 
